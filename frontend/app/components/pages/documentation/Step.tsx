@@ -5,7 +5,7 @@ import { Card } from "../../ui/Card"
 
 export const HowToUse = () => {
     return (
-        <section className="py-10">
+        <section className="py-5">
             <div className="container mx-auto max-w-7xl px-6">
 
                 <div className="mx-auto mb-16 max-w-3xl text-center">
