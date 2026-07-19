@@ -10,19 +10,14 @@ import {
   Card,
   CardContent,
 } from "../../ui/Card";
+import { Background } from "../../ui/Background";
 
 export const DocsHeroSection = () => {
   return (
     <section className="relative overflow-hidden bg-background">
       {/* Background */}
 
-      <div className="absolute inset-0 -z-20 overflow-hidden">
-        <div className="animate-hero-glow absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[150px]" />
-
-        <div className="animate-hero-glow absolute -right-52 bottom-0 h-[550px] w-[550px] rounded-full bg-secondary/15 blur-[180px]" />
-
-        <div className="absolute left-1/2 top-1/3 h-80 w-80 -translate-x-1/2 rounded-full bg-primary-fixed/30 blur-[140px]" />
-      </div>
+      <Background/>
 
       <div className="container mx-auto grid min-h-[calc(100vh-72px)] max-w-7xl items-center gap-20 px-6 py-16 lg:grid-cols-2 lg:px-10">
 

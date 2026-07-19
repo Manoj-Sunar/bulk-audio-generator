@@ -4,7 +4,7 @@ import * as React from "react";
 
 interface SpanProps extends React.HTMLAttributes<HTMLSpanElement> {
   size?: "xs" | "sm" | "md" | "lg" | "xl"| "3xl" | "4xl" | "5xl";
-  weight?: "light" | "normal" | "medium" | "semibold" | "bold";
+  weight?: "light" | "normal" | "medium" | "semibold" | "bold" | "extrabold";
   color?: "default" | "muted" | "primary" | "destructive";
   truncate?: boolean;
 }
@@ -26,6 +26,7 @@ const weightStyles = {
   medium: "font-medium",
   semibold: "font-semibold",
   bold: "font-bold",
+  extrabold: "font-extrabold",
 };
 
 const colorStyles = {

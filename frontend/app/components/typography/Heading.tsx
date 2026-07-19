@@ -16,7 +16,7 @@ type HeadingElement =
 interface HeadingProps
   extends React.HTMLAttributes<HTMLHeadingElement> {
   as?: HeadingElement;
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
   weight?:
     | "light"
     | "normal"
@@ -37,6 +37,8 @@ const sizeStyles = {
   xl: "text-3xl",
   "2xl": "text-4xl",
   "3xl": "text-5xl",
+  "4xl": "text-6xl",
+  "5xl": "text-7xl",
 };
 
 const weightStyles = {

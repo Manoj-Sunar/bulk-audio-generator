@@ -1,3 +1,6 @@
+import { ApiKeyCard } from "@/app/components/pages/generator/ApiKeyCard";
+import { Generator } from "@/app/components/pages/generator/Generator";
+import { GeneratorHeader } from "@/app/components/pages/generator/GeneratorHeader";
 import type { Metadata } from "next";
 
 
@@ -111,8 +114,7 @@ export default function GeneratorPage() {
 
       <main className="bg-background">
 
-        {/* Hero */}
-
+       <Generator/>
        
       </main>
     </>
