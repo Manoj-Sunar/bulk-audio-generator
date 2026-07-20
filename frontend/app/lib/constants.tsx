@@ -78,3 +78,32 @@ export const STEPS = [
       "When generation finishes, all audio files are automatically bundled into a ZIP archive ready to download to your computer.",
   },
 ];
+
+
+
+export const logs = [
+  {
+    id: 1,
+    time: "12:44",
+    message: "Generated introduction_01.mp3",
+    status: "success",
+  },
+  {
+    id: 2,
+    time: "12:45",
+    message: "Generated heading_intro.mp3",
+    status: "success",
+  },
+  {
+    id: 3,
+    time: "12:46",
+    message: "Generated section_01.mp3",
+    status: "success",
+  },
+  {
+    id: 4,
+    time: "",
+    message: "Processing ending.mp3...",
+    status: "processing",
+  },
+];

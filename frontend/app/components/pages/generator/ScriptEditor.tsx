@@ -7,6 +7,7 @@ import {
   FileText,
   FolderOpen,
   Hash,
+  Sparkles,
   Timer,
 } from "lucide-react";
 
@@ -161,6 +162,7 @@ Every blank line creates a separate audio file.`}
             variant="outline"
             leftIcon={<FolderOpen size={18} />}
             onClick={() => inputRef.current?.click()}
+            size="sm"
           >
             Import TXT
           </Button>
@@ -170,6 +172,7 @@ Every blank line creates a separate audio file.`}
             leftIcon={<Clipboard size={18} />}
             onClick={copyScripts}
             disabled={!value}
+            size="sm"
           >
             Copy
           </Button>
@@ -179,12 +182,25 @@ Every blank line creates a separate audio file.`}
             leftIcon={<Eraser size={18} />}
             onClick={() => onChange("")}
             disabled={!value}
+            size="sm"
           >
             Clear
           </Button>
 
+
+
+
+
         </div>
 
+        <Button
+          size="lg"
+          className="min-w-[220px]"
+          leftIcon={<Sparkles size={18} />}
+
+        >
+          Generate Audio
+        </Button>
         <input
           ref={inputRef}
           hidden
@@ -199,40 +215,50 @@ Every blank line creates a separate audio file.`}
   );
 };
 
+
+
+
 interface StatCardProps {
   icon: React.ReactNode;
   title: string;
   value: string | number;
 }
 
+
+
+
 const StatCard = ({
   icon,
   title,
   value,
 }: StatCardProps) => (
-  <div className="rounded-2xl border border-outline-variant bg-surface-container p-2">
+  <div className="flex items-center gap-3 rounded-xl border border-outline-variant bg-surface-container px-4 py-3">
 
-    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-fixed text-primary">
+    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-fixed text-primary">
 
       {icon}
 
     </div>
 
-    <Paragraph
-      size="sm"
-      className="text-on-surface-variant"
-    >
-      {title}
-    </Paragraph>
+    <div className="min-w-0">
 
-    <Heading
-      as="h3"
-      size="lg"
-      weight="bold"
-      className="mt-1"
-    >
-      {value}
-    </Heading>
+      <Paragraph
+        size="xs"
+        className="leading-none text-on-surface-variant"
+      >
+        {title}
+      </Paragraph>
+
+      <Heading
+        as="h6"
+        size="sm"
+        weight="bold"
+        className="mt-1"
+      >
+        {value}
+      </Heading>
+
+    </div>
 
   </div>
 );
