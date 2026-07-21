@@ -1,21 +1,20 @@
 "use client";
 
-import { useState } from "react";
-
+import { useState, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ApiKeyCard } from "./ApiKeyCard";
 import { ScriptEditorCard } from "./ScriptEditor";
 import { LiveProgress } from "./LiveProgress";
-import {
-  GeneratedAudioFile,
-  GeneratedFilesTable,
-} from "./GeneratedFilesTable";
-
+import { GeneratedFilesTable } from "./GeneratedFilesTable";
 import { Background } from "../../ui/Background";
 import { logs } from "@/app/lib/constants";
+import { GeneratedAudioFile } from "./GeneratedFilesTable";
+import { fadeInLeft, fadeInRight, staggerContainer } from "@/app/lib/animations";
 
 export const Generator = () => {
   const [apiKey, setApiKey] = useState("");
   const [scripts, setScripts] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const [files, setFiles] = useState<GeneratedAudioFile[]>([
     {
@@ -44,123 +43,117 @@ export const Generator = () => {
     },
   ]);
 
-  /* ---------------- Play ---------------- */
+  const stats = useMemo(() => ({
+    total: files.length,
+    completed: files.filter(f => f.status === "success").length,
+    eta: "01m 42s",
+  }), [files]);
 
-  const handlePlay = (file: GeneratedAudioFile) => {
+  const handlePlay = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
-
     const audio = new Audio(file.audioUrl);
+    audio.play().catch(console.error);
+  }, []);
 
-    audio.play();
-  };
-
-  /* ---------------- Download Single ---------------- */
-
-  const handleDownload = (file: GeneratedAudioFile) => {
+  const handleDownload = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
-
     const link = document.createElement("a");
-
     link.href = file.audioUrl;
     link.download = file.fileName;
-
     document.body.appendChild(link);
-
     link.click();
-
     link.remove();
-  };
+  }, []);
 
-  /* ---------------- Delete ---------------- */
+  const handleDelete = useCallback((file: GeneratedAudioFile) => {
+    setFiles(prev => prev.filter(item => item.id !== file.id));
+  }, []);
 
-  const handleDelete = (file: GeneratedAudioFile) => {
-    setFiles((prev) =>
-      prev.filter((item) => item.id !== file.id)
-    );
-  };
-
-  /* ---------------- Download ZIP ---------------- */
-
-  const handleDownloadZip = async () => {
+  const handleDownloadZip = useCallback(async () => {
     try {
-      /**
-       * Replace this endpoint with your FastAPI endpoint.
-       *
-       * Example:
-       * http://localhost:8000/api/download-zip
-       */
-
-      const response = await fetch(
-        "http://localhost:8000/download-zip"
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to download ZIP");
-      }
-
+      const response = await fetch("http://localhost:8000/download-zip");
+      if (!response.ok) throw new Error("Failed to download ZIP");
+      
       const blob = await response.blob();
-
       const url = URL.createObjectURL(blob);
-
       const link = document.createElement("a");
-
       link.href = url;
       link.download = "generated-audios.zip";
-
       document.body.appendChild(link);
-
       link.click();
-
       link.remove();
-
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error(error);
+      console.error("Zip download error:", error);
     }
-  };
+  }, []);
+
+  const handleGenerate = useCallback(() => {
+    setIsGenerating(true);
+    setTimeout(() => setIsGenerating(false), 3000);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    setIsGenerating(false);
+    console.log("Generation Cancelled");
+  }, []);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-primary/5"
+    >
       <Background />
 
-      <section className="relative z-10 mx-auto max-w-8xl px-6 py-8 lg:px-8 lg:py-10">
+      <motion.section 
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="relative z-10 mx-auto max-w-8xl px-6 py-8 lg:px-8 lg:py-10"
+      >
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
           {/* Left Sidebar */}
-
-          <aside className="space-y-6 xl:sticky xl:top-6 xl:col-span-5 xl:self-start">
-            <ApiKeyCard
-              value={apiKey}
-              onChange={setApiKey}
-            />
-
+          <motion.aside 
+            variants={fadeInLeft}
+            className="space-y-6 xl:sticky xl:top-6 xl:col-span-5 xl:self-start"
+          >
+            <ApiKeyCard value={apiKey} onChange={setApiKey} />
             <LiveProgress
-              total={48}
-              completed={12}
-              eta="01m 42s"
-              running
+              total={stats.total}
+              completed={stats.completed}
+              eta={stats.eta}
+              running={isGenerating}
               logs={logs}
-              onCancel={() => console.log("Generation Cancelled")}
+              onCancel={handleCancel}
             />
-          </aside>
+          </motion.aside>
 
-          {/* Right */}
-
-          <section className="space-y-8 xl:col-span-7">
+          {/* Right Sidebar */}
+          <motion.section 
+            variants={fadeInRight}
+            className="space-y-8 xl:col-span-7"
+          >
             <ScriptEditorCard
               value={scripts}
               onChange={setScripts}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
             />
 
-            <GeneratedFilesTable
-              files={files}
-              onPlay={handlePlay}
-              onDownload={handleDownload}
-              onDelete={handleDelete}
-              onDownloadZip={handleDownloadZip}
-            />
-          </section>
+            <AnimatePresence mode="wait">
+              <GeneratedFilesTable
+                files={files}
+                onPlay={handlePlay}
+                onDownload={handleDownload}
+                onDelete={handleDelete}
+                onDownloadZip={handleDownloadZip}
+              />
+            </AnimatePresence>
+          </motion.section>
         </div>
-      </section>
-    </main>
+      </motion.section>
+    </motion.main>
   );
 };

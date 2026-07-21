@@ -79,9 +79,14 @@ export const STEPS = [
   },
 ];
 
-
-
-export const logs = [
+export type ProgressLogStatus = "success" | "processing" | "error";
+export interface ProgressLog {
+  id: number;
+  time: string;
+  message: string;
+  status: ProgressLogStatus;
+}
+export const logs: ProgressLog[] = [
   {
     id: 1,
     time: "12:44",
