@@ -19,8 +19,12 @@ export interface NavLink {
 
 export const NAV_LINKS: NavLink[] = [
   {
-    name: "Documentation",
+    name: "Home",
     href: "/",
+  },
+  {
+    name: "Documentation",
+    href: "/bulk-audio/documentation",
   },
   {
     name: "Generator",

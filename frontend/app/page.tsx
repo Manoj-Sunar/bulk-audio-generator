@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Docs } from "./components/pages/documentation/Docs";
+import { Docs } from "./components/pages/home/Docs";
 
 export const metadata: Metadata = {
   title: "Bulk Audio Generation | AI Bulk Voice Generator with ElevenLabs",
