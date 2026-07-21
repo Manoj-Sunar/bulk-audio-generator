@@ -105,7 +105,7 @@ export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
               type={showKey ? "text" : "password"}
               helperText="Your API key never leaves your browser."
               leftIcon={<KeyRound size={18} />}
-              className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+              className="transition-all duration-300 focus:ring-2 focus:ring-primary/20 w-full py-2 outline-none border-none focus:outline-none"
             />
           </motion.div>
 

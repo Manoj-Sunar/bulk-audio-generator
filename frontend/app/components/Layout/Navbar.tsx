@@ -47,9 +47,9 @@ export function Navbar() {
 
   // Fixed: Use a function that returns the variant object
   const linkVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      x: -20 
+    hidden: {
+      opacity: 0,
+      x: -20
     },
     visible: (i: number) => ({
       opacity: 1,
@@ -193,19 +193,16 @@ export function Navbar() {
             whileTap={{ scale: 0.95 }}
           >
             <Button className="px-6 rounded-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
-              <span className="flex items-center gap-2">
-                Get Started
-                <motion.span
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  →
-                </motion.span>
-              </span>
+
+              <Link
+
+                href={"/bulk-audio/bulk-audio-login"}
+
+
+              >
+                Getstarted
+              </Link>
+
             </Button>
           </motion.div>
 

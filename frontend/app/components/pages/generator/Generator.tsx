@@ -98,6 +98,9 @@ export const Generator = () => {
     console.log("Generation Cancelled");
   }, []);
 
+
+  console.log(apiKey)
+
   return (
     <motion.main 
       initial={{ opacity: 0 }}
