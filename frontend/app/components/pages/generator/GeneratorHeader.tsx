@@ -89,9 +89,10 @@ export const GeneratorHeader = () => {
 
         {/* Heading */}
         <motion.div variants={fadeInUp}>
-          <Heading as="h1" size="4xl" weight="extrabold" className="max-w-5xl leading-tight">
+          <Heading as="h1" size="4xl" weight="extrabold" className="max-w-5xl leading-tight text-center">
             Generate
             <Span
+            size="6xl"
               className="mx-3 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent"
               weight="extrabold"
             >

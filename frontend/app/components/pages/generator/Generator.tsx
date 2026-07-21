@@ -114,7 +114,7 @@ export const Generator = () => {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="relative z-10 mx-auto max-w-8xl px-6 py-8 lg:px-8 lg:py-10"
+        className="relative z-10 mx-auto max-w-8xl md:px-6 py-8 lg:px-8 lg:py-10"
       >
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
           {/* Left Sidebar */}

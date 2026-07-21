@@ -3,7 +3,7 @@ import * as React from "react";
 
 
 interface SpanProps extends React.HTMLAttributes<HTMLSpanElement> {
-  size?: "xs" | "sm" | "md" | "lg" | "xl"| "3xl" | "4xl" | "5xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl"| "3xl" | "4xl" | "5xl"|"6xl";
   weight?: "light" | "normal" | "medium" | "semibold" | "bold" | "extrabold";
   color?: "default" | "muted" | "primary" | "destructive";
   truncate?: boolean;
@@ -18,6 +18,7 @@ const sizeStyles = {
   "3xl": "text-3xl",
   "4xl": "text-4xl",
   "5xl": "text-5xl",
+  "6xl":"text-6xl"
 };
 
 const weightStyles = {
