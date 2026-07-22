@@ -200,7 +200,7 @@ export function Navbar() {
 
 
               >
-                Getstarted
+                Get Started
               </Link>
 
             </Button>
