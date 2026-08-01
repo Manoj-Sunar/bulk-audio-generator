@@ -53,7 +53,7 @@ export const DocsHeroSection = () => {
           >
             Generate
 
-            <Span className="mx-2 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent text-5xl font-bold">
+            <Span className="mx-2 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent text-6xl font-extrabold">
               100+
             </Span>
 
