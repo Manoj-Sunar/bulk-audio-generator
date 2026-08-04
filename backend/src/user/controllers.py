@@ -16,7 +16,7 @@ from src.utils.jwt_response import build_auth_response
 logger = logging.getLogger(__name__)
 
 google_service = GoogleOAuthService(settings.GOOGLE_CLIENT_ID)
-github_service = GithubOAuthService()
+github_service = GithubOAuthService(settings.GITHUB_CLIENT_ID, settings.GITHUB_CLIENT_SECRET)
 
 def UserRegister(body: UserSchema, db: Session):
     """
@@ -180,12 +180,26 @@ def GoogleLogin(body: GoogleLoginSchema, db: Session,response: Response):
         raise HTTPException(status_code=500, detail="Internal server error.")
 
 
-async def GithubLogin(body: GithubLoginSchema, db: Session,response: Response):
+
+    
+    
+    
+    # src/user/controllers.py
+
+async def GithubLogin(body: GithubLoginSchema, db: Session, response: Response):
     try:
-        github_user = await github_service.verify_token(body.access_token)
+        # 1. Use the service to exchange the 'code' for an access token
+        access_token = await github_service.get_access_token(body.code)
+        
+        # 2. Verify the token and get user info
+        github_user = await github_service.verify_token(access_token)
+        
         if not github_user["email_verified"]:
             raise HTTPException(status_code=403, detail="GitHub email is not verified.")
-        return oauth_login(github_user, db,response)
+        
+        # 3. Handle login/linking
+        return oauth_login(github_user, db, response)
+        
     except HTTPException:
         raise
     except Exception:

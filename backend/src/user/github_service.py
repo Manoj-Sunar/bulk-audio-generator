@@ -5,15 +5,40 @@ from fastapi import HTTPException, status
 
 
 class GithubOAuthService:
-    """
-    GitHub OAuth Access Token Verification Service
-
-    The frontend sends the GitHub access token obtained after
-    completing the OAuth flow.
-    """
-
+    GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
     GITHUB_USER_URL = "https://api.github.com/user"
     GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
+
+    def __init__(self, client_id: str, client_secret: str):
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+    async def get_access_token(self, code: str) -> str:
+        """Exchange authorization code for an access token."""
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                self.GITHUB_TOKEN_URL,
+                data={
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "code": code,
+                    "accept": "application/json",
+                },
+                headers={"Accept": "application/json"},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to exchange GitHub code for token.",
+                )
+            data = response.json()
+            if "access_token" not in data:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="GitHub code invalid or expired.",
+                )
+            return data["access_token"]
+
 
     async def verify_token(self, access_token: str) -> Dict[str, Any]:
         """

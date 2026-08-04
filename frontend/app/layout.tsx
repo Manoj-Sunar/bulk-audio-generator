@@ -4,6 +4,9 @@ import "./globals.css";
 
 import { Navbar } from "./components/Layout/Navbar";
 import { Footer } from "./components/Layout/Footer";
+import { QueryProvider } from "./lib/react-query/provider";
+import { AuthProvider } from "./lib/auth/context";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -132,11 +135,16 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col bg-background text-on-background antialiased">
-        <Navbar />
 
-        <main className="flex-1">{children}</main>
-
-        <Footer/>
+        <QueryProvider>
+          <AuthProvider>
+            <Navbar />
+            <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+              <main className="flex-1">{children}</main>
+            </GoogleOAuthProvider>
+            <Footer />
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -28,8 +28,6 @@ export const LoginCard = () => {
 
                 <LoginForm />
 
-                <SocialLogin />
-
                 <LoginFooter />
             </CardContent>
         </Card>

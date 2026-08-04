@@ -193,19 +193,19 @@ class GoogleLoginSchema(BaseModel):
 
   
 
+# src/user/dtos.py
 
 class GithubLoginSchema(BaseModel):
     """
     GitHub OAuth Login Request
-
-    The frontend sends the GitHub Access Token obtained
-    after completing the OAuth flow.
+    
+    The frontend sends the authorization code obtained 
+    after the OAuth redirect.
     """
-
-    access_token: str = Field(
+    code: str = Field(
         ...,
         min_length=10,
-        description="GitHub OAuth Access Token",
+        description="GitHub OAuth authorization code"
     )
 
    
