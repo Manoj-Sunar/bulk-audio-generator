@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status,HTTPException
+from fastapi import APIRouter, Depends, status,HTTPException,Response
 from sqlalchemy.orm import Session
 from src.user.dtos import UserSchema, UserLoginSchema, RefreshTokenSchema
 from src.utils.db import getDb
@@ -15,16 +15,16 @@ def register(body: UserSchema, db: Session = Depends(getDb)):
     return controllers.UserRegister(body, db)
 
 @user_routes.post("/login", status_code=status.HTTP_200_OK)
-def login(body: UserLoginSchema, db: Session = Depends(getDb)):
-    return controllers.UserLogin(body, db)
+def login(body: UserLoginSchema, db: Session = Depends(getDb), response: Response = None):
+    return controllers.UserLogin(body, db, response)
 
 @user_routes.post("/google", status_code=status.HTTP_200_OK)
-def google_login(body: controllers.GoogleLoginSchema, db: Session = Depends(getDb)):
-    return controllers.GoogleLogin(body, db)
+def google_login(body: controllers.GoogleLoginSchema, db: Session = Depends(getDb), response: Response = None):
+    return controllers.GoogleLogin(body, db, response)
 
 @user_routes.post("/github", status_code=status.HTTP_200_OK)
-async def github_login(body: controllers.GithubLoginSchema, db: Session = Depends(getDb)):
-    return await controllers.GithubLogin(body, db)
+async def github_login(body: controllers.GithubLoginSchema, db: Session = Depends(getDb), response: Response = None):
+    return await controllers.GithubLogin(body, db, response)
 
 @user_routes.post("/refresh", status_code=status.HTTP_200_OK)
 def refresh_token(body: RefreshTokenSchema, db: Session = Depends(getDb)):

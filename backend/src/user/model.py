@@ -12,7 +12,7 @@ class User(Base):
     password = Column(String(255), nullable=True)          # hashed password for local auth
     email_verified = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, nullable=False, default=True)
-
+    audio_generations = relationship("AudioGeneration", back_populates="user")
     # Relationship to providers
     providers = relationship(
         "UserProvider",

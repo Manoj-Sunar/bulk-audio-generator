@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status,Response
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 import logging
@@ -99,7 +99,7 @@ def UserRegister(body: UserSchema, db: Session):
         )
 
 
-def UserLogin(body: UserLoginSchema, db: Session):
+def UserLogin(body: UserLoginSchema, db: Session,response: Response):
     """
     Authenticate local user using email + password.
     Checks that the user has a 'local' provider.
@@ -149,7 +149,7 @@ def UserLogin(body: UserLoginSchema, db: Session):
         #     raise HTTPException(status_code=403, detail="Please verify your email first.")
 
         logger.info("User logged in locally. id=%s email=%s", user.id, user.email)
-        return build_auth_response(user, "Login successful.")
+        return build_auth_response(user, "Login successful.",response)
 
     except HTTPException:
         raise
@@ -167,12 +167,12 @@ def UserLogin(body: UserLoginSchema, db: Session):
         )
 
 
-def GoogleLogin(body: GoogleLoginSchema, db: Session):
+def GoogleLogin(body: GoogleLoginSchema, db: Session,response: Response):
     try:
         google_user = google_service.verify_token(body.token)
         if not google_user["email_verified"]:
             raise HTTPException(status_code=403, detail="Google email is not verified.")
-        return oauth_login(google_user, db)
+        return oauth_login(google_user, db,response)
     except HTTPException:
         raise
     except Exception:
@@ -180,12 +180,12 @@ def GoogleLogin(body: GoogleLoginSchema, db: Session):
         raise HTTPException(status_code=500, detail="Internal server error.")
 
 
-async def GithubLogin(body: GithubLoginSchema, db: Session):
+async def GithubLogin(body: GithubLoginSchema, db: Session,response: Response):
     try:
         github_user = await github_service.verify_token(body.access_token)
         if not github_user["email_verified"]:
             raise HTTPException(status_code=403, detail="GitHub email is not verified.")
-        return oauth_login(github_user, db)
+        return oauth_login(github_user, db,response)
     except HTTPException:
         raise
     except Exception:

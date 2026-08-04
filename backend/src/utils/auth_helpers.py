@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status,Response
 from sqlalchemy.orm import Session
 import logging
 from src.user.model import User
@@ -7,7 +7,7 @@ from src.utils.jwt_response import build_auth_response
 
 logger = logging.getLogger(__name__)
 
-def oauth_login(oauth_user: dict, db: Session):
+def oauth_login(oauth_user: dict, db: Session, response: Response):
     """
     Handle OAuth login with automatic provider linking.
 
@@ -45,7 +45,7 @@ def oauth_login(oauth_user: dict, db: Session):
             "New user created via %s. id=%s email=%s",
             oauth_user["provider"].title(), user.id, email
         )
-        return build_auth_response(user, f"{oauth_user['provider'].title()} login successful.")
+        return build_auth_response(user, f"{oauth_user['provider'].title()} login successful.", response)
 
     # 2. Disabled account
     if not user.is_active:
@@ -97,4 +97,4 @@ def oauth_login(oauth_user: dict, db: Session):
         oauth_user["provider"].title(), user.id, email
     )
 
-    return build_auth_response(user, f"{oauth_user['provider'].title()} login successful.")
+    return build_auth_response(user, f"{oauth_user['provider'].title()} login successful.",response)
