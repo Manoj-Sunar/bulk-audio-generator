@@ -18,7 +18,7 @@ def build_auth_response(
         {
             "id": user.id,
             "email": user.email,
-            "provider": user.provider,
+          
         }
     )
 
@@ -26,7 +26,7 @@ def build_auth_response(
         {
             "id": user.id,
             "email": user.email,
-            "provider": user.provider,
+            
         }
     )
 
@@ -43,7 +43,7 @@ def build_auth_response(
                 "name": user.name,
                 "email": user.email,
                 "avatar": user.avatar,
-                "provider": user.provider,
+               
                 "email_verified": user.email_verified,
                 "is_active": user.is_active,
                 "created_at": user.created_at,

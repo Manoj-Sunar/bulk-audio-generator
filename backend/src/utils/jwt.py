@@ -17,8 +17,8 @@ def create_access_token(data: dict):
 
     return encode(
         payload,
-        settings.SECREAT_KEY,
-        algorithm=settings.ALGORITHEM,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
     )
 
 
@@ -35,14 +35,14 @@ def create_refresh_token(data: dict):
 
     return encode(
         payload,
-        settings.SECREAT_KEY,
-        algorithm=settings.ALGORITHEM,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
     )
 
 
 def decode_token(token: str):
     return decode(
         token,
-        settings.SECREAT_KEY,
-        algorithms=[settings.ALGORITHEM],
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
     )
