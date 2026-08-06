@@ -188,8 +188,12 @@ def GoogleLogin(body: GoogleLoginSchema, db: Session,response: Response):
 
 async def GithubLogin(body: GithubLoginSchema, db: Session, response: Response):
     try:
+        
+        print(body.code)
         # 1. Use the service to exchange the 'code' for an access token
         access_token = await github_service.get_access_token(body.code)
+        
+        
         
         # 2. Verify the token and get user info
         github_user = await github_service.verify_token(access_token)

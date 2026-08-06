@@ -67,12 +67,16 @@ export function useGoogleLogin() {
 }
 
 
+
+
 export function useGithubLogin() {
   const { setUser, setIsLoading } = useAuth();
 
   return useMutation({
-    mutationFn: async (accessToken: string) => {
-      const response = await apiClient.post('/user/github', { access_token: accessToken });
+    // CHANGE 1: Rename 'accessToken' to 'code' to match your page.tsx
+    mutationFn: async (code: string) => { 
+      // CHANGE 2: Send { code } instead of { access_token: ... }
+      const response = await apiClient.post('/user/github', { code }); 
       return response.data.data.user;
     },
     onMutate: () => setIsLoading(true),
@@ -83,6 +87,9 @@ export function useGithubLogin() {
     onError: () => setIsLoading(false),
   });
 }
+
+
+
 
 
 export function useLogout() {

@@ -11,11 +11,15 @@ import { NAV_LINKS } from "@/app/lib/constants";
 import { Heading } from "../typography/Heading";
 import { cn } from "@/app/lib/helpers";
 import { Button } from "../ui/Button";
+import { useAuth } from "@/app/lib/auth/context";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  const { user } = useAuth();
+ console.log(user);
 
   // Handle scroll effect
   useEffect(() => {
@@ -188,23 +192,38 @@ export function Navbar() {
 
         {/* Right side actions */}
         <div className="flex items-center gap-3">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button className="px-6 rounded-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
-
-              <Link
-
-                href={"/bulk-audio/bulk-audio-login"}
-
-
+          {user ? (
+            // Logged in: user avatar (with dropdown for logout)
+            <div className="relative group">
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary ring-2 ring-primary/20 transition hover:ring-primary/40"
+                onClick={() => {/* toggle dropdown */ }} // वा Link to profile
               >
-                Get Started
-              </Link>
-
-            </Button>
-          </motion.div>
+               
+                  <span className="text-sm font-semibold uppercase">
+                    {user.name?.charAt(0) || user.email?.charAt(0)}
+                  </span>
+              
+              </button>
+              {/* Dropdown (optional) */}
+              <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-gray-50">Profile</Link>
+                <button
+                  onClick={() => {/* logout logic */ }}
+                  className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Not logged in: show Get Started button
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button className="px-6 rounded-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
+                <Link href="/bulk-audio/bulk-audio-login">Get Started</Link>
+              </Button>
+            </motion.div>
+          )}
 
           {/* Mobile Menu Button */}
           <motion.button

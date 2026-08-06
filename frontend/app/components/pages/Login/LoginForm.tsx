@@ -12,6 +12,7 @@ import { Input } from "../../Inputs/InputText";
 import { Button } from "../../ui/Button";
 import { Label } from "../../typography/Label";
 import { useGithubLogin, useGoogleLogin, useLogin } from "@/app/lib/auth/hooks";
+import { useAuth } from "@/app/lib/auth/context";
 
 
 export const LoginForm = () => {
@@ -27,23 +28,11 @@ export const LoginForm = () => {
   const { mutate: login, isPending: loginPending } = useLogin();
   const { mutate: googleLogin, isPending: googlePending } = useGoogleLogin();
   const { mutate: githubLogin, isPending: githubPending } = useGithubLogin();
+  const{setUser}=useAuth();
 
   const isPending = loginPending || googlePending || githubPending;
 
-  // Handle GitHub OAuth redirect – extract code from URL
-  useEffect(() => {
-    const code = searchParams.get("code");
-    if (code) {
-      // Remove code from URL without page reload
-      window.history.replaceState({}, "", window.location.pathname);
-      githubLogin(code, {
-        onSuccess: () => router.push("/bulk-audio/generator"),
-        onError: () => {
-          // Show error toast
-        },
-      });
-    }
-  }, [searchParams, githubLogin, router]);
+  
 
   const handleChange =
     (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +66,8 @@ export const LoginForm = () => {
   };
 
   return (
+
+  
     <div className="space-y-6">
       {/* Local Login Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -168,7 +159,11 @@ export const LoginForm = () => {
             const token = credentialResponse.credential;
             if (token) {
               googleLogin(token, {
-                onSuccess: () => router.push("/dashboard"),
+                onSuccess: (data) => {
+                  setUser(data)
+                 
+                  router.push("/");
+                },
                 onError: () => {
                   // Show error
                 },
@@ -178,7 +173,7 @@ export const LoginForm = () => {
           onError={() => {
             console.error("Google login failed");
           }}
-          useOneTap
+         
           shape="rectangular"
           size="large"
           width="300"

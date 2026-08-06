@@ -131,6 +131,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+       data-scroll-behavior="smooth" 
       className={`${poppins.variable} ${poppins.className} h-full scroll-smooth`}
       suppressHydrationWarning
     >

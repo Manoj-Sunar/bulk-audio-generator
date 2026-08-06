@@ -3,10 +3,8 @@
 import { Card, CardContent } from "../../ui/Card";
 import { LoginFooter } from "./LoginFooter";
 import { LoginForm } from "./LoginForm";
-
-
 import { LoginHeader } from "./LoginHeader";
-import { SocialLogin } from "./SocialLogin";
+
 
 export const LoginCard = () => {
     return (
