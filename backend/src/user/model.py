@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+# src/user/model.py
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, Text
 from sqlalchemy.orm import relationship
 from src.utils.db import Base
 
@@ -9,11 +10,15 @@ class User(Base):
     name = Column(String(150), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
     avatar = Column(String(500), nullable=True)
-    password = Column(String(255), nullable=True)          # hashed password for local auth
+    password = Column(String(255), nullable=True)
     email_verified = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, nullable=False, default=True)
+    csrf_token = Column(String(64), nullable=True)  # CSRF protection
+    failed_login_attempts = Column(Integer, default=0)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
     audio_generations = relationship("AudioGeneration", back_populates="user")
-    # Relationship to providers
     providers = relationship(
         "UserProvider",
         back_populates="user",

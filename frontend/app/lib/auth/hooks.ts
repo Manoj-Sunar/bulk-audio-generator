@@ -1,107 +1,114 @@
 // src/lib/auth/hooks.ts
-import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '../axios/client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useAuth } from './context';
-
-type RegisterInput = {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
-
-
-
+import { extractErrorMessage } from '../axios/client';
 
 export function useRegister() {
-  const { setUser, setIsLoading } = useAuth();
+  const { register, setUser } = useAuth();
+  const router = useRouter();
 
   return useMutation({
-    mutationFn: async (data: RegisterInput) => {
-      const response = await apiClient.post('/user/register', data);
-      return response.data.data; // { id, name, email, ... }
+    mutationFn: register,
+    onSuccess: (user) => {
+      setUser(user);
+      toast.success('Registration successful!');
+      router.push('/bulk-audio/generator');
     },
-    onMutate: () => setIsLoading(true),
-    onSuccess: (userData) => {
-      setUser(userData);
-      setIsLoading(false);
+    onError: (error: any) => {
+      const message = extractErrorMessage(error);
+      toast.error(message);
     },
-    onError: () => setIsLoading(false),
   });
 }
-
 
 export function useLogin() {
-  const { setUser, setIsLoading } = useAuth();
+  const { login, setUser } = useAuth();
+  const router = useRouter();
 
   return useMutation({
-    mutationFn: async (data: { email: string; password: string }) => {
-      const response = await apiClient.post('/user/login', data);
-      return response.data.data.user;
-    },
-    onMutate: () => setIsLoading(true),
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      login(email, password),
     onSuccess: (user) => {
       setUser(user);
-      setIsLoading(false);
+      toast.success('Welcome back!');
+      router.push('/bulk-audio/generator');
     },
-    onError: () => setIsLoading(false),
+    onError: (error: any) => {
+      const message = extractErrorMessage(error);
+      toast.error(message);
+    },
   });
 }
-
-
-export function useGoogleLogin() {
-  const { setUser, setIsLoading } = useAuth();
-
-  return useMutation({
-    mutationFn: async (token: string) => {
-      const response = await apiClient.post('/user/google', { token });
-      return response.data.data.user;
-    },
-    onMutate: () => setIsLoading(true),
-    onSuccess: (user) => {
-      setUser(user);
-      setIsLoading(false);
-    },
-    onError: () => setIsLoading(false),
-  });
-}
-
-
-
-
-export function useGithubLogin() {
-  const { setUser, setIsLoading } = useAuth();
-
-  return useMutation({
-    // CHANGE 1: Rename 'accessToken' to 'code' to match your page.tsx
-    mutationFn: async (code: string) => { 
-      // CHANGE 2: Send { code } instead of { access_token: ... }
-      const response = await apiClient.post('/user/github', { code }); 
-      return response.data.data.user;
-    },
-    onMutate: () => setIsLoading(true),
-    onSuccess: (user) => {
-      setUser(user);
-      setIsLoading(false);
-    },
-    onError: () => setIsLoading(false),
-  });
-}
-
-
-
-
 
 export function useLogout() {
-  const { setUser } = useAuth();
+  const { logout, setUser } = useAuth();
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      // Call a logout endpoint if exists; otherwise clear cookies locally
-      // Since cookies are HttpOnly, we need a backend endpoint to clear them.
-      // For now, we assume you have a /logout endpoint.
-      await apiClient.post('/user/logout');
+    mutationFn: logout,
+    onSuccess: () => {
+      setUser(null);
+      queryClient.clear();
+      toast.success('Logged out');
+      router.push('/bulk-audio/bulk-audio-login');
     },
-    onSuccess: () => setUser(null),
+    onError: (error: any) => {
+      const message = extractErrorMessage(error);
+      toast.error(message);
+    },
+  });
+}
+
+export function useGoogleLogin() {
+  const { googleLogin, setUser } = useAuth();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (code: string) => googleLogin(code),
+    onSuccess: (user) => {
+      setUser(user);
+      toast.success('Google login successful!');
+      router.push('/bulk-audio/generator');
+    },
+    onError: (error: any) => {
+      const message = extractErrorMessage(error);
+      toast.error(message);
+    },
+  });
+}
+
+export function useGithubLogin() {
+  const { githubLogin, setUser } = useAuth();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (code: string) => githubLogin(code),
+    onSuccess: (user) => {
+      setUser(user);
+      toast.success('GitHub login successful!');
+      router.push('/bulk-audio/generator');
+    },
+    onError: (error: any) => {
+      const message = extractErrorMessage(error);
+      toast.error(message);
+    },
+  });
+}
+
+export function useRefreshToken() {
+  const { refreshToken } = useAuth();
+
+  return useMutation({
+    mutationFn: refreshToken,
+    onSuccess: () => {
+      toast.success('Token refreshed successfully');
+    },
+    onError: (error: any) => {
+      const message = extractErrorMessage(error);
+      toast.error(message);
+    },
   });
 }

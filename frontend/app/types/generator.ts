@@ -1,28 +1,26 @@
-export interface GeneratedAudio {
+// src/app/types/generator.ts
+export type GenerationStatus = 'idle' | 'generating' | 'completed' | 'failed';
+
+export type FileStatus = 'success' | 'processing' | 'failed';
+
+export interface GeneratedAudioFile {
   id: string;
-  script: string;
-  blob: Blob;
-  filename: string;
+  fileName: string;
+  status: FileStatus;
+  audioUrl?: string;
+  blob?: Blob;
+  index: number;
+  created_at?: string;
 }
 
-export interface FailedAudio {
-  id: string;
-  script: string;
-  reason: string;
+export interface GenerationLog {
+  id: number;
+  time: string;
+  message: string;
+  status: 'success' | 'processing' | 'error';
 }
 
-export interface VoiceGenerationState {
-  generating: boolean;
-
-  progress: number;
-
-  completed: number;
-
+export interface GeneratorStats {
   total: number;
-
-  currentScript: number;
-
-  failed: FailedAudio[];
-
-  generated: GeneratedAudio[];
+  completed: number;
 }

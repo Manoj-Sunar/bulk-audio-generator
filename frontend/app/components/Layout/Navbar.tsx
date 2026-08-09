@@ -12,14 +12,15 @@ import { Heading } from "../typography/Heading";
 import { cn } from "@/app/lib/helpers";
 import { Button } from "../ui/Button";
 import { useAuth } from "@/app/lib/auth/context";
+import { useLogout } from "@/app/lib/auth/hooks";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-
+  const { mutate: logout } = useLogout();
   const { user } = useAuth();
- console.log(user);
+
 
   // Handle scroll effect
   useEffect(() => {
@@ -65,6 +66,8 @@ export function Navbar() {
       }
     })
   };
+
+
 
   return (
     <motion.header
@@ -209,7 +212,7 @@ export function Navbar() {
               <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                 <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-gray-50">Profile</Link>
                 <button
-                  onClick={() => {/* logout logic */ }}
+                  onClick={() => { logout(); }}
                   className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
                 >
                   Logout
