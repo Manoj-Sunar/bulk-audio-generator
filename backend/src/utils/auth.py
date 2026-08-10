@@ -1,7 +1,7 @@
 # src/utils/auth.py
 from fastapi import HTTPException, status, Request, Depends
 from sqlalchemy.orm import Session
-from src.utils.jwt import decode_token, validate_token_type, is_token_expired
+from src.utils.jwt import decode_token, validate_token_type
 from src.user.model import User
 from src.utils.db import getDb
 import logging
@@ -53,16 +53,11 @@ async def get_current_user(request: Request, db: Session = Depends(getDb)):
         )
 
 def require_csrf_token(request: Request):
-    """Validate CSRF token - """
+    """Strict CSRF validation. Fails if token is missing or mismatched."""
     csrf_token = request.cookies.get("csrf_token")
     csrf_header = request.headers.get("X-CSRF-Token")
     
-  
-    if not csrf_token:
-        return True
-    
-   
-    if not csrf_header or csrf_token != csrf_header:
+    if not csrf_token or not csrf_header or csrf_token != csrf_header:
         logger.warning(f"CSRF validation failed: cookie={csrf_token}, header={csrf_header}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

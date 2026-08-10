@@ -3,7 +3,7 @@ from fastapi import HTTPException, status, Response, Request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 import logging
-
+import httpx 
 
 from src.user.model import User
 from src.user.user_provider import UserProvider
@@ -147,24 +147,40 @@ def UserLogin(body: UserLoginSchema, db: Session, response: Response):
             detail="Login failed. Please try again.",
         )
 
+
+
 def GoogleLogin(body: GoogleLoginSchema, db: Session, response: Response):
-    """Authenticate with Google"""
+    """Authenticate with Google (Backend exchanges code)"""
     try:
-        google_user = google_service.verify_token(body.token)
+        # Exchange code for token
+        token_res = httpx.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": body.token,  # This is actually the authorization code now
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "redirect_uri": "http://localhost:3000/google/callback", # Use env var in prod
+                "grant_type": "authorization_code",
+            }
+        )
+        token_data = token_res.json()
+        if "id_token" not in token_data:
+            raise HTTPException(400, detail="Failed to get ID token from Google")
+        
+        google_user = google_service.verify_token(token_data["id_token"])
         if not google_user["email_verified"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Google email is not verified."
-            )
+            raise HTTPException(403, detail="Google email is not verified.")
+            
         return oauth_login(google_user, db, response)
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Google login error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Google authentication failed."
-        )
+        raise HTTPException(500, detail="Google authentication failed.")
+
+
+
+
 
 async def GithubLogin(body: GithubLoginSchema, db: Session, response: Response):
     """Authenticate with GitHub"""
@@ -187,57 +203,6 @@ async def GithubLogin(body: GithubLoginSchema, db: Session, response: Response):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="GitHub authentication failed."
-        )
-
-def RefreshToken(request: Request, db: Session):
-    """Refresh access token using refresh token cookie"""
-    try:
-        refresh_token = request.cookies.get("refresh_token")
-        if not refresh_token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token not found"
-            )
-        
-        # Validate refresh token
-        payload = validate_token_type(refresh_token, "refresh")
-        
-        # Check if token is expired
-        if is_token_expired(refresh_token):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token expired. Please login again."
-            )
-        
-        user_id = payload.get("id")
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user or not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found or disabled"
-            )
-        
-        # Generate new tokens
-        new_tokens = refresh_tokens(user.id, user.email)
-        
-        # Create response without body (tokens will be set as cookies)
-        return {
-            "success": True,
-            "message": "Tokens refreshed successfully"
-        }
-        
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Token refresh error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Token refresh failed"
         )
 
 def Logout(response: Response):
@@ -266,9 +231,8 @@ def GetMe(user: User, db: Session):
     
 
 
-
-
-def RefreshToken(request: Request, db: Session, response: Response):  # ✅ response थपियो
+# src/user/controllers.py (Excerpt - ONLY keep this RefreshToken)
+def RefreshToken(request: Request, db: Session, response: Response):
     """Refresh access token using refresh token cookie"""
     try:
         refresh_token = request.cookies.get("refresh_token")
@@ -295,8 +259,7 @@ def RefreshToken(request: Request, db: Session, response: Response):  # ✅ resp
         
         new_tokens = refresh_tokens(user.id, user.email)
         
-        # ✅ नयाँ cookies सेट गर्नुहोस्
-        from src.utils.settings import settings
+        # Set Secure Cookies
         response.set_cookie(
             key="access_token",
             value=new_tokens["access_token"],
@@ -316,7 +279,7 @@ def RefreshToken(request: Request, db: Session, response: Response):  # ✅ resp
             path="/",
         )
         
-        # ✅ नयाँ CSRF token बनाउनुहोस् र cookie मा सेट गर्नुहोस्
+        # Rotate CSRF token
         user.csrf_token = generate_csrf_token()
         db.commit()
         

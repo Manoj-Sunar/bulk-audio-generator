@@ -3,8 +3,8 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import JSZip from 'jszip';
 import { useAuth } from '@/app/lib/auth/context';
 import { useGenerateAndPlayAudio } from '@/app/lib/audio/hook';
 import { GeneratedAudioFile, GenerationLog } from '@/app/types/generator';
@@ -15,6 +15,7 @@ import { GeneratedFilesTable } from './GeneratedFilesTable';
 import { Background } from '../../ui/Background';
 import { fadeInLeft, fadeInRight, staggerContainer } from '@/app/lib/animations';
 import { extractErrorMessage } from '@/app/lib/axios/client';
+import { useRouter } from 'next/navigation';
 
 const initialLogs: GenerationLog[] = [
   { id: 0, time: new Date().toLocaleTimeString(), message: 'System ready. Waiting for scripts...', status: 'success' },
@@ -34,7 +35,7 @@ function dataURLtoBlob(dataURL: string): Blob {
 
 export const Generator = () => {
   const { user, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [apiKey, setApiKey] = useState('');
   const [scripts, setScripts] = useState('');
@@ -44,16 +45,8 @@ export const Generator = () => {
   const [files, setFiles] = useState<GeneratedAudioFile[]>([]);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
+ const router = useRouter();
   const { mutate: generateAudio, isPending } = useGenerateAndPlayAudio();
-
-  // Auth check
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/bulk-audio/bulk-audio-login');
-    }
-  }, [user, authLoading, router]);
 
   // Stats
   const stats = useMemo(() => {
@@ -73,24 +66,20 @@ export const Generator = () => {
       toast.error('No valid scripts found');
       return;
     }
-
     if (chunks.length > 100) {
       toast.error('Too many scripts (max 100)');
       return;
     }
-
     if (!apiKey.trim()) {
       toast.error('Please enter your ElevenLabs API key');
       return;
     }
 
-    // Reset state
     setStatus('generating');
     setLogs([]);
     setFiles([]);
     setErrorMessage(null);
 
-    // Generate
     generateAudio(
       {
         script: scripts,
@@ -113,7 +102,6 @@ export const Generator = () => {
             setFiles(audioFiles);
             setStatus('completed');
             
-            // Add logs
             const newLogs = audioFiles.map((file, index) => ({
               id: Date.now() + index,
               time: new Date().toLocaleTimeString(),
@@ -121,7 +109,6 @@ export const Generator = () => {
               status: 'success' as const,
             }));
             setLogs(prev => [...prev, ...newLogs]);
-            
             toast.success(`Generated ${audioFiles.length} audio files`);
           } else {
             setStatus('failed');
@@ -142,6 +129,8 @@ export const Generator = () => {
     setStatus('failed');
     toast.info('Generation cancelled');
   }, []);
+
+
 
   const handlePlay = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
@@ -168,6 +157,8 @@ export const Generator = () => {
     };
   }, [currentlyPlaying]);
 
+
+
   const handleDownload = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
     const link = document.createElement('a');
@@ -178,25 +169,88 @@ export const Generator = () => {
     link.remove();
   }, []);
 
+
+
   const handleDelete = useCallback((fileId: string) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
     toast.info('File removed');
   }, []);
 
-  const handleDownloadZip = useCallback(() => {
+  const handleDownloadZip = useCallback(async () => {
     const successFiles = files.filter(f => f.status === 'success');
     if (successFiles.length === 0) {
       toast.error('No completed files to download');
       return;
     }
-    toast.info(`Downloading ${successFiles.length} files...`);
-    // Implement zip download logic
+
+    try {
+      toast.info(`Zipping ${successFiles.length} files...`);
+      const zip = new JSZip();
+      
+      for (const file of successFiles) {
+        if (file.blob) {
+          zip.file(file.fileName, file.blob);
+        } else if (file.audioUrl) {
+          const res = await fetch(file.audioUrl);
+          const blob = await res.blob();
+          zip.file(file.fileName, blob);
+        }
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `bulk-audio-${new Date().toISOString().slice(0,10)}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success('ZIP downloaded successfully!');
+    } catch (error) {
+      toast.error('Failed to create ZIP file');
+      console.error(error);
+    }
   }, [files]);
 
+
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+  }, []);
+
+
+
+// ✅ Hardened Auth Check
+useEffect(() => {
+  // Only redirect if the user is explicitly null (not just loading)
+  if (!authLoading && !user) {
+    router.push('/bulk-audio/bulk-audio-login');
+  }
+}, [user, authLoading, router]);
+
+
+  // ✅ Beautiful Skeleton (Instant fallback)
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-12 gap-8 animate-pulse">
+          <div className="xl:col-span-5 space-y-6">
+            <div className="h-64 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
+            <div className="h-96 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
+          </div>
+          <div className="xl:col-span-7 space-y-8">
+            <div className="h-16 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
+            <div className="h-[400px] bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
+            <div className="h-64 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -205,46 +259,47 @@ export const Generator = () => {
     <motion.main
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.4 }}
       className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-primary/5"
     >
       <Background />
 
       {/* Error Display */}
-      {errorMessage && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-2xl w-full"
-        >
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {errorMessage}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-2xl w-full"
+          >
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg backdrop-blur-sm">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Error</h3>
+                  <div className="mt-2 text-sm text-red-700">{errorMessage}</div>
+                </div>
+                <div className="ml-auto pl-3">
+                  <button
+                    onClick={() => setErrorMessage(null)}
+                    className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100"
+                  >
+                    <span className="sr-only">Dismiss</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
                 </div>
               </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setErrorMessage(null)}
-                  className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100"
-                >
-                  <span className="sr-only">Dismiss</span>
-                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.section
         variants={staggerContainer}
@@ -258,7 +313,6 @@ export const Generator = () => {
             className="space-y-6 xl:sticky xl:top-6 xl:col-span-5 xl:self-start"
           >
             <ApiKeyCard value={apiKey} onChange={setApiKey} />
-            
             <LiveProgress
               total={stats.total}
               completed={stats.completed}
@@ -280,7 +334,10 @@ export const Generator = () => {
                 className="w-full rounded-lg border-gray-200 p-2 outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="pNInz6obpgDQGcFmaJgB">Adam (Default)</option>
-             
+                <option value="21m00Tcm4TlvDq8ikWAM">Rachel</option>
+                <option value="AZnzlk1XvdvUeBnXmlld">Domi</option>
+                <option value="EXAVITQu4vrIxn12LM3J">Bella</option>
+                <option value="yoZ06aMxZJJ28mfd3POQ">Sam</option>
               </select>
             </div>
 

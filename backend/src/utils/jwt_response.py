@@ -25,7 +25,6 @@ def build_auth_response(
             samesite="lax",
             max_age=900,  # 15 minutes
             path="/",
-            domain=None,  # Allow all subdomains
         )
         # Refresh token - long lived
         response.set_cookie(
@@ -36,7 +35,6 @@ def build_auth_response(
             samesite="lax",
             max_age=604800,  # 7 days
             path="/",
-            domain=None,
         )
         # CSRF token - not HTTP-only, sent to client
         response.set_cookie(
@@ -46,7 +44,6 @@ def build_auth_response(
             samesite="lax",
             max_age=900,
             path="/",
-            domain=None,
         )
 
     # Serialize user data (exclude sensitive fields)

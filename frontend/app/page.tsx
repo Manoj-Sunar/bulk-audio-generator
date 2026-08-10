@@ -18,14 +18,10 @@ const softwareJsonLd = {
 };
 
 export default async function Home() {
-  // ✅ Server-side authentication check
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('access_token');
 
-  if (accessToken) {
-    // ✅ यदि access_token छ भने, Generator मा पठाउनुहोस्
-    redirect('/bulk-audio/generator');
-  }
+  
+
+
 
   // ✅ यदि access_token छैन भने, Docs (होम पेज) देखाउनुहोस्
   return (

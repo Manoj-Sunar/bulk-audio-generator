@@ -43,23 +43,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializedRef = useRef(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize auth state
-  useEffect(() => {
+useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
+
+    const safetyTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('Auth loading timeout reached - forcing UI to render');
+        setIsLoading(false);
+      }
+    }, 5000);
 
     const initAuth = async () => {
       try {
         const response = await apiClient.get('/user/me');
         setUser(response.data);
       } catch (error) {
-        console.log('Auth init - user not authenticated');
-        setUser(null);
+        // Try refresh once
+        try {
+          await apiClient.post('/user/refresh');
+          const retry = await apiClient.get('/user/me');
+          setUser(retry.data);
+        } catch (refreshError) {
+          setUser(null); // ✅ Explicitly set to null so Navbar updates
+        }
       } finally {
+        clearTimeout(safetyTimeout);
         setIsLoading(false);
       }
     };
+
     initAuth();
+
+    return () => {
+      clearTimeout(safetyTimeout);
+    };
   }, []);
 
   // Auto refresh token every 10 minutes
@@ -70,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshTimerRef.current) {
         clearInterval(refreshTimerRef.current);
       }
-      
+
       refreshTimerRef.current = setInterval(() => {
         console.log('Auto-refreshing token...');
         refreshToken();
@@ -136,14 +154,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
 
-   useEffect(() => {
+  useEffect(() => {
     if (!user) return;
 
     const setupRefreshTimer = () => {
       if (refreshTimerRef.current) {
         clearInterval(refreshTimerRef.current);
       }
-      
+
       refreshTimerRef.current = setInterval(() => {
         console.log('Auto-refreshing token...');
         refreshToken();
@@ -160,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
 
-  
+
   // ... बाँकी फङ्क्सनहरू (login, register, googleLogin, githubLogin, logout) पहिले जस्तै छन्
 
   const refreshToken = useCallback(async (): Promise<void> => {
@@ -169,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // ✅ यहाँ response interceptor ले automatically cookie update गर्छ
       await apiClient.post('/user/refresh');
-      
+
       // ✅ Re-fetch user data
       const response = await apiClient.get('/user/me');
       setUser(response.data);
