@@ -16,9 +16,10 @@ import { Background } from '../../ui/Background';
 import { fadeInLeft, fadeInRight, staggerContainer } from '@/app/lib/animations';
 import { extractErrorMessage } from '@/app/lib/axios/client';
 import { useRouter } from 'next/navigation';
+import { Sparkles, Zap, Clock, Layers } from 'lucide-react';
 
 const initialLogs: GenerationLog[] = [
-  { id: 0, time: new Date().toLocaleTimeString(), message: 'System ready. Waiting for scripts...', status: 'success' },
+  { id: 0, time: new Date().toLocaleTimeString(), message: '🚀 System ready. Waiting for scripts...', status: 'success' },
 ];
 
 function dataURLtoBlob(dataURL: string): Blob {
@@ -36,6 +37,7 @@ function dataURLtoBlob(dataURL: string): Blob {
 export const Generator = () => {
   const { user, isLoading: authLoading } = useAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const router = useRouter();
 
   const [apiKey, setApiKey] = useState('');
   const [scripts, setScripts] = useState('');
@@ -45,16 +47,18 @@ export const Generator = () => {
   const [files, setFiles] = useState<GeneratedAudioFile[]>([]);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
- const router = useRouter();
+
   const { mutate: generateAudio, isPending } = useGenerateAndPlayAudio();
 
-  // Stats
   const stats = useMemo(() => {
     const completed = files.filter(f => f.status === 'success').length;
     return { total: files.length, completed };
   }, [files]);
 
-  // Handlers
+
+
+
+  
   const handleGenerate = useCallback(() => {
     if (!scripts.trim()) {
       toast.error('Please enter some scripts');
@@ -105,11 +109,11 @@ export const Generator = () => {
             const newLogs = audioFiles.map((file, index) => ({
               id: Date.now() + index,
               time: new Date().toLocaleTimeString(),
-              message: `Generated: ${file.fileName}`,
+              message: `✅ Generated: ${file.fileName}`,
               status: 'success' as const,
             }));
             setLogs(prev => [...prev, ...newLogs]);
-            toast.success(`Generated ${audioFiles.length} audio files`);
+            toast.success(`✨ Generated ${audioFiles.length} audio files`);
           } else {
             setStatus('failed');
             toast.error('No audio segments were generated');
@@ -129,8 +133,6 @@ export const Generator = () => {
     setStatus('failed');
     toast.info('Generation cancelled');
   }, []);
-
-
 
   const handlePlay = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
@@ -157,8 +159,6 @@ export const Generator = () => {
     };
   }, [currentlyPlaying]);
 
-
-
   const handleDownload = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
     const link = document.createElement('a');
@@ -169,11 +169,9 @@ export const Generator = () => {
     link.remove();
   }, []);
 
-
-
-  const handleDelete = useCallback((fileId: string) => {
-    setFiles(prev => prev.filter(f => f.id !== fileId));
-    toast.info('File removed');
+  const handleDelete = useCallback((file: GeneratedAudioFile) => {
+    setFiles(prev => prev.filter(f => f.id !== file.id));
+    toast.info(`🗑️ Removed: ${file.fileName}`);
   }, []);
 
   const handleDownloadZip = useCallback(async () => {
@@ -184,7 +182,7 @@ export const Generator = () => {
     }
 
     try {
-      toast.info(`Zipping ${successFiles.length} files...`);
+      toast.info(`📦 Zipping ${successFiles.length} files...`);
       const zip = new JSZip();
       
       for (const file of successFiles) {
@@ -206,16 +204,13 @@ export const Generator = () => {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      toast.success('ZIP downloaded successfully!');
+      toast.success('📥 ZIP downloaded successfully!');
     } catch (error) {
       toast.error('Failed to create ZIP file');
       console.error(error);
     }
   }, [files]);
 
-
-
-  // Cleanup audio on unmount
   useEffect(() => {
     return () => {
       if (audioRef.current) {
@@ -225,30 +220,24 @@ export const Generator = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/bulk-audio/bulk-audio-login');
+    }
+  }, [user, authLoading, router]);
 
-
-// ✅ Hardened Auth Check
-useEffect(() => {
-  // Only redirect if the user is explicitly null (not just loading)
-  if (!authLoading && !user) {
-    router.push('/bulk-audio/bulk-audio-login');
-  }
-}, [user, authLoading, router]);
-
-
-  // ✅ Beautiful Skeleton (Instant fallback)
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-12 gap-8 animate-pulse">
           <div className="xl:col-span-5 space-y-6">
-            <div className="h-64 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
-            <div className="h-96 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
+            <div className="h-64 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
+            <div className="h-96 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
           </div>
           <div className="xl:col-span-7 space-y-8">
-            <div className="h-16 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
-            <div className="h-[400px] bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
-            <div className="h-64 bg-gray-200/50 rounded-2xl border border-gray-100 shadow-lg"></div>
+            <div className="h-16 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
+            <div className="h-[400px] bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
+            <div className="h-64 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
           </div>
         </div>
       </div>
@@ -259,55 +248,99 @@ useEffect(() => {
     <motion.main
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-primary/5"
+      transition={{ duration: 0.6 }}
+      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
     >
       <Background />
 
-      {/* Error Display */}
+      {/* Enhanced Error Display */}
       <AnimatePresence>
         {errorMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-2xl w-full"
+            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+            className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 max-w-2xl w-full px-4"
           >
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg backdrop-blur-sm">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <div className="bg-white/95 backdrop-blur-xl border border-red-200/80 rounded-2xl p-5 shadow-2xl shadow-red-500/10">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error</h3>
-                  <div className="mt-2 text-sm text-red-700">{errorMessage}</div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-red-800">Generation Failed</h3>
+                  <p className="mt-1 text-sm text-red-700 leading-relaxed">{errorMessage}</p>
                 </div>
-                <div className="ml-auto pl-3">
-                  <button
-                    onClick={() => setErrorMessage(null)}
-                    className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100"
-                  >
-                    <span className="sr-only">Dismiss</span>
-                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setErrorMessage(null)}
+                  className="flex-shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Hero Section */}
+      <section className="relative z-10 px-6 pt-12 pb-8 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50/80 backdrop-blur-sm border border-indigo-200/50 text-indigo-700 text-sm font-medium mb-6">
+            <Sparkles className="w-4 h-4" />
+            <span>ElevenLabs API Powered</span>
+          </div>
+          
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
+            Generate
+            <span className="block md:inline bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent md:ml-3">
+              Bulk AI Voices
+            </span>
+          </h1>
+          
+          <p className="mt-6 max-w-2xl mx-auto text-lg text-slate-600 leading-relaxed">
+            Convert hundreds of text scripts into natural-sounding AI voices in seconds.
+            Generate multiple audio files simultaneously and download everything as a ZIP archive.
+          </p>
+        </motion.div>
+
+        {/* Quick Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm"
+        >
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full border border-slate-200/50 shadow-sm">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span className="font-medium text-slate-700">Parallel Processing</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full border border-slate-200/50 shadow-sm">
+            <Layers className="w-4 h-4 text-indigo-500" />
+            <span className="font-medium text-slate-700">Up to 100 Scripts</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full border border-slate-200/50 shadow-sm">
+            <Clock className="w-4 h-4 text-emerald-500" />
+            <span className="font-medium text-slate-700">Instant Generation</span>
+          </div>
+        </motion.div>
+      </section>
+
       <motion.section
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="relative z-10 mx-auto max-w-8xl md:px-6 py-8 lg:px-8 lg:py-10"
+        className="relative z-10 mx-auto max-w-7xl px-4 pb-12 lg:px-6"
       >
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-12">
           <motion.aside
             variants={fadeInLeft}
             className="space-y-6 xl:sticky xl:top-6 xl:col-span-5 xl:self-start"
@@ -324,20 +357,23 @@ useEffect(() => {
 
           <motion.section
             variants={fadeInRight}
-            className="space-y-8 xl:col-span-7"
+            className="space-y-6 xl:col-span-7"
           >
-            <div className="p-4 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-xl shadow-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Voice Profile</label>
+            {/* Voice Selector - Enhanced */}
+            <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/30 p-5 transition-all hover:shadow-xl hover:shadow-indigo-200/20">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                🎤 Voice Profile
+              </label>
               <select
                 value={voiceId}
                 onChange={(e) => setVoiceId(e.target.value)}
-                className="w-full rounded-lg border-gray-200 p-2 outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full rounded-xl border-slate-200/80 bg-white/50 px-4 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all duration-200"
               >
-                <option value="pNInz6obpgDQGcFmaJgB">Adam (Default)</option>
-                <option value="21m00Tcm4TlvDq8ikWAM">Rachel</option>
-                <option value="AZnzlk1XvdvUeBnXmlld">Domi</option>
-                <option value="EXAVITQu4vrIxn12LM3J">Bella</option>
-                <option value="yoZ06aMxZJJ28mfd3POQ">Sam</option>
+                <option value="pNInz6obpgDQGcFmaJgB">🎙️ Adam (Default)</option>
+                <option value="21m00Tcm4TlvDq8ikWAM">🎙️ Rachel</option>
+                <option value="AZnzlk1XvdvUeBnXmlld">🎙️ Domi</option>
+                <option value="EXAVITQu4vrIxn12LM3J">🎙️ Bella</option>
+                <option value="yoZ06aMxZJJ28mfd3POQ">🎙️ Sam</option>
               </select>
             </div>
 

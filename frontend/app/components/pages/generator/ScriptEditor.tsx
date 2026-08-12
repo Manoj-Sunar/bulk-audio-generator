@@ -11,6 +11,7 @@ import {
   Sparkles,
   Timer,
   Loader2,
+  Send,
 } from "lucide-react";
 
 import { Card, CardContent } from "../../ui/Card";
@@ -79,130 +80,141 @@ export const ScriptEditorCard = ({
       variants={fadeInUp}
       initial="hidden"
       animate="visible"
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.5 }}
     >
-      <Card className="rounded-xl border-gray-100 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
-        <CardContent className="space-y-8 p-8">
+      <Card className="group overflow-hidden rounded-2xl border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-lg shadow-slate-200/30 hover:shadow-xl hover:shadow-indigo-200/20 transition-all duration-500">
+        {/* Top gradient accent */}
+        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <CardContent className="space-y-6 py-6 px-6">
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>
-              <Heading as="h2" size="xl" weight="bold">
-                Bulk Script Editor
+              <Heading as="h2" size="lg" weight="semibold" className="text-slate-800">
+                📝 Script Editor
               </Heading>
-              <Paragraph className="mt-2 text-on-surface-variant">
-                Paste multiple scripts below. Separate every script with one blank line.
+              <Paragraph className="mt-1 text-sm text-slate-500">
+                Paste multiple scripts. Separate each with a blank line.
               </Paragraph>
             </div>
-            <motion.div
-              className="rounded-2xl bg-primary-fixed p-3 text-primary"
-              whileHover={{ rotate: 15, scale: 1.1 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 text-indigo-600 group-hover:scale-110 transition-transform duration-300">
               <FileText size={24} />
-            </motion.div>
+            </div>
           </div>
 
-          {/* Statistics */}
+          {/* Statistics - Enhanced */}
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="grid gap-4 md:grid-cols-4"
+            className="grid grid-cols-2 md:grid-cols-4 gap-3"
           >
-            <StatCard icon={<FileText size={18} />} title="Scripts" value={stats.scripts} />
-            <StatCard icon={<Hash size={18} />} title="Words" value={stats.words} />
-            <StatCard icon={<Clipboard size={18} />} title="Characters" value={stats.characters} />
-            <StatCard icon={<Timer size={18} />} title="Read Time" value={`${stats.estimatedMinutes} min`} />
+            {[
+              { icon: FileText, label: "Scripts", value: stats.scripts, color: "indigo" },
+              { icon: Hash, label: "Words", value: stats.words, color: "purple" },
+              { icon: Clipboard, label: "Characters", value: stats.characters, color: "pink" },
+              { icon: Timer, label: "Read Time", value: `${stats.estimatedMinutes}m`, color: "emerald" },
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                variants={scaleUp}
+                whileHover={{ y: -2, scale: 1.02 }}
+                className={`flex items-center gap-3 rounded-xl bg-gradient-to-br from-${stat.color}-50/60 to-${stat.color}-100/30 border border-${stat.color}-100/50 px-3.5 py-3 transition-all duration-300`}
+              >
+                <div className={`p-2 rounded-lg bg-${stat.color}-100/60 text-${stat.color}-600`}>
+                  <stat.icon size={16} />
+                </div>
+                <div>
+                  <Paragraph size="xs" className="text-slate-500 leading-none">
+                    {stat.label}
+                  </Paragraph>
+                  <Heading as="h6" size="sm" weight="bold" className="text-slate-700 mt-1">
+                    {stat.value}
+                  </Heading>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
 
           {/* Editor */}
-          <motion.div whileFocus={{ scale: 1.005 }} transition={{ duration: 0.2 }}>
+          <div className="relative">
             <Textarea
-              label="Scripts"
+              label=""
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              rows={12}
-              placeholder={`Hello everyone.
+              rows={10}
+              placeholder={`Write or paste your scripts here...
 
- Welcome to Bulk Audio Generator.
+Example:
+Hello everyone. Welcome to Bulk Audio Generator.
 
-This is another script.
+This is another script. It will create a separate audio file.
 
 Every blank line creates a separate audio file.`}
-             helperText="Separate each script with a blank line. Use double line breaks to separate scripts:  ↵ ↵"
-              className="transition-all duration-300 focus:ring-2 rounded-lg focus:ring-primary/20 w-full border border-gray-300 outline-none resize-none p-2"
+              helperText="Separate each script with a blank line (press Enter twice between scripts)"
+              className="w-full rounded-xl border-slate-200/80 bg-white/50 p-4 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all duration-200 outline-none resize-y min-h-[200px]"
             />
-          </motion.div>
+          </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-3">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <div className="flex flex-wrap gap-2.5">
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="outline"
-                leftIcon={<FolderOpen size={18} />}
+                leftIcon={<FolderOpen size={16} />}
                 onClick={() => inputRef.current?.click()}
                 size="sm"
+                className="rounded-xl border-slate-200/80 text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition-all duration-200"
               >
                 Import TXT
               </Button>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="outline"
-                leftIcon={<Clipboard size={18} />}
+                leftIcon={<Clipboard size={16} />}
                 onClick={copyScripts}
                 disabled={!value}
                 size="sm"
+                className="rounded-xl border-slate-200/80 text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition-all duration-200"
               >
-                Copy
+                Copy All
               </Button>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="outline"
-                leftIcon={<Eraser size={18} />}
+                leftIcon={<Eraser size={16} />}
                 onClick={clearScripts}
                 disabled={!value}
                 size="sm"
-                className="hover:border-red-500 hover:text-red-500"
+                className="rounded-xl border-slate-200/80 text-slate-600 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-200"
               >
                 Clear
               </Button>
             </motion.div>
           </div>
 
-          {/* Generate Button */}
+          {/* Generate Button - Enhanced */}
           <motion.div
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             transition={{ duration: 0.2 }}
+            className="relative"
           >
             <Button
               size="lg"
-              className="min-w-[220px] relative overflow-hidden w-full"
-              leftIcon={isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+              className="w-full relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/35 transition-all duration-300 text-base font-semibold py-4"
+              leftIcon={isGenerating ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
               onClick={onGenerate}
               disabled={!value || isGenerating}
             >
               {isGenerating ? (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  Generating...
-                </motion.span>
+                <span>Generating Audio Files...</span>
               ) : (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  Generate Audio
-                </motion.span>
+                <span>🚀 Generate Audio</span>
               )}
 
               {isGenerating && (
@@ -228,34 +240,3 @@ Every blank line creates a separate audio file.`}
     </motion.div>
   );
 };
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  title: string;
-  value: string | number;
-}
-
-const StatCard = ({ icon, title, value }: StatCardProps) => (
-  <motion.div
-    variants={scaleUp}
-    whileHover={{ scale: 1.05, y: -4 }}
-    transition={{ duration: 0.3 }}
-    className="flex items-center gap-3 rounded-xl border border-outline-variant bg-surface-container/50 px-4 py-3 transition-all duration-300 hover:border-primary/20 hover:shadow-md"
-  >
-    <motion.div
-      className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-fixed text-primary"
-      whileHover={{ rotate: 15 }}
-      transition={{ duration: 0.3 }}
-    >
-      {icon}
-    </motion.div>
-    <div className="min-w-0">
-      <Paragraph size="xs" className="leading-none text-on-surface-variant">
-        {title}
-      </Paragraph>
-      <Heading as="h6" size="sm" weight="bold" className="mt-1">
-        {value}
-      </Heading>
-    </div>
-  </motion.div>
-);

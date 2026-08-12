@@ -1,8 +1,18 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Loader2, XCircle, Square } from "lucide-react";
-import { useEffect, useState } from "react";
+import { 
+  CheckCircle2, 
+  Loader2, 
+  XCircle, 
+  Square, 
+  Activity,
+  Waves,
+  Gauge,
+  Zap,
+  Clock
+} from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "../../ui/Button";
 import { Card, CardContent } from "../../ui/Card";
 import { Heading } from "../../typography/Heading";
@@ -22,6 +32,8 @@ interface LiveProgressProps {
   running: boolean;
   logs: ProgressLog[];
   onCancel?: () => void;
+  estimatedTimePerFile?: number; // seconds
+  currentFile?: string;
 }
 
 export const LiveProgress = ({
@@ -30,100 +42,345 @@ export const LiveProgress = ({
   running,
   logs,
   onCancel,
+  estimatedTimePerFile = 2.5,
+  currentFile = "",
 }: LiveProgressProps) => {
   const progress = total === 0 ? 0 : (completed / total) * 100;
   const [eta, setEta] = useState("Calculating...");
+  const [elapsed, setElapsed] = useState(0);
+  const [processingSpeed, setProcessingSpeed] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
 
-  // Dynamic ETA Calculation
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const successCount = logs.filter(l => l.status === 'success').length;
+    const errorCount = logs.filter(l => l.status === 'error').length;
+    const processingCount = logs.filter(l => l.status === 'processing').length;
+    return { successCount, errorCount, processingCount };
+  }, [logs]);
+
+  // Timer for elapsed time
   useEffect(() => {
     if (!running) return;
+    const startTime = Date.now();
+    const timer = setInterval(() => {
+      setElapsed((Date.now() - startTime) / 1000);
+    }, 100);
+    return () => clearInterval(timer);
+  }, [running]);
+
+  // ETA calculation with adaptive speed
+  useEffect(() => {
+    if (!running || completed === 0) return;
+    
     const interval = setInterval(() => {
       const remaining = total - completed;
-      if (remaining <= 0) setEta("Done!");
-      else {
-        const seconds = Math.max(1, remaining * 1.2);
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
+      if (remaining <= 0) {
+        setEta("✨ Complete!");
+        return;
+      }
+
+      // Calculate processing speed (files per second)
+      const speed = completed / Math.max(elapsed, 1);
+      setProcessingSpeed(speed);
+
+      // Adaptive ETA based on current speed and remaining files
+      const estimatedSeconds = remaining / Math.max(speed, 0.1);
+      const adjustedSeconds = Math.max(estimatedSeconds, remaining * estimatedTimePerFile);
+      
+      if (adjustedSeconds < 60) {
+        setEta(`${Math.ceil(adjustedSeconds)}s`);
+      } else {
+        const mins = Math.floor(adjustedSeconds / 60);
+        const secs = Math.ceil(adjustedSeconds % 60);
         setEta(`~${mins}m ${secs}s`);
       }
-    }, 500);
+    }, 300);
+
     return () => clearInterval(interval);
-  }, [running, total, completed]);
+  }, [running, completed, total, elapsed, estimatedTimePerFile]);
+
+  // Celebration animation when complete
+  useEffect(() => {
+    if (completed === total && total > 0 && running === false) {
+      setShowCelebration(true);
+      const timer = setTimeout(() => setShowCelebration(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [completed, total, running]);
+
+  // Format elapsed time
+  const formatElapsed = () => {
+    const mins = Math.floor(elapsed / 60);
+    const secs = Math.floor(elapsed % 60);
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  };
 
   return (
     <motion.div variants={fadeInUp} initial="hidden" animate="visible">
-      <Card className="overflow-hidden rounded-xl border-gray-100 bg-white/80 backdrop-blur-sm shadow-lg">
-        <CardContent className="space-y-6 p-6">
-          {/* Header */}
+      <Card className="group overflow-hidden rounded-2xl border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-lg shadow-slate-200/30 hover:shadow-xl hover:shadow-indigo-200/20 transition-all duration-500">
+        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <CardContent className="space-y-5 py-5 px-6">
+          {/* Header with animated status */}
           <div className="flex items-center justify-between">
-            <Heading as="h3" size="lg" weight="bold">
-              ⚡ Live Progress
-            </Heading>
-
-            <div className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-300 ${
-                running ? "bg-primary-fixed text-primary" : "bg-green-100 text-green-700"
-              }`}
-            >
-              {running && <Loader2 size={14} className="animate-spin" />}
-              {!running && logs[logs.length - 1]?.status === 'success' && <CheckCircle2 size={14} />}
-              {!running && logs[logs.length - 1]?.status === 'error' && <XCircle size={14} />}
-              {running ? "Processing" : logs[logs.length - 1]?.status === 'error' ? "Failed" : "Ready"}
+            <div className="flex items-center gap-2.5">
+              <motion.div
+                animate={running ? { rotate: 360 } : { rotate: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                <Activity size={20} className="text-indigo-600" />
+              </motion.div>
+              <Heading as="h3" size="md" weight="semibold" className="text-slate-800">
+                Live Progress
+              </Heading>
             </div>
+
+            <motion.div 
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all duration-300 ${
+                running
+                  ? "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/80"
+                  : stats.errorCount > 0
+                  ? "bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200/80"
+                  : "bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200/80"
+              }`}
+              animate={running ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              {running ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" />
+                  Processing
+                </>
+              ) : stats.errorCount > 0 ? (
+                <>
+                  <XCircle size={12} />
+                  Failed
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={12} />
+                  Complete
+                </>
+              )}
+            </motion.div>
           </div>
 
-          {/* Progress Bar */}
+          {/* Main Progress with animated bar */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Paragraph size="sm" className="text-on-surface-variant">Files Generated</Paragraph>
-              <Paragraph size="sm" className="font-semibold text-primary">
-                {completed} / {total}
-              </Paragraph>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-500">Progress</span>
+                {running && (
+                  <motion.span
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                    className="text-xs text-indigo-400"
+                  >
+                    ● Live
+                  </motion.span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-indigo-600">
+                  {completed} / {total}
+                </span>
+                <span className="text-sm font-medium text-slate-400">
+                  ({Math.round(progress)}%)
+                </span>
+              </div>
             </div>
 
-            <div className="h-2 overflow-hidden rounded-full bg-surface-container">
+            <div className="relative h-3 overflow-hidden rounded-full bg-slate-100/80">
               <motion.div
-                className="relative h-full rounded-full bg-gradient-to-r from-primary to-secondary"
+                className="relative h-full rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-              />
+              >
+                {/* Animated shimmer effect */}
+                {progress > 0 && progress < 100 && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+                
+                {/* Pulsing glow at the edge */}
+                {progress > 0 && progress < 100 && (
+                  <motion.div
+                    className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white/40 rounded-full blur-sm"
+                    animate={{ scale: [1, 1.5, 1] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  />
+                )}
+              </motion.div>
             </div>
 
-            <Paragraph size="xs" className="text-on-surface-variant text-right">
-              ETA • {eta}
-            </Paragraph>
+            {/* Stats grid */}
+            <div className="grid grid-cols-4 gap-2 pt-1">
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 rounded bg-emerald-100/50">
+                  <CheckCircle2 size={12} className="text-emerald-600" />
+                </div>
+                <span className="text-xs font-medium text-slate-600">{stats.successCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 rounded bg-amber-100/50">
+                  <Loader2 size={12} className="text-amber-600 animate-spin" />
+                </div>
+                <span className="text-xs font-medium text-slate-600">{stats.processingCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 rounded bg-red-100/50">
+                  <XCircle size={12} className="text-red-600" />
+                </div>
+                <span className="text-xs font-medium text-slate-600">{stats.errorCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 rounded bg-indigo-100/50">
+                  <Zap size={12} className="text-indigo-600" />
+                </div>
+                <span className="text-xs font-medium text-slate-600">
+                  {processingSpeed ? `${processingSpeed.toFixed(1)}/s` : '0/s'}
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Logs */}
-          <div className="max-h-72 space-y-1 overflow-y-auto rounded-xl border border-outline-variant bg-surface-container/50 p-3">
-            <AnimatePresence mode="popLayout">
-              {logs.slice().reverse().map((log) => (
-                <motion.div
-                  key={log.id}
-                  variants={listItemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  layout
-                  className="flex items-start gap-2 text-xs border-b border-gray-100/50 py-1.5 last:border-0"
-                >
-                  {log.status === "success" && <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-600" />}
-                  {log.status === "processing" && <Loader2 size={14} className="mt-0.5 shrink-0 text-primary animate-spin" />}
-                  {log.status === "error" && <XCircle size={14} className="mt-0.5 shrink-0 text-red-600" />}
-                  
-                  <span className="flex-1 text-gray-700">{log.message}</span>
-                  <span className="text-gray-400 whitespace-nowrap">{log.time}</span>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          {/* ETA and Time Info */}
+          <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-50/80 to-indigo-50/80 border border-slate-200/60 px-4 py-2.5">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <Clock size={14} className="text-slate-400" />
+                <span className="text-xs text-slate-500">ETA</span>
+              </div>
+              <motion.span 
+                key={eta}
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm font-semibold text-indigo-600"
+              >
+                {eta}
+              </motion.span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Gauge size={14} className="text-slate-400" />
+              <span className="text-xs text-slate-500">Elapsed: {formatElapsed()}</span>
+            </div>
           </div>
 
-          {/* Cancel Button */}
+          {/* Current file being processed */}
+          {running && currentFile && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 rounded-lg bg-indigo-50/50 border border-indigo-100/50 px-3 py-2"
+            >
+              <Waves size={14} className="text-indigo-500 animate-pulse" />
+              <span className="text-xs text-slate-600 truncate flex-1">
+                Generating: <span className="font-medium text-indigo-700">{currentFile}</span>
+              </span>
+            </motion.div>
+          )}
+
+          {/* Logs with enhanced styling */}
+          <div className="relative">
+            <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-xl bg-slate-50/80 border border-slate-200/60 p-2">
+              <AnimatePresence mode="popLayout">
+                {logs.slice().reverse().map((log, index) => (
+                  <motion.div
+                    key={log.id}
+                    variants={listItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    layout
+                    className="flex items-start gap-2.5 text-xs py-1.5 px-2.5 rounded-lg hover:bg-white/50 transition-colors group"
+                  >
+                    <div className="mt-0.5">
+                      {log.status === "success" && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                        >
+                          <CheckCircle2 size={14} className="shrink-0 text-emerald-500" />
+                        </motion.div>
+                      )}
+                      {log.status === "processing" && (
+                        <Loader2 size={14} className="shrink-0 text-amber-500 animate-spin" />
+                      )}
+                      {log.status === "error" && (
+                        <XCircle size={14} className="shrink-0 text-red-500" />
+                      )}
+                    </div>
+                    
+                    <span className="flex-1 text-slate-600 leading-relaxed">
+                      {log.message}
+                    </span>
+                    
+                    <span className="text-slate-400 whitespace-nowrap font-mono text-[10px] opacity-50 group-hover:opacity-100 transition-opacity">
+                      {log.time}
+                    </span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* Scroll indicator */}
+            {logs.length > 3 && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-slate-50/80 to-transparent pointer-events-none" />
+            )}
+          </div>
+
+          {/* Cancel Button with animation */}
           <AnimatePresence>
             {running && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}>
-                <Button variant="destructive" fullWidth leftIcon={<Square size={16} />} onClick={onCancel}>
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              >
+                <Button
+                  variant="destructive"
+                  fullWidth
+                  leftIcon={<Square size={16} />}
+                  onClick={onCancel}
+                  className="rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 shadow-lg shadow-red-500/25 hover:shadow-red-500/35 transition-all duration-300"
+                >
                   Cancel Generation
                 </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Celebration overlay */}
+          <AnimatePresence>
+            {showCelebration && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-2xl"
+              >
+                <div className="text-center">
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 10, -10, 0]
+                    }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <span className="text-6xl">🎉</span>
+                  </motion.div>
+                  <Heading as="h4" size="md" className="mt-2 text-slate-800">
+                    All {total} files generated!
+                  </Heading>
+                  <Paragraph className="text-slate-500">
+                    Ready for download
+                  </Paragraph>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

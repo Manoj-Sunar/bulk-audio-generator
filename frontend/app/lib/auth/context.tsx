@@ -4,7 +4,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { apiClient, extractErrorMessage } from '../axios/client';
 
-export type User = {
+export interface User {
   id: number;
   name: string;
   email: string;
@@ -12,7 +12,7 @@ export type User = {
   email_verified: boolean;
   is_active: boolean;
   created_at: string;
-};
+}
 
 type AuthContextType = {
   user: User | null;

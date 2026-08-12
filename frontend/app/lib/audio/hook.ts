@@ -3,12 +3,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, extractErrorMessage } from '../axios/client';
 import { toast } from 'sonner';
 
+
+
 export type GenerateAudioInput = {
   script: string;
   api_keys: string[];
   voice_id?: string;
   model_id?: string;
 };
+
+
 
 export type SegmentResponse = {
   id: number;
@@ -19,10 +23,14 @@ export type SegmentResponse = {
   created_at: string | null;
 };
 
+
+
 export type GenerateAudioResponse = {
   generation_id: number;
   segments: SegmentResponse[];
 };
+
+
 
 export type GenerationListResponse = {
   data: {
@@ -42,6 +50,9 @@ export type GenerationListResponse = {
   };
 };
 
+
+
+
 export function useGenerateAudio() {
   return useMutation({
     mutationFn: async (data: GenerateAudioInput) => {
@@ -54,6 +65,8 @@ export function useGenerateAudio() {
     },
   });
 }
+
+
 
 export function useGenerateAndPlayAudio() {
   return useMutation({
@@ -73,18 +86,25 @@ export function useGenerateAndPlayAudio() {
   });
 }
 
-export function useGenerationsList(skip: number = 0, limit: number = 50) {
+
+
+
+export function useGenerationsList(skip: number = 0, limit: number = 50,includeAudio:boolean=true) {
   return useQuery({
-    queryKey: ['audio-generations', skip, limit],
+    queryKey: ['audio-generations', skip, limit,includeAudio],
     queryFn: async () => {
       const response = await apiClient.get('/audio/generations', {
-        params: { skip, limit },
+        params: { skip, limit, includeAudio, include_audio: includeAudio },
       });
       return response.data as GenerationListResponse;
     },
     staleTime: 30000, // 30 seconds
   });
 }
+
+
+
+
 
 export function useGenerationDetails(generationId: number | null) {
   return useQuery({
@@ -97,6 +117,10 @@ export function useGenerationDetails(generationId: number | null) {
     staleTime: 60000,
   });
 }
+
+
+
+
 
 export function useDeleteGeneration() {
   const queryClient = useQueryClient();
@@ -116,6 +140,9 @@ export function useDeleteGeneration() {
     },
   });
 }
+
+
+
 
 export function useDownloadGeneration() {
   return useMutation({

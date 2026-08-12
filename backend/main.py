@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from src.utils.db import Base, engine
 from src.user.routes import user_routes
 from src.audio.route import audio_routes
+from src.elevenLabs.route import elevenlabs_routes
 import logging
 
 # Setup logger
@@ -95,3 +96,4 @@ async def health_check():
 # Register your routers
 app.include_router(user_routes)
 app.include_router(audio_routes)
+app.include_router(elevenlabs_routes)

@@ -1,6 +1,4 @@
-import { motion } from "framer-motion";
 import { Generator } from "@/app/components/pages/generator/Generator";
-import { GeneratorHeader } from "@/app/components/pages/generator/GeneratorHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -86,7 +84,7 @@ export default function GeneratorPage() {
       />
 
       <main className="bg-background">
-        <GeneratorHeader />
+        
         <Generator />
       </main>
     </>

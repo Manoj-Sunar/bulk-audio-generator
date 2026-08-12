@@ -21,8 +21,6 @@ export function Navbar() {
   const { mutate: logout } = useLogout();
   const { user } = useAuth();
 
-
-  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -31,43 +29,23 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  // Animation variants - Fixed TypeScript issues
   const mobileMenuVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      height: 0,
-      transition: { duration: 0.3, ease: "easeInOut" }
-    },
-    visible: {
-      opacity: 1,
-      height: "auto",
-      transition: { duration: 0.3, ease: "easeInOut" }
-    }
+    hidden: { opacity: 0, height: 0, transition: { duration: 0.3, ease: "easeInOut" } },
+    visible: { opacity: 1, height: "auto", transition: { duration: 0.3, ease: "easeInOut" } },
   };
 
-  // Fixed: Use a function that returns the variant object
   const linkVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      x: -20
-    },
+    hidden: { opacity: 0, x: -20 },
     visible: (i: number) => ({
       opacity: 1,
       x: 0,
-      transition: {
-        delay: i * 0.05,
-        duration: 0.3,
-        ease: "easeOut" as const // Use 'as const' for literal type
-      }
-    })
+      transition: { delay: i * 0.05, duration: 0.3, ease: "easeOut" },
+    }),
   };
-
-
 
   return (
     <motion.header
@@ -86,15 +64,8 @@ export function Navbar() {
         aria-label="Main Navigation"
       >
         {/* Logo */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ duration: 0.2 }}
-        >
-          <Link
-            href="/"
-            className="flex items-center gap-3 transition-opacity hover:opacity-90"
-          >
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
             <div className="relative">
               <Image
                 src="/wave.svg"
@@ -108,18 +79,17 @@ export function Navbar() {
                 className="absolute -top-1 -right-1"
                 animate={{
                   scale: [1, 1.2, 1],
-                  rotate: [0, 15, -15, 0]
+                  rotate: [0, 15, -15, 0],
                 }}
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  ease: "easeInOut"
+                  ease: "easeInOut",
                 }}
               >
                 <Sparkles size={12} className="text-primary" />
               </motion.div>
             </div>
-
             <Heading
               as="h1"
               size="lg"
@@ -142,6 +112,7 @@ export function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ duration: 0.2 }}
+                className="relative"
               >
                 <Link
                   href={href}
@@ -166,26 +137,25 @@ export function Navbar() {
                   )}
                   {name}
 
-                  {/* Active indicator */}
+                  {/* NEW: Active indicator — pill background instead of border */}
                   {isActive && (
-                    <motion.div
+                    <motion.span
                       layoutId="activeIndicator"
-                      className="absolute inset-0 rounded-full border-2 border-primary/30"
+                      className="absolute inset-0 rounded-full bg-primary/10 -z-10"
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3 }}
                     />
                   )}
 
-                  {/* Hover underline effect */}
+                  {/* Gradient underline indicator (visible on hover and active) */}
                   <motion.span
                     className={cn(
-                      "absolute bottom-0 left-1/2 h-0.5 bg-primary rounded-full",
-                      isActive ? "w-6" : "w-0"
+                      "absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full",
+                      isActive ? "w-6" : "w-0 group-hover:w-6"
                     )}
-                    whileHover={!isActive ? { width: "1.5rem" } : {}}
-                    transition={{ duration: 0.3 }}
                     style={{ transform: "translateX(-50%)" }}
+                    transition={{ duration: 0.3 }}
                   />
                 </Link>
               </motion.li>
@@ -196,23 +166,21 @@ export function Navbar() {
         {/* Right side actions */}
         <div className="flex items-center gap-3">
           {user ? (
-            // Logged in: user avatar (with dropdown for logout)
             <div className="relative group">
               <button
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary ring-2 ring-primary/20 transition hover:ring-primary/40"
-                onClick={() => {/* toggle dropdown */ }} // वा Link to profile
+                onClick={() => {/* toggle dropdown */ }}
               >
-               
-                  <span className="text-sm font-semibold uppercase">
-                    {user.name?.charAt(0) || user.email?.charAt(0)}
-                  </span>
-              
+                <span className="text-sm font-semibold uppercase">
+                  {user.name?.charAt(0) || user.email?.charAt(0)}
+                </span>
               </button>
-              {/* Dropdown (optional) */}
               <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-lg ring-1 ring-black/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-gray-50">Profile</Link>
+                <Link href="/bulk-audio/profile" className="block px-4 py-2 text-sm hover:bg-gray-50">
+                  Profile
+                </Link>
                 <button
-                  onClick={() => { logout(); }}
+                  onClick={() => logout()}
                   className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
                 >
                   Logout
@@ -220,7 +188,6 @@ export function Navbar() {
               </div>
             </div>
           ) : (
-            // Not logged in: show Get Started button
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button className="px-6 rounded-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
                 <Link href="/bulk-audio/bulk-audio-login">Get Started</Link>
@@ -337,7 +304,7 @@ export function Navbar() {
                     transition={{
                       duration: 1.5,
                       repeat: Infinity,
-                      ease: "easeInOut"
+                      ease: "easeInOut",
                     }}
                   >
                     →

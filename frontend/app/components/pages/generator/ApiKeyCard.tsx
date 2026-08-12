@@ -10,6 +10,7 @@ import {
   KeyRound,
   ShieldCheck,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "../../ui/Card";
 import { Heading } from "../../typography/Heading";
@@ -17,8 +18,7 @@ import { Paragraph } from "../../typography/Paragraph";
 import { Input } from "../../Inputs/InputText";
 import { Button } from "../../ui/Button";
 import { Label } from "../../typography/Label";
-import { ImConnection } from "react-icons/im";
-import { fadeInUp, scaleUp, pulseAnimation } from "@/app/lib/animations";
+import { fadeInUp, scaleUp } from "@/app/lib/animations";
 
 interface ApiKeyCardProps {
   value: string;
@@ -40,13 +40,7 @@ export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
     setIsLoaded(true);
   }, [onChange]);
 
-  useEffect(() => {
-    if (value.trim()) {
-      localStorage.setItem(STORAGE_KEY, value);
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }, [value]);
+
 
   const handleCopy = useCallback(async () => {
     if (!value) return;
@@ -67,63 +61,55 @@ export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
       variants={fadeInUp}
       initial="hidden"
       animate="visible"
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.5 }}
     >
-      <Card className="rounded-xl border-gray-100 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
-        <CardContent className="space-y-2 py-5 px-9">
+      <Card className="group overflow-hidden rounded-2xl border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-lg shadow-slate-200/30 hover:shadow-xl hover:shadow-indigo-200/20 transition-all duration-500">
+        {/* Top gradient accent */}
+        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <CardContent className="space-y-5 py-6 px-6">
           {/* Header */}
-          <motion.div 
-            className="flex items-center gap-3"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
-          >
-            <motion.div
-              variants={pulseAnimation}
-              initial="initial"
-              animate="animate"
-            >
-              <ImConnection className="text-primary" />
-            </motion.div>
-            <Heading size="sm" className="font-semibold">
-              ElevenLabs API Connection
-            </Heading>
-          </motion.div>
-
-          <Label className="uppercase text-gray-600">ElevenLabs API Key</Label>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 text-indigo-600 group-hover:scale-110 transition-transform duration-300">
+              <KeyRound size={20} />
+            </div>
+            <div>
+              <Heading as="h3" size="md" weight="semibold" className="text-slate-800">
+                ElevenLabs API Key
+              </Heading>
+              <Paragraph size="xs" className="text-slate-500">
+                Securely stored in your browser
+              </Paragraph>
+            </div>
+          </div>
 
           {/* Input */}
-          <motion.div 
-            className="relative"
-            whileFocus={{ scale: 1.01 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div className="relative">
             <Input
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Paste your ElevenLabs API Key..."
+              placeholder="Enter your ElevenLabs API key..."
               type={showKey ? "text" : "password"}
               helperText="Your API key never leaves your browser."
-              leftIcon={<KeyRound size={18} />}
-              className="transition-all duration-300 focus:ring-2 focus:ring-primary/20 w-full py-2 outline-none border-none focus:outline-none"
+              className="w-full py-3 px-4 rounded-xl border-slate-200/80 bg-white/50 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all duration-200 outline-none"
             />
-          </motion.div>
+          </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-3">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <div className="flex flex-wrap gap-2.5">
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="outline"
                 onClick={() => setShowKey(prev => !prev)}
-                leftIcon={showKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                leftIcon={showKey ? <EyeOff size={16} /> : <Eye size={16} />}
                 size="sm"
-                className="transition-all duration-300"
+                className="rounded-xl border-slate-200/80 text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition-all duration-200"
               >
                 {showKey ? "Hide" : "Show"}
               </Button>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="outline"
                 onClick={handleCopy}
@@ -137,51 +123,47 @@ export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      {copied ? <Check size={18} /> : <Clipboard size={18} />}
+                      {copied ? <Check size={16} className="text-emerald-500" /> : <Clipboard size={16} />}
                     </motion.span>
                   </AnimatePresence>
                 }
                 size="sm"
+                className="rounded-xl border-slate-200/80 text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition-all duration-200"
               >
-                {copied ? "Copied" : "Copy"}
+                {copied ? "Copied!" : "Copy"}
               </Button>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="outline"
                 onClick={clearKey}
                 disabled={!value}
-                leftIcon={<Trash2 size={18} />}
+                leftIcon={<Trash2 size={16} />}
                 size="sm"
-                className="transition-all duration-300 hover:border-red-500 hover:text-red-500"
+                className="rounded-xl border-slate-200/80 text-slate-600 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-200"
               >
                 Clear
               </Button>
             </motion.div>
           </div>
 
-          {/* Notice */}
-          <motion.div 
+          {/* Privacy Notice */}
+          <motion.div
             variants={scaleUp}
             initial="hidden"
             animate="visible"
             transition={{ delay: 0.3 }}
-            className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-primary-fixed/30 px-2 py-4"
+            className="flex items-start gap-3 rounded-xl bg-gradient-to-br from-indigo-50/80 to-purple-50/80 border border-indigo-100/50 px-4 py-3.5"
           >
-            <motion.div
-              whileHover={{ rotate: 15, scale: 1.1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ShieldCheck size={22} className="mt-0.5 shrink-0 text-primary" />
-            </motion.div>
+            <ShieldCheck size={20} className="mt-0.5 shrink-0 text-indigo-600" />
             <div>
-              <Paragraph className="font-semibold text-primary">
-                Privacy First
+              <Paragraph size="sm" weight="semibold" className="text-indigo-900">
+                🔒 Privacy First
               </Paragraph>
-              <Paragraph size="sm" className="mt-1 text-on-surface-variant">
-                Your API key is saved only in your browser using localStorage. 
-                It is never uploaded anywhere except directly to ElevenLabs when you generate audio.
+              <Paragraph size="xs" className="mt-0.5 text-slate-600 leading-relaxed">
+                Your API key is saved only in your browser's localStorage. 
+                It is never stored on our servers.
               </Paragraph>
             </div>
           </motion.div>

@@ -95,6 +95,9 @@ def UserRegister(body: UserSchema, db: Session):
             detail="Registration failed. Please try again.",
         )
 
+
+
+
 def UserLogin(body: UserLoginSchema, db: Session, response: Response):
     """Authenticate local user"""
     try:
@@ -205,6 +208,12 @@ async def GithubLogin(body: GithubLoginSchema, db: Session, response: Response):
             detail="GitHub authentication failed."
         )
 
+
+
+
+
+
+
 def Logout(response: Response):
     """Logout user by clearing cookies"""
     response.delete_cookie("access_token", path="/")
@@ -215,6 +224,8 @@ def Logout(response: Response):
         "success": True,
         "message": "Logged out successfully"
     }
+
+
 
 def GetMe(user: User, db: Session):
     """Get current user profile"""

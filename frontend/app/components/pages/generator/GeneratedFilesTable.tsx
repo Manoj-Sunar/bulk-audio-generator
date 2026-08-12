@@ -11,6 +11,7 @@ import {
   Play,
   Trash2,
   XCircle,
+  Music,
 } from 'lucide-react';
 import { Card, CardContent } from '../../ui/Card';
 import { Heading } from '../../typography/Heading';
@@ -29,24 +30,23 @@ interface GeneratedFilesTableProps {
 }
 
 const statusStyles = {
-  success: 'bg-green-100 text-green-700 border-green-200',
-  processing: 'bg-primary-fixed text-primary border-primary/20 animate-pulse',
-  failed: 'bg-error-container text-error border-error/20',
+  success: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  processing: 'bg-amber-50 text-amber-700 border-amber-200/80 animate-pulse',
+  failed: 'bg-red-50 text-red-700 border-red-200/80',
 };
 
 const statusLabel = {
-  success: 'SUCCESS',
-  processing: 'GENERATING',
-  failed: 'FAILED',
+  success: '✓ Ready',
+  processing: '⟳ Generating',
+  failed: '✗ Failed',
 };
 
-// Memoized table row for performance
-const TableRow = memo(({ 
-  file, 
-  currentlyPlaying, 
-  onPlay, 
-  onDownload, 
-  onDelete 
+const TableRow = memo(({
+  file,
+  currentlyPlaying,
+  onPlay,
+  onDownload,
+  onDelete
 }: {
   file: GeneratedAudioFile;
   currentlyPlaying: string | null;
@@ -54,6 +54,8 @@ const TableRow = memo(({
   onDownload?: (file: GeneratedAudioFile) => void;
   onDelete?: (file: GeneratedAudioFile) => void;
 }) => {
+  const isPlaying = currentlyPlaying === file.id;
+
   return (
     <motion.tr
       variants={listItemVariants}
@@ -61,75 +63,75 @@ const TableRow = memo(({
       animate="visible"
       exit="exit"
       layout
-      className="border-b border-outline-variant transition-all duration-300 hover:bg-surface-container-low"
+      className="border-b border-slate-100 transition-all duration-300 hover:bg-slate-50/80 group"
     >
-      <td className="px-6 py-4">
+      <td className="px-4 py-3">
         {file.status === 'processing' ? (
-          <motion.div
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          >
-            <Loader2 size={18} className="text-primary" />
-          </motion.div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
+            <Loader2 size={18} className="animate-spin text-amber-500" />
+          </div>
         ) : (
-          <motion.button
+          <button
             onClick={() => onPlay?.(file)}
             disabled={!file.audioUrl}
-            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:scale-105 ${
-              currentlyPlaying === file.id
-                ? 'bg-error text-white hover:bg-error/80'
-                : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 ${
+              isPlaying
+                ? 'bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/30'
+                : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white hover:shadow-lg hover:shadow-indigo-500/25'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {currentlyPlaying === file.id ? (
+            {isPlaying ? (
               <Pause size={18} fill="currentColor" />
             ) : (
               <Play size={18} className="ml-0.5" fill="currentColor" />
             )}
-          </motion.button>
+          </button>
         )}
       </td>
 
-      <td className="px-6 py-4">
-        <p className="font-medium text-on-surface truncate max-w-[200px]">
-          {file.fileName}
-        </p>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <Music size={16} className="text-slate-400" />
+          <p className="font-medium text-slate-700 truncate max-w-[200px] text-sm">
+            {file.fileName}
+          </p>
+        </div>
       </td>
 
-      <td className="px-6 py-4">
-        <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold ${statusStyles[file.status]}`}>
-          {file.status === 'success' && <CheckCircle2 size={14} />}
-          {file.status === 'processing' && (
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-              <Loader2 size={14} />
-            </motion.div>
-          )}
-          {file.status === 'failed' && <XCircle size={14} />}
+      <td className="px-4 py-3">
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${statusStyles[file.status]}`}>
+          {file.status === 'success' && <CheckCircle2 size={12} />}
+          {file.status === 'processing' && <Loader2 size={12} className="animate-spin" />}
+          {file.status === 'failed' && <XCircle size={12} />}
           {statusLabel[file.status]}
         </span>
       </td>
 
-      <td className="px-6 py-4">
-        <div className="flex justify-end gap-2">
-          <Button
-            size="icon"
-            variant="ghost"
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
             disabled={file.status !== 'success'}
             onClick={() => onDownload?.(file)}
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              file.status === 'success'
+                ? 'text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 hover:scale-110'
+                : 'text-slate-300 cursor-not-allowed'
+            }`}
           >
             <Download size={18} />
-          </Button>
+          </button>
 
-          <Button
-            size="icon"
-            variant="ghost"
+          <button
             disabled={file.status === 'processing'}
             onClick={() => onDelete?.(file)}
-            className="hover:text-red-500"
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              file.status === 'processing'
+                ? 'text-slate-300 cursor-not-allowed'
+                : 'text-slate-400 hover:bg-red-50 hover:text-red-600 hover:scale-110'
+            }`}
           >
             <Trash2 size={18} />
-          </Button>
+          </button>
         </div>
       </td>
     </motion.tr>
@@ -155,24 +157,22 @@ export const GeneratedFilesTable = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="overflow-hidden rounded-xl border-gray-100 bg-white/80 backdrop-blur-sm shadow-lg">
-        <div className="flex flex-col gap-4 border-b border-outline-variant px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="group overflow-hidden rounded-2xl border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-lg shadow-slate-200/30 hover:shadow-xl hover:shadow-indigo-200/20 transition-all duration-500">
+        {/* Top gradient accent */}
+        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <div className="flex flex-col gap-4 border-b border-slate-200/60 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Heading as="h2" size="xl" weight="bold">
-              Generated Files
+            <Heading as="h2" size="lg" weight="semibold" className="text-slate-800">
+              🎵 Generated Files
             </Heading>
-            <motion.p
-              className="mt-1 text-sm text-on-surface-variant"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {successCount} of {files.length} files are ready.
-            </motion.p>
+            <p className="mt-1 text-sm text-slate-500">
+              {successCount} of {files.length} files ready for download
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-primary-fixed px-3 py-1 text-sm font-semibold text-primary">
+            <span className="rounded-full bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-1.5 text-sm font-semibold text-indigo-700 border border-indigo-100/50">
               {files.length} Files
             </span>
 
@@ -180,6 +180,7 @@ export const GeneratedFilesTable = ({
               leftIcon={<Archive size={18} />}
               disabled={!hasSuccessFiles}
               onClick={onDownloadZip}
+              className="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/35 transition-all duration-300"
             >
               Download ZIP
             </Button>
@@ -191,15 +192,17 @@ export const GeneratedFilesTable = ({
             {files.length === 0 ? (
               <motion.div
                 key="empty"
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="flex h-64 items-center justify-center text-on-surface-variant"
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex h-64 items-center justify-center"
               >
                 <div className="text-center">
-                  <Archive size={48} className="mx-auto mb-4 text-gray-300" />
-                  <p>No generated files yet.</p>
-                  <p className="text-sm">Start generating audio to see results.</p>
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                    <Archive size={36} className="text-slate-300" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No files generated yet</p>
+                  <p className="text-sm text-slate-400 mt-1">Start generating to see results</p>
                 </div>
               </motion.div>
             ) : (
@@ -210,12 +213,12 @@ export const GeneratedFilesTable = ({
                 className="overflow-x-auto"
               >
                 <table className="min-w-full">
-                  <thead className="bg-surface-container/50">
-                    <tr className="border-b border-outline-variant">
-                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Preview</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Filename</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Status</th>
-                      <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Actions</th>
+                  <thead>
+                    <tr className="border-b border-slate-200/60 bg-slate-50/50">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Preview</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Filename</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
                     </tr>
                   </thead>
 
