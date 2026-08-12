@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Background } from "../../ui/Background";
 import { LoginCard } from "./LoginCard";
 import { useGithubLogin, useGoogleLogin } from '@/app/lib/auth/hooks';
+import { motion } from 'framer-motion';
 
 export const Login = () => {
   const router = useRouter();
@@ -13,25 +14,27 @@ export const Login = () => {
   const githubLogin = useGithubLogin();
   const googleLogin = useGoogleLogin();
 
-  // Handle OAuth callbacks from URL
   useEffect(() => {
     const code = searchParams.get('code');
     const provider = searchParams.get('provider');
-    
     if (code && provider === 'github') {
       githubLogin.mutate(code);
     } else if (code && provider === 'google') {
       googleLogin.mutate(code);
     }
-  }, [searchParams]);
+  }, [searchParams, githubLogin, googleLogin]);
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-16">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6 lg:py-16">
       <Background />
-
-      <div className="relative z-10 w-full max-w-md">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-md"
+      >
         <LoginCard />
-      </div>
+      </motion.div>
     </main>
   );
 };
