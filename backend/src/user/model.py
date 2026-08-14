@@ -13,11 +13,10 @@ class User(Base):
     password = Column(String(255), nullable=True)
     email_verified = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, nullable=False, default=True)
-    csrf_token = Column(String(64), nullable=True)  # CSRF protection
+    csrf_token = Column(String(64), nullable=True)
     failed_login_attempts = Column(Integer, default=0)
     locked_until = Column(DateTime(timezone=True), nullable=True)
-    
-    # Relationships
+
     audio_generations = relationship("AudioGeneration", back_populates="user")
     providers = relationship(
         "UserProvider",

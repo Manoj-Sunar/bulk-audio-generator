@@ -156,9 +156,9 @@ export const ElevenLabsSetup = () => {
                   Your API Key is Secure
                 </Heading>
                 <Paragraph className="mt-2 text-on-surface-variant/80 leading-relaxed">
-                  The API key is stored only in your browser using localStorage.
-                  It is sent directly to your FastAPI backend when generating audio
-                  and is never saved permanently on any server.
+                  Your API key is transmitted securely to our backend, encrypted using
+                  industry‑standard Fernet (symmetric encryption), and stored in the database.
+                  The raw key is never persisted in your browser or accessible to anyone.
                 </Paragraph>
               </div>
             </CardContent>

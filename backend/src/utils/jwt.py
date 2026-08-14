@@ -11,7 +11,6 @@ class TokenType:
     CSRF = "csrf"
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create access token with configurable expiry"""
     payload = data.copy()
     exp_delta = expires_delta or timedelta(minutes=15)
     payload.update({
@@ -23,7 +22,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create refresh token with configurable expiry"""
     payload = data.copy()
     exp_delta = expires_delta or timedelta(days=7)
     payload.update({
@@ -35,21 +33,18 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) 
     return encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 def decode_token(token: str) -> Dict[str, Any]:
-    """Decode and validate JWT token"""
     try:
         return decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except PyJWTError as e:
         raise ValueError(f"Invalid token: {str(e)}")
 
 def validate_token_type(token: str, expected_type: str) -> Dict[str, Any]:
-    """Validate token and check type"""
     payload = decode_token(token)
     if payload.get("type") != expected_type:
         raise ValueError(f"Invalid token type. Expected {expected_type}")
     return payload
 
 def is_token_expired(token: str) -> bool:
-    """Check if token is expired"""
     try:
         payload = decode_token(token)
         exp = payload.get("exp")
@@ -60,7 +55,6 @@ def is_token_expired(token: str) -> bool:
         return True
 
 def refresh_tokens(user_id: int, email: str) -> Dict[str, str]:
-    """Generate new token pair for user"""
     token_data = {"id": user_id, "email": email}
     return {
         "access_token": create_access_token(token_data),
@@ -68,7 +62,6 @@ def refresh_tokens(user_id: int, email: str) -> Dict[str, str]:
     }
 
 def get_token_expiry(token: str) -> Optional[datetime]:
-    """Get token expiry time"""
     try:
         payload = decode_token(token)
         exp = payload.get("exp")

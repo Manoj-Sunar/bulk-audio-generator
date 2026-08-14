@@ -14,11 +14,12 @@ export const EmptyState = () => {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.2 }}
     >
-      <Card className="hover:shadow-xl hover:shadow-indigo-200/20 transition-all duration-500">
+      <Card className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-12 text-center">
-          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-4">
-            <Music className="w-10 h-10 text-indigo-500" />
+          <div className="w-20 h-20 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <Music className="w-10 h-10 text-slate-400" />
           </div>
           
           <Heading as="h3" size="lg" weight="semibold" className="text-slate-800 mb-2">
@@ -34,7 +35,7 @@ export const EmptyState = () => {
               size="lg"
               leftIcon={<Sparkles className="w-4 h-4" />}
               rightIcon={<ArrowRight className="w-4 h-4" />}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/35"
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
             >
               Start Generating
             </Button>

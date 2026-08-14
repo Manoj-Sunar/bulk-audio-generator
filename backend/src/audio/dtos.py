@@ -1,3 +1,4 @@
+# src/audio/dtos.py
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
@@ -11,7 +12,6 @@ class GenerateAudioRequest(BaseModel):
 class SegmentResponse(BaseModel):
     index: int
     title: str
-    # we don't expose audio data in list; download endpoint will fetch it
 
 class GenerationListItem(BaseModel):
     id: int
@@ -28,3 +28,4 @@ class GenerationDetail(BaseModel):
     voice_id: str
     model_id: str
     created_at: datetime
+    characters_used: Optional[int] = None

@@ -1,179 +1,193 @@
 "use client";
 
 import Link from "next/link";
-import { AtSign, Eye, EyeOff, Lock, User } from "lucide-react";
-import { useState } from "react";
+import { AtSign, Eye, EyeOff, Lock, User, CheckCircle2, XCircle } from "lucide-react";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { Input } from "../../Inputs/InputText";
 import { Button } from "../../ui/Button";
 import { Paragraph } from "../../typography/Paragraph";
 
 interface RegisterFormProps {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-
-  loading?: boolean;
-
-  onNameChange: (value: string) => void;
-  onEmailChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onConfirmPasswordChange: (value: string) => void;
-
-  onSubmit: () => void;
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    loading?: boolean;
+    isTermsAccepted: boolean;
+    onNameChange: (value: string) => void;
+    onEmailChange: (value: string) => void;
+    onPasswordChange: (value: string) => void;
+    onConfirmPasswordChange: (value: string) => void;
+    onTermsChange: (value: boolean) => void;
+    onSubmit: () => void;
 }
 
 export const RegisterForm = ({
-  name,
-  email,
-  password,
-  confirmPassword,
-  loading = false,
-  onNameChange,
-  onEmailChange,
-  onPasswordChange,
-  onConfirmPasswordChange,
-  onSubmit,
+    name,
+    email,
+    password,
+    confirmPassword,
+    loading = false,
+    isTermsAccepted,
+    onNameChange,
+    onEmailChange,
+    onPasswordChange,
+    onConfirmPasswordChange,
+    onTermsChange,
+    onSubmit,
 }: RegisterFormProps) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  return (
-    <div className="space-y-7">
-      {/* Name */}
+    // Password Strength Calculation
+    const passwordStrength = useMemo(() => {
+        if (!password) return 0;
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (password.match(/[a-z]+/)) score++;
+        if (password.match(/[A-Z]+/)) score++;
+        if (password.match(/[0-9]+/)) score++;
+        if (password.match(/[$@#&!]+/)) score++;
+        return score;
+    }, [password]);
 
-      <Input
-        label="Full Name"
-        placeholder="John Doe"
-        value={name}
-        onChange={(e) => onNameChange(e.target.value)}
-        leftIcon={<User size={18} />}
-      />
+    const isPasswordMatch = password && confirmPassword && password === confirmPassword;
 
-      {/* Email */}
+    return (
+        <div className="space-y-6">
+            <Input
+                label="Full Name"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => onNameChange(e.target.value)}
+                leftIcon={<User size={18} />}
+                className="transition-all w-full border-none outline-none ml-2"
+            />
 
-      <Input
-        type="email"
-        label="Email Address"
-        placeholder="john@example.com"
-        value={email}
-        onChange={(e) => onEmailChange(e.target.value)}
-        leftIcon={<AtSign size={18} />}
-      />
+            <Input
+                type="email"
+                label="Email Address"
+                placeholder="john@example.com"
+                value={email}
+                onChange={(e) => onEmailChange(e.target.value)}
+                leftIcon={<AtSign size={18} />}
+                className="transition-all w-full border-none outline-none ml-2"
+            />
 
-      {/* Password */}
+            <div className="space-y-2">
+                <Input
+                    label="Password"
+                    placeholder="Create a strong password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => onPasswordChange(e.target.value)}
+                    leftIcon={<Lock size={18} />}
+                    rightIcon={
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="text-on-surface-variant transition hover:text-primary"
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    }
+                    className="transition-all w-full border-none outline-none ml-2"
+                />
+                
+                {/* Password Strength Bar */}
+                {password && (
+                    <div className="mt-2 flex gap-1">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div
+                                key={i}
+                                className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                                    i <= passwordStrength
+                                        ? i <= 2
+                                            ? "bg-red-500"
+                                            : i <= 3
+                                            ? "bg-yellow-500"
+                                            : "bg-green-500"
+                                        : "bg-gray-200"
+                                }`}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
 
-      <Input
-        label="Password"
-        placeholder="Create a strong password"
-        type={showPassword ? "text" : "password"}
-        value={password}
-        onChange={(e) => onPasswordChange(e.target.value)}
-        leftIcon={<Lock size={18} />}
-        rightIcon={
-          <button
-            type="button"
-            onClick={() =>
-              setShowPassword((prev) => !prev)
-            }
-            className="text-on-surface-variant transition hover:text-primary"
-          >
-            {showPassword ? (
-              <EyeOff size={18} />
-            ) : (
-              <Eye size={18} />
-            )}
-          </button>
-        }
-      />
+            <Input
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => onConfirmPasswordChange(e.target.value)}
+                leftIcon={<Lock size={18} />}
+                rightIcon={
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        className="text-on-surface-variant transition hover:text-primary"
+                    >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                }
+                className="transition-all w-full border-none outline-none ml-2"
+            />
+            
+            <AnimatePresence>
+                {confirmPassword && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className={`flex items-center gap-2 text-sm ${isPasswordMatch ? "text-green-600" : "text-red-500"}`}
+                    >
+                        {isPasswordMatch ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                        <span>{isPasswordMatch ? "Passwords match" : "Passwords do not match"}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-      {/* Confirm Password */}
+            <div className="flex items-start gap-3">
+                <input
+                    id="terms"
+                    type="checkbox"
+                    checked={isTermsAccepted}
+                    onChange={(e) => onTermsChange(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary/50"
+                />
+                <Paragraph size="sm" className="leading-6 text-on-surface-variant">
+                    I agree to the{" "}
+                    <Link href="/terms" className="font-medium text-primary hover:underline">
+                        Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy" className="font-medium text-primary hover:underline">
+                        Privacy Policy
+                    </Link>
+                    .
+                </Paragraph>
+            </div>
 
-      <Input
-        label="Confirm Password"
-        placeholder="Confirm your password"
-        type={showConfirmPassword ? "text" : "password"}
-        value={confirmPassword}
-        onChange={(e) =>
-          onConfirmPasswordChange(e.target.value)
-        }
-        leftIcon={<Lock size={18} />}
-        rightIcon={
-          <button
-            type="button"
-            onClick={() =>
-              setShowConfirmPassword((prev) => !prev)
-            }
-            className="text-on-surface-variant transition hover:text-primary"
-          >
-            {showConfirmPassword ? (
-              <EyeOff size={18} />
-            ) : (
-              <Eye size={18} />
-            )}
-          </button>
-        }
-      />
+            <Button
+                loading={loading}
+                fullWidth
+                size="lg"
+                onClick={onSubmit}
+                disabled={!isTermsAccepted || loading}
+                className="rounded-2xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 hover:scale-[1.02] active:scale-95"
+            >
+                Create Account
+            </Button>
 
-      {/* Terms */}
-
-      <div className="flex items-start gap-3">
-        <input
-          id="terms"
-          type="checkbox"
-          className="mt-1 h-4 w-4 rounded border-outline accent-primary"
-        />
-
-        <Paragraph
-          size="sm"
-          className="leading-6 text-on-surface-variant"
-        >
-          I agree to the{" "}
-          <Link
-            href="/terms"
-            className="font-medium text-primary hover:underline"
-          >
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link
-            href="/privacy"
-            className="font-medium text-primary hover:underline"
-          >
-            Privacy Policy
-          </Link>
-          .
-        </Paragraph>
-      </div>
-
-      {/* Register Button */}
-
-      <Button
-        loading={loading}
-        fullWidth
-        size="lg"
-        onClick={onSubmit}
-        className="rounded-2xl"
-      >
-        Create Account
-      </Button>
-
-      {/* Login */}
-
-      <Paragraph
-        size="sm"
-        className="text-center text-on-surface-variant"
-      >
-        Already have an account?{" "}
-        <Link
-          href="/bulk-audio/bulk-audio-login"
-          className="font-semibold text-primary hover:underline"
-        >
-          Sign In
-        </Link>
-      </Paragraph>
-    </div>
-  );
+            <Paragraph size="sm" className="text-center text-on-surface-variant">
+                Already have an account?{" "}
+                <Link href="/bulk-audio/bulk-audio-login" className="font-semibold text-primary hover:underline">
+                    Sign In
+                </Link>
+            </Paragraph>
+        </div>
+    );
 };

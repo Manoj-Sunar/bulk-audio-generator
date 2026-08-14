@@ -9,34 +9,29 @@ def build_auth_response(
     message: str = "Login successful.",
     response: Response = None,
 ):
-    """Generate JWT tokens and set secure cookies"""
     token_data = {"id": user.id, "email": user.email}
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
-    # Set secure HTTP-only cookies
     if response:
-        # Access token - short lived
         response.set_cookie(
             key="access_token",
             value=access_token,
             httponly=True,
             secure=settings.COOKIE_SECURE,
             samesite="lax",
-            max_age=900,  # 15 minutes
+            max_age=900,
             path="/",
         )
-        # Refresh token - long lived
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
             secure=settings.COOKIE_SECURE,
             samesite="lax",
-            max_age=604800,  # 7 days
+            max_age=604800,
             path="/",
         )
-        # CSRF token - not HTTP-only, sent to client
         response.set_cookie(
             key="csrf_token",
             value=user.csrf_token or "",
@@ -46,7 +41,6 @@ def build_auth_response(
             path="/",
         )
 
-    # Serialize user data (exclude sensitive fields)
     user_data = {
         "id": user.id,
         "name": user.name,
@@ -56,7 +50,6 @@ def build_auth_response(
         "is_active": user.is_active,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }
-
     return {
         "success": True,
         "message": message,

@@ -16,7 +16,7 @@ import { Background } from '../../ui/Background';
 import { fadeInLeft, fadeInRight, staggerContainer } from '@/app/lib/animations';
 import { extractErrorMessage } from '@/app/lib/axios/client';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Zap, Clock, Layers } from 'lucide-react';
+import { Sparkles, Zap, Clock, Layers, Loader2 } from 'lucide-react';
 
 const initialLogs: GenerationLog[] = [
   { id: 0, time: new Date().toLocaleTimeString(), message: '🚀 System ready. Waiting for scripts...', status: 'success' },
@@ -55,10 +55,6 @@ export const Generator = () => {
     return { total: files.length, completed };
   }, [files]);
 
-
-
-
-  
   const handleGenerate = useCallback(() => {
     if (!scripts.trim()) {
       toast.error('Please enter some scripts');
@@ -105,7 +101,7 @@ export const Generator = () => {
             }));
             setFiles(audioFiles);
             setStatus('completed');
-            
+
             const newLogs = audioFiles.map((file, index) => ({
               id: Date.now() + index,
               time: new Date().toLocaleTimeString(),
@@ -136,7 +132,7 @@ export const Generator = () => {
 
   const handlePlay = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
-    
+
     if (currentlyPlaying === file.id) {
       audioRef.current?.pause();
       setCurrentlyPlaying(null);
@@ -184,7 +180,7 @@ export const Generator = () => {
     try {
       toast.info(`📦 Zipping ${successFiles.length} files...`);
       const zip = new JSZip();
-      
+
       for (const file of successFiles) {
         if (file.blob) {
           zip.file(file.fileName, file.blob);
@@ -199,7 +195,7 @@ export const Generator = () => {
       const url = URL.createObjectURL(content);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `bulk-audio-${new Date().toISOString().slice(0,10)}.zip`;
+      link.download = `bulk-audio-${new Date().toISOString().slice(0, 10)}.zip`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -226,19 +222,31 @@ export const Generator = () => {
     }
   }, [user, authLoading, router]);
 
+  // 🎯 PREMIUM LOADING STATE – full‑page loader
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-12 gap-8 animate-pulse">
-          <div className="xl:col-span-5 space-y-6">
-            <div className="h-64 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
-            <div className="h-96 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="relative mx-auto h-16 w-16">
+            <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-blue-600 animate-spin" />
           </div>
-          <div className="xl:col-span-7 space-y-8">
-            <div className="h-16 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
-            <div className="h-[400px] bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
-            <div className="h-64 bg-gradient-to-br from-slate-200/60 to-slate-300/30 rounded-3xl border border-slate-200/50 shadow-xl"></div>
-          </div>
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 text-xl font-semibold text-slate-700"
+          >
+            Loading your workspace…
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-2 text-sm text-slate-400"
+          >
+            Please wait while we prepare your session
+          </motion.p>
         </div>
       </div>
     );
@@ -253,7 +261,7 @@ export const Generator = () => {
     >
       <Background />
 
-      {/* Enhanced Error Display */}
+      {/* Error Display (unchanged) */}
       <AnimatePresence>
         {errorMessage && (
           <motion.div
@@ -287,7 +295,7 @@ export const Generator = () => {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
+      {/* Hero Section (unchanged) */}
       <section className="relative z-10 px-6 pt-12 pb-8 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -298,21 +306,20 @@ export const Generator = () => {
             <Sparkles className="w-4 h-4" />
             <span>ElevenLabs API Powered</span>
           </div>
-          
+
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
             Generate
             <span className="block md:inline bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent md:ml-3">
               Bulk AI Voices
             </span>
           </h1>
-          
+
           <p className="mt-6 max-w-2xl mx-auto text-lg text-slate-600 leading-relaxed">
             Convert hundreds of text scripts into natural-sounding AI voices in seconds.
             Generate multiple audio files simultaneously and download everything as a ZIP archive.
           </p>
         </motion.div>
 
-        {/* Quick Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -359,7 +366,6 @@ export const Generator = () => {
             variants={fadeInRight}
             className="space-y-6 xl:col-span-7"
           >
-            {/* Voice Selector - Enhanced */}
             <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/30 p-5 transition-all hover:shadow-xl hover:shadow-indigo-200/20">
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 🎤 Voice Profile

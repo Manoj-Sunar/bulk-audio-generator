@@ -4,6 +4,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { apiClient, extractErrorMessage } from '../axios/client';
 
+
 export interface User {
   id: number;
   name: string;
@@ -25,6 +26,7 @@ type AuthContextType = {
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   setUser: (user: User | null) => void;
+
 };
 
 type RegisterData = {
@@ -54,6 +56,9 @@ useEffect(() => {
       }
     }, 5000);
 
+
+
+    
     const initAuth = async () => {
       try {
         const response = await apiClient.get('/user/me');
@@ -80,6 +85,9 @@ useEffect(() => {
     };
   }, []);
 
+
+
+
   // Auto refresh token every 10 minutes
   useEffect(() => {
     if (!user) return;
@@ -104,12 +112,18 @@ useEffect(() => {
     };
   }, [user]);
 
+
+
+
   const login = useCallback(async (email: string, password: string): Promise<User> => {
     const response = await apiClient.post('/user/login', { email, password });
     const userData = response.data?.data?.user || response.data?.data || response.data;
     setUser(userData);
     return userData;
   }, []);
+
+
+
 
   const register = useCallback(async (data: RegisterData): Promise<User> => {
     const response = await apiClient.post('/user/register', {
@@ -123,6 +137,9 @@ useEffect(() => {
     return userData;
   }, []);
 
+
+
+
   const googleLogin = useCallback(async (code: string): Promise<User> => {
     const response = await apiClient.post('/user/google', { token: code });
     const userData = response.data?.data?.user || response.data?.data || response.data;
@@ -130,12 +147,17 @@ useEffect(() => {
     return userData;
   }, []);
 
+
+
+
   const githubLogin = useCallback(async (code: string): Promise<User> => {
     const response = await apiClient.post('/user/github', { code });
     const userData = response.data?.data?.user || response.data?.data || response.data;
     setUser(userData);
     return userData;
   }, []);
+
+
 
   const logout = useCallback(async (): Promise<void> => {
     try {
@@ -179,7 +201,12 @@ useEffect(() => {
 
 
 
-  // ... बाँकी फङ्क्सनहरू (login, register, googleLogin, githubLogin, logout) पहिले जस्तै छन्
+
+
+
+
+
+
 
   const refreshToken = useCallback(async (): Promise<void> => {
     if (isRefreshing) return;
@@ -210,6 +237,7 @@ useEffect(() => {
     logout,
     refreshToken,
     setUser,
+  
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

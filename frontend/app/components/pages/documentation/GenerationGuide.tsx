@@ -31,7 +31,7 @@ const steps = [
   {
     icon: KeyRound,
     title: "Enter Your API Key",
-    description: "Paste your ElevenLabs API key into the secure input field. Your key is stored locally and never leaves your browser.",
+   description: "Paste your ElevenLabs API key into the secure input field. It is transmitted to our backend, where it is encrypted (Fernet) and stored securely in the database. The raw key never touches your browser storage.",
     image: "/api_key_card.png",
     alt: "ElevenLabs API Key Input",
   },
