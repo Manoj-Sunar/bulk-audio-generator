@@ -102,3 +102,40 @@ class GithubLoginSchema(BaseModel):
 
 class RefreshTokenSchema(BaseModel):
     refresh_token: str = Field(..., min_length=10)
+    
+    
+    
+    
+    
+
+class RequestPasswordResetSchema(BaseModel):
+    email: EmailStr
+
+class VerifyOTPSchema(BaseModel):
+    email: EmailStr
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP")
+
+class ResetPasswordSchema(BaseModel):
+    email: EmailStr
+    otp: str = Field(..., min_length=6, max_length=6)
+    new_password: str = Field(..., min_length=8, max_length=100)
+    confirm_password: str = Field(..., min_length=8, max_length=100)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, value: str):
+        # reuse existing password strength validator from security.py
+        from src.utils.security import validate_password_strength
+        if not validate_password_strength(value):
+            raise ValueError("Password does not meet security requirements")
+        return value
+
+    @model_validator(mode="after")
+    def check_passwords_match(self):
+        if self.new_password != self.confirm_password:
+            raise ValueError("Passwords do not match")
+        return self
+
+class OTPVerificationResponse(BaseModel):
+    success: bool
+    message: str

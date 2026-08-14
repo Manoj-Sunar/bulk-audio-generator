@@ -1,7 +1,30 @@
 # src/user/model.py
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, func, Text
 from sqlalchemy.orm import relationship
 from src.utils.db import Base
+
+
+class OTPVerification(Base):
+    __tablename__ = "otp_verifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    otp_code = Column(String(6), nullable=False)          # plaintext, or hashed if you prefer
+    purpose = Column(String(50), nullable=False, default="reset_password")  # e.g., 'reset_password'
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="otps")
+
+
+
+
+
+
+
+
+
 
 class User(Base):
     __tablename__ = "users"
@@ -27,6 +50,6 @@ class User(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
+    otps = relationship("OTPVerification", back_populates="user", cascade="all, delete-orphan")
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}')>"

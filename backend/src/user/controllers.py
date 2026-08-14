@@ -1,5 +1,5 @@
 # src/user/controllers.py
-from fastapi import HTTPException, status, Response, Request
+from fastapi import HTTPException, status, Response, Request,BackgroundTasks
 from sqlalchemy.orm import Session
 import logging
 import httpx
@@ -13,6 +13,10 @@ from src.utils.settings import settings
 from src.utils.auth_helpers import oauth_login
 from src.utils.jwt_response import build_auth_response
 from src.utils.jwt import validate_token_type, refresh_tokens, is_token_expired
+from src.utils.email import send_email
+from src.utils.otp import create_otp, verify_otp, mark_otp_used
+from src.user.dtos import RequestPasswordResetSchema, VerifyOTPSchema, ResetPasswordSchema
+
 
 logger = logging.getLogger(__name__)
 google_service = GoogleOAuthService(settings.GOOGLE_CLIENT_ID)
@@ -195,3 +199,70 @@ def RefreshToken(request: Request, db: Session, response: Response):
     except Exception as e:
         logger.exception(f"Token refresh error: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Token refresh failed")
+    
+    
+    
+    
+    
+def request_password_reset(body: RequestPasswordResetSchema, db: Session, background_tasks: BackgroundTasks):
+    """Step 1: Generate OTP and send email."""
+    email = body.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        # For security, we don't reveal if email exists. We return same success message.
+        return {"success": True, "message": "If your email is registered, you will receive an OTP."}
+    
+    # Generate OTP
+    otp_obj = create_otp(db, user.id, "reset_password")
+    
+    # Prepare email content
+    subject = "Password Reset OTP"
+    html_body = f"""
+    <html>
+    <body>
+        <p>Hello {user.name},</p>
+        <p>You requested to reset your password. Use the following OTP to proceed:</p>
+        <h2 style="color: #2d3748;">{otp_obj.otp_code}</h2>
+        <p>This OTP is valid for {settings.OTP_EXPIRY_MINUTES} minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+        <p>Thanks,<br>Your App Team</p>
+    </body>
+    </html>
+    """
+    
+    # Send email in background
+    background_tasks.add_task(send_email, user.email, subject, html_body)
+    
+    return {"success": True, "message": "If your email is registered, you will receive an OTP."}
+
+def verify_otp_controller(body: VerifyOTPSchema, db: Session):
+    """Step 2: Verify OTP (optional – can skip and do directly in reset)."""
+    email = body.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    
+    if not verify_otp(db, user.id, body.otp, "reset_password"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired OTP")
+    
+    # Optionally, you could generate a temporary token for reset, but we'll use OTP again.
+    return {"success": True, "message": "OTP verified successfully"}
+
+def reset_password_controller(body: ResetPasswordSchema, db: Session):
+    """Step 3: Reset password using OTP and new password."""
+    email = body.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    
+    # Verify OTP again
+    if not verify_otp(db, user.id, body.otp, "reset_password"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired OTP")
+    
+    # Update password
+    user.password = hash_password(body.new_password)
+    # Optionally: clear any OTPs to prevent reuse
+    mark_otp_used(db, body.otp, user.id, "reset_password")
+    db.commit()
+    
+    return {"success": True, "message": "Password reset successfully. You can now login with your new password."}

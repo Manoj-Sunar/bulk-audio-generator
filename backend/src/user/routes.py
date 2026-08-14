@@ -1,5 +1,5 @@
 # src/user/routes.py
-from fastapi import APIRouter, Depends, status, Response, Request   # <-- add Request
+from fastapi import APIRouter, Depends, status, Response, Request,BackgroundTasks   # <-- add Request
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -8,6 +8,7 @@ from src.utils.db import get_db
 from src.user import controllers
 from src.utils.auth import get_current_user
 from src.user.model import User
+from src.user.dtos import RequestPasswordResetSchema, VerifyOTPSchema, ResetPasswordSchema
 
 user_routes = APIRouter(prefix="/user")
 limiter = Limiter(key_func=get_remote_address)
@@ -79,3 +80,36 @@ def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):
     return controllers.GetMe(current_user, db)
+
+
+
+
+
+
+@user_routes.post("/request-password-reset")
+@limiter.limit("5/minute")   # limit per IP
+def request_password_reset(
+    request: Request,
+    body: RequestPasswordResetSchema,
+    db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks = BackgroundTasks()
+):
+    return controllers.request_password_reset(body, db, background_tasks)
+
+@user_routes.post("/verify-otp")
+@limiter.limit("5/minute")
+def verify_otp(
+    request: Request,
+    body: VerifyOTPSchema,
+    db: Session = Depends(get_db)
+):
+    return controllers.verify_otp_controller(body, db)
+
+@user_routes.post("/reset-password")
+@limiter.limit("5/minute")
+def reset_password(
+    request: Request,
+    body: ResetPasswordSchema,
+    db: Session = Depends(get_db)
+):
+    return controllers.reset_password_controller(body, db)

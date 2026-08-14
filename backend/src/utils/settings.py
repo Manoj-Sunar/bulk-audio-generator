@@ -37,6 +37,17 @@ class Settings(BaseSettings):
     MAX_SCRIPT_LENGTH: int = 100000
     MAX_CHUNKS: int = 1000
     AUDIO_TIMEOUT: int = 60
+    
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    SMTP_TLS: bool = True
+
+    # OTP
+    OTP_EXPIRY_MINUTES: int = 10
+    OTP_LENGTH: int = 6
 
     @property
     def cors_origins(self) -> List[str]:

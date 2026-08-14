@@ -11,6 +11,7 @@ import { Input } from '@/app/components/Inputs/InputText';
 import { Button } from '@/app/components/ui/Button';
 import { SocialLogin } from './SocialLogin';
 import { fadeInUp, staggerContainer } from '@/app/lib/animations';
+import Link from 'next/link';
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -70,6 +71,15 @@ export const LoginForm = () => {
             leftIcon={<Lock size={18} className="text-on-surface-variant/60" />}
             className="border-none outline-none ml-2 w-full"
           />
+        </motion.div>
+
+        <motion.div className="mt-1 flex justify-end" variants={fadeInUp}>
+          <Link
+            href="/bulk-audio/forgot-password"
+            className="text-xs font-medium text-primary/70 transition-colors hover:text-primary hover:underline"
+          >
+            Forgot password?
+          </Link>
         </motion.div>
 
         <motion.div variants={fadeInUp}>
