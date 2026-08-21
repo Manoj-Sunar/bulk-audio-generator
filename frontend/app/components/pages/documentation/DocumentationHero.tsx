@@ -10,6 +10,7 @@ import {
   Shield,
   Zap,
   Clock,
+  Bot,
 } from "lucide-react";
 
 import {
@@ -32,9 +33,10 @@ const STATS = [
 ] as const;
 
 const QUICK_STEPS = [
-  { number: 1, title: "Enter API Key", description: "Paste your ElevenLabs API key" },
-  { number: 2, title: "Paste Scripts", description: "Separate with blank lines" },
-  { number: 3, title: "Generate & Download", description: "Get your ZIP file instantly" },
+  { number: 1, title: "Choose Provider", description: "Select ElevenLabs or Google AI Studio" },
+  { number: 2, title: "Enter API Key", description: "Paste your TTS provider API key" },
+  { number: 3, title: "Paste Scripts", description: "Separate with blank lines" },
+  { number: 4, title: "Generate & Download", description: "Get your ZIP file instantly" },
 ] as const;
 
 export const DocumentationHero = () => {
@@ -70,12 +72,13 @@ export const DocumentationHero = () => {
             <Span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
               Bulk AI Voices
             </Span>{" "}
-            with ElevenLabs
+            with ElevenLabs & Google AI
           </Heading>
 
           <Paragraph size="lg" className="mt-6 max-w-2xl leading-8 text-on-surface-variant">
             Transform your scripts into high-quality AI voices in bulk.
-            Configure ElevenLabs, generate hundreds of audio files,
+            Choose between ElevenLabs or Google AI Studio Text-to-Speech,
+            configure your API key, generate hundreds of audio files,
             and download them instantly — all in one powerful platform.
           </Paragraph>
 

@@ -1,3 +1,4 @@
+// app/components/pages/home/Docs.tsx
 import { DocsHeroSection } from "./HeroSection"
 import { HowToUse } from "./Step"
 

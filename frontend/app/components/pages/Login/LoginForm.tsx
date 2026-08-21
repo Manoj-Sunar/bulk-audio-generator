@@ -12,6 +12,7 @@ import { Button } from '@/app/components/ui/Button';
 import { SocialLogin } from './SocialLogin';
 import { fadeInUp, staggerContainer } from '@/app/lib/animations';
 import Link from 'next/link';
+import { PasswordInput } from '../../Inputs/PasswordInput';
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -59,19 +60,16 @@ export const LoginForm = () => {
           />
         </motion.div>
 
-        <motion.div variants={fadeInUp}>
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isLoading}
-            leftIcon={<Lock size={18} className="text-on-surface-variant/60" />}
-            className="border-none outline-none ml-2 w-full"
-          />
-        </motion.div>
+        <PasswordInput
+          label="Password"
+          placeholder="••••••••"
+          value={password}
+          onChange={setPassword}
+          disabled={loginMutation.isPending}
+          required
+          autoComplete="current-password"
+          className="bg-white/50 outline-none w-full ml-2"
+        />
 
         <motion.div className="mt-1 flex justify-end" variants={fadeInUp}>
           <Link

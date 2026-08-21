@@ -16,15 +16,25 @@ from src.utils.settings import settings
 # ─── Logging with request ID ───────────────────────────────
 class RequestIDFilter(logging.Filter):
     def filter(self, record):
-        record.request_id = getattr(record, 'request_id', 'N/A')
+        # Ensure request_id is present; if not, set to 'N/A'
+        if not hasattr(record, 'request_id'):
+            record.request_id = 'N/A'
         return True
 
+# Configure basic logging with the format including request_id
 logging.basicConfig(
     level=settings.LOG_LEVEL,
     format="%(asctime)s [%(levelname)s] %(name)s (request_id=%(request_id)s): %(message)s",
 )
+
+# Add the filter to the root logger and all existing handlers
+root_logger = logging.getLogger()
+root_logger.addFilter(RequestIDFilter())
+for handler in root_logger.handlers:
+    handler.addFilter(RequestIDFilter())
+
+# Now create the module logger (it will inherit the filter from root)
 logger = logging.getLogger(__name__)
-logger.addFilter(RequestIDFilter())
 
 # ─── Rate Limiter ───────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
@@ -46,8 +56,8 @@ async def add_request_id(request: Request, call_next):
     response.headers["X-Request-ID"] = request_id
     return response
 
-# Trusted Hosts (from env)
-allowed_hosts = ["localhost", "127.0.0.1"] + settings.ALLOWED_ORIGINS.split(",")
+# Trusted Hosts (from env) – filter out empty strings
+allowed_hosts = ["localhost", "127.0.0.1"] + [h for h in settings.ALLOWED_ORIGINS.split(",") if h.strip()]
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=allowed_hosts,

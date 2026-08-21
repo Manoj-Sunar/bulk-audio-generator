@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "../../Inputs/InputText";
 import { Button } from "../../ui/Button";
 import { Paragraph } from "../../typography/Paragraph";
+import { PasswordInput } from "../../Inputs/PasswordInput";
 
 interface RegisterFormProps {
     name: string;
@@ -76,46 +77,26 @@ export const RegisterForm = ({
                 className="transition-all w-full border-none outline-none ml-2"
             />
 
-            <div className="space-y-2">
-                <Input
-                    label="Password"
-                    placeholder="Create a strong password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => onPasswordChange(e.target.value)}
-                    leftIcon={<Lock size={18} />}
-                    rightIcon={
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword((prev) => !prev)}
-                            className="text-on-surface-variant transition hover:text-primary"
-                        >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                    }
-                    className="transition-all w-full border-none outline-none ml-2"
-                />
-                
-                {/* Password Strength Bar */}
-                {password && (
-                    <div className="mt-2 flex gap-1">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div
-                                key={i}
-                                className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                                    i <= passwordStrength
-                                        ? i <= 2
-                                            ? "bg-red-500"
-                                            : i <= 3
-                                            ? "bg-yellow-500"
-                                            : "bg-green-500"
-                                        : "bg-gray-200"
-                                }`}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+            <PasswordInput
+                label="Password"
+                placeholder="Create a strong password"
+                value={password}
+                onChange={onPasswordChange}
+                disabled={loading}
+                required
+                autoComplete="new-password"
+                className="bg-white/50 outline-none w-full ml-2"
+            />
+            <PasswordInput
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={onConfirmPasswordChange}
+                disabled={loading}
+                required
+                autoComplete="new-password"
+                className="bg-white/50 outline-none w-full ml-2"
+            />
 
             <Input
                 label="Confirm Password"
@@ -135,7 +116,7 @@ export const RegisterForm = ({
                 }
                 className="transition-all w-full border-none outline-none ml-2"
             />
-            
+
             <AnimatePresence>
                 {confirmPassword && (
                     <motion.div

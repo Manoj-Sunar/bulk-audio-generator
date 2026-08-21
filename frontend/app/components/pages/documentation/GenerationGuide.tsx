@@ -12,6 +12,8 @@ import {
   ArrowRight,
   Play,
   FolderArchive,
+  Bot,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -29,11 +31,18 @@ import { ImageWithLightbox } from "../../ui/ImageWithLightBox";
 
 const steps = [
   {
+    icon: Sparkles,
+    title: "Choose Your Provider",
+    description: "Select either ElevenLabs or Google AI Studio as your TTS provider. Each offers unique voice options and capabilities.",
+    image: "/provider_selection.png",
+    alt: "Provider Selection",
+  },
+  {
     icon: KeyRound,
     title: "Enter Your API Key",
-   description: "Paste your ElevenLabs API key into the secure input field. It is transmitted to our backend, where it is encrypted (Fernet) and stored securely in the database. The raw key never touches your browser storage.",
+    description: "Paste your ElevenLabs or Google AI Studio API key into the secure input field. It is transmitted to our backend, where it is encrypted (Fernet) and stored securely in the database.",
     image: "/api_key_card.png",
-    alt: "ElevenLabs API Key Input",
+    alt: "API Key Input",
   },
   {
     icon: FileText,
@@ -45,7 +54,7 @@ const steps = [
   {
     icon: Mic,
     title: "Choose Voice Profile",
-    description: "Select your preferred voice from the available profiles. The Adam voice is selected by default.",
+    description: "Select your preferred voice from the available profiles. ElevenLabs and Google AI Studio each offer a variety of voices.",
     image: "/voice_list.png",
     alt: "Voice Selection",
   },
@@ -87,14 +96,14 @@ export const GenerateGuide = () => {
           <Heading as="h2" size="3xl" weight="extrabold">
             Generate Bulk Audio
             <Span className="mx-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              In 5 Simple Steps
+              In 6 Simple Steps
             </Span>
           </Heading>
 
           <Paragraph size="lg" className="mt-6 text-on-surface-variant">
             Follow this visual guide to generate hundreds of AI voices with
-            ElevenLabs. Each step includes a screenshot to help you navigate
-            the process. Click any image to enlarge.
+            ElevenLabs or Google AI Studio. Each step includes a screenshot to
+            help you navigate the process. Click any image to enlarge.
           </Paragraph>
         </motion.div>
 
@@ -143,18 +152,35 @@ export const GenerateGuide = () => {
                               </div>
                               <div>
                                 <Paragraph size="sm" className="font-semibold text-primary">
-                                  Privacy First
+                                  Two Providers Available
                                 </Paragraph>
                                 <Paragraph size="sm" className="text-on-surface-variant">
-                                  Your API key is saved only in your browser's localStorage.
-                                  It is never stored on our servers.
+                                  Choose between ElevenLabs (premium voice quality) or Google AI Studio (great for multilingual support).
                                 </Paragraph>
                               </div>
                             </div>
                           </div>
                         )}
 
-                        {index === 4 && (
+                        {index === 1 && (
+                          <div className="mt-6 rounded-2xl bg-primary-fixed p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                                <CheckCircle2 size={16} />
+                              </div>
+                              <div>
+                                <Paragraph size="sm" className="font-semibold text-primary">
+                                  Privacy First
+                                </Paragraph>
+                                <Paragraph size="sm" className="text-on-surface-variant">
+                                  Your API key is encrypted and stored securely. It is never exposed in the browser.
+                                </Paragraph>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {index === 5 && (
                           <div className="mt-6 flex flex-wrap gap-3">
                             <Button size="sm" rightIcon={<FolderArchive size={16} />}>
                               Download ZIP
@@ -185,7 +211,7 @@ export const GenerateGuide = () => {
           })}
         </motion.div>
 
-        {/* Quick Tips - unchanged */}
+        {/* Quick Tips - updated */}
         <motion.div
           variants={fadeInUp}
           initial="hidden"
@@ -208,6 +234,16 @@ export const GenerateGuide = () => {
                   <div className="rounded-2xl bg-white/50 p-6">
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="text-primary" size={20} />
+                      <Paragraph weight="semibold">Choose Your Provider</Paragraph>
+                    </div>
+                    <Paragraph className="mt-2 text-on-surface-variant">
+                      Select ElevenLabs for premium voice quality or Google AI Studio for multilingual support.
+                    </Paragraph>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/50 p-6">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="text-primary" size={20} />
                       <Paragraph weight="semibold">Separate Scripts</Paragraph>
                     </div>
                     <Paragraph className="mt-2 text-on-surface-variant">
@@ -221,17 +257,7 @@ export const GenerateGuide = () => {
                       <Paragraph weight="semibold">API Key Format</Paragraph>
                     </div>
                     <Paragraph className="mt-2 text-on-surface-variant">
-                      Your ElevenLabs API key starts with "sk_" followed by a long string.
-                    </Paragraph>
-                  </div>
-
-                  <div className="rounded-2xl bg-white/50 p-6">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="text-primary" size={20} />
-                      <Paragraph weight="semibold">Real-time Progress</Paragraph>
-                    </div>
-                    <Paragraph className="mt-2 text-on-surface-variant">
-                      Watch live progress with file count and estimated time remaining.
+                      ElevenLabs keys start with "sk_". Google AI Studio keys are alphanumeric strings.
                     </Paragraph>
                   </div>
 

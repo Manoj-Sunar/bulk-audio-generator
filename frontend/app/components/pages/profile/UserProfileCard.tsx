@@ -12,10 +12,13 @@ import { User as UserType } from '@/app/lib/auth/context';
 import { useCallback } from 'react';
 
 interface UserProfileCardProps {
-  user: UserType;
+  user: UserType; // Now guaranteed non-null
 }
 
 export const UserProfileCard = ({ user }: UserProfileCardProps) => {
+  // If user is null (shouldn't happen), return null
+  if (!user) return null;
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -23,8 +26,6 @@ export const UserProfileCard = ({ user }: UserProfileCardProps) => {
       day: 'numeric',
     });
   };
-
-
 
   const getInitials = useCallback((name: string) => {
     const names = name.split(' ');
@@ -52,7 +53,7 @@ export const UserProfileCard = ({ user }: UserProfileCardProps) => {
           <div className="absolute -bottom-10 left-6">
             <div className="relative">
               <div className="w-20 h-20 rounded-xl bg-white border-2 border-slate-200 shadow-sm p-0.5">
-                {user.avatar === "" || user.avatar === undefined ? (
+                {user.avatar ? (
                   <img
                     src={user.avatar}
                     alt={user.name}
@@ -92,10 +93,11 @@ export const UserProfileCard = ({ user }: UserProfileCardProps) => {
                 <Span size="sm" className="text-slate-600">{user.email}</Span>
               </div>
             </div>
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${user.email_verified
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+              user.email_verified
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 : 'bg-amber-50 text-amber-700 border-amber-200'
-              }`}>
+            }`}>
               {user.email_verified ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
               <Span size="xs" weight="medium">
                 {user.email_verified ? 'Verified' : 'Not Verified'}

@@ -32,18 +32,7 @@ export const RegisterFooter = () => {
 
       {/* Already have account */}
 
-      <Paragraph
-        size="sm"
-        className="text-center text-on-surface-variant"
-      >
-        Already have an account?{" "}
-        <Link
-          href="/bulk-audio/bulk-audio-login"
-          className="font-semibold text-primary transition-colors hover:underline"
-        >
-          Sign In
-        </Link>
-      </Paragraph>
+     
 
       {/* Copyright */}
 

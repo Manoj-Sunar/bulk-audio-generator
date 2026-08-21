@@ -17,17 +17,21 @@ from src.audio.elevenlabs_service import split_script_into_chunks, generate_audi
 from src.utils.encryption import encrypt_api_keys
 from src.user.model import User
 from src.utils.security import sanitize_script_input, sanitize_filename
-
+from src.audio.dtos import ProviderType
+from src.audio import gemini_service
 logger = logging.getLogger(__name__)
 
 def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
     try:
         sanitized_script = sanitize_script_input(req.script)
         encrypted_keys = encrypt_api_keys(req.api_keys)
+        
+        # Use the same chunking function (either service's version)
         chunks = split_script_into_chunks(sanitized_script)
         if not chunks:
             raise HTTPException(400, "Script is empty or contains no paragraphs.")
 
+        # Create generation record (unchanged)
         generation = AudioGeneration(
             user_id=user.id,
             encrypted_api_keys=encrypted_keys,
@@ -40,15 +44,19 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         db.commit()
         db.refresh(generation)
 
-        api_key = req.api_keys[0]
-        results, total_chars = generate_audio_for_chunks_with_retry(
-            chunks, api_key, req.voice_id, req.model_id
-        )
+        api_key = req.api_keys[0]  # Use the first key
 
-        # Store character usage (if needed)
-        # (We no longer store quota, but we can store total_chars if desired)
-        # generation.total_characters_used = total_chars   # optional
+        # --- Route to the appropriate provider ---
+        if req.provider == ProviderType.GEMINI:
+            results, usage = gemini_service.generate_audio_for_chunks(
+                chunks, api_key, req.voice_id
+            )
+        else:  # ElevenLabs (default)
+            results, usage = generate_audio_for_chunks(
+                chunks, api_key, req.voice_id, req.model_id
+            )
 
+        # Store segments (unchanged – both return (title, audio_bytes))
         segments = []
         for idx, (title, audio_bytes) in enumerate(results, 1):
             sanitized_title = sanitize_filename(title)
@@ -64,6 +72,7 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         generation.status = GenerationStatus.COMPLETED
         db.commit()
 
+        # Build response (unchanged)
         response_data = []
         for seg in segments:
             audio_base64 = base64.b64encode(seg.audio_data).decode('utf-8')
@@ -79,7 +88,7 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         return {
             "generation_id": generation.id,
             "segments": response_data,
-            "characters_used": total_chars
+            "usage": usage   # now can be either characters (ElevenLabs) or tokens (Gemini)
         }
 
     except HTTPException:
@@ -87,8 +96,13 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"Audio generation failed for user {user.id}: {str(e)}")
+        logger.error(f"Audio generation failed: {str(e)}")
         raise HTTPException(500, f"Audio generation failed: {str(e)}")
+
+
+
+
+
 
 def generate_audio_for_chunks_with_retry(
     chunks: List[str],
@@ -108,6 +122,11 @@ def generate_audio_for_chunks_with_retry(
             logger.warning(f"Attempt {attempt+1} failed, retrying in {delay:.2f}s...")
             time.sleep(delay)
     raise HTTPException(500, "Maximum retries exceeded")
+
+
+
+
+
 
 def get_voice_insights(voice_id: str) -> Dict[str, Any]:
     if voice_id in VOICE_INSIGHTS:

@@ -32,7 +32,7 @@ export const NAV_LINKS: NavLink[] = [
   },
   {
     name: "GitHub",
-    href: "https://github.com/Manoj-Sunar/bulk-audio-generator",
+    href: "https://github.com/Manoj-Sunar",
     icon: FaGithub,
     external: true,
   },

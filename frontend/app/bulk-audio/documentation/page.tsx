@@ -4,17 +4,20 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://your-domain.com"),
-  title: "Documentation | Bulk Audio Generator using ElevenLabs",
+  title: "Documentation | Bulk Audio Generator using ElevenLabs & Google AI Studio",
   description:
-    "Complete documentation for Bulk Audio Generator. Learn how to configure ElevenLabs API, generate hundreds of AI voices, and use the FastAPI backend.",
+    "Complete documentation for Bulk Audio Generator. Learn how to configure ElevenLabs API and Google AI Studio Text-to-Speech, generate hundreds of AI voices, and use the FastAPI backend.",
   keywords: [
     "Bulk Audio Generator Documentation",
     "Bulk Audio Generation",
     "Bulk AI Voice Generator",
     "ElevenLabs Documentation",
     "ElevenLabs API Guide",
+    "Google AI Studio Documentation",
+    "Google TTS API",
     "Bulk Voice Generator",
     "FastAPI ElevenLabs",
+    "FastAPI Google TTS",
     "Bulk Text To Speech",
     "AI Voice Generator",
     "Generate Multiple Audio Files",
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Bulk Audio Generator Documentation",
     description:
-      "Complete guide for using Bulk Audio Generator with ElevenLabs API.",
+      "Complete guide for using Bulk Audio Generator with ElevenLabs API and Google AI Studio.",
     url: "https://your-domain.com/documentation",
     type: "article",
     images: [
@@ -54,7 +57,7 @@ const jsonLd = {
   "@type": "TechArticle",
   headline: "Bulk Audio Generator Documentation",
   description:
-    "Learn how to use Bulk Audio Generator with ElevenLabs.",
+    "Learn how to use Bulk Audio Generator with ElevenLabs and Google AI Studio.",
   author: {
     "@type": "Organization",
     name: "Bulk Audio Generator",

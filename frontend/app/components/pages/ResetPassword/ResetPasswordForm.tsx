@@ -12,6 +12,7 @@ import { useResetPassword } from "@/app/lib/auth/hooks";
 import { fadeInUp } from "@/app/lib/animations";
 import { PasswordRequirements } from "./PasswordRequirements";
 import { Span } from "../../typography/Span";
+import { PasswordInput } from "../../Inputs/PasswordInput";
 
 interface ResetPasswordFormProps {
   email: string;
@@ -76,46 +77,25 @@ export const ResetPasswordForm = ({ email, otp }: ResetPasswordFormProps) => {
       onSubmit={handleSubmit}
       className="space-y-6"
     >
-      <div className="space-y-1">
-        <Input
-          label="New Password"
-          type="password"
-          placeholder="••••••••"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-          disabled={mutation.isPending}
-          leftIcon={<Lock size={18} className="text-on-surface-variant/60 group-focus-within:text-primary transition-colors" />}
-          className="bg-white/50 outline-none w-full ml-2 transition-all duration-300 focus:ring-2 focus:ring-primary/30"
-        />
-        {newPassword && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="flex gap-1 mt-1"
-          >
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
-                  i <= passwordStrength ? getStrengthColor() : "bg-gray-200"
-                }`}
-              />
-            ))}
-          </motion.div>
-        )}
-      </div>
-
-      <Input
+      <PasswordInput
+        label="New Password"
+        placeholder="••••••••"
+        value={newPassword}
+        onChange={setNewPassword}
+        disabled={mutation.isPending}
+        required
+        autoComplete="new-password"
+        className="bg-white/50 outline-none w-full ml-2"
+      />
+      <PasswordInput
         label="Confirm New Password"
-        type="password"
         placeholder="••••••••"
         value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        required
+        onChange={setConfirmPassword}
         disabled={mutation.isPending}
-        leftIcon={<Lock size={18} className="text-on-surface-variant/60 group-focus-within:text-primary transition-colors" />}
-        className="bg-white/50 outline-none w-full ml-2 transition-all duration-300 focus:ring-2 focus:ring-primary/30"
+        required
+        autoComplete="new-password"
+        className="bg-white/50 outline-none w-full ml-2"
       />
 
       <PasswordRequirements password={newPassword} />

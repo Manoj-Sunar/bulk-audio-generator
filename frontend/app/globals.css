@@ -1,10 +1,6 @@
 @import "tailwindcss";
 
-
-
-
 @theme {
-
   --animate-float: float 7s ease-in-out infinite;
   --animate-float-slow: floatSlow 10s ease-in-out infinite;
   --color-primary: #3748dd;
@@ -64,232 +60,51 @@
   --color-inverse-primary: #bdc2ff;
 }
 
-
-
-
-
-@keyframes heroFloat {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(4deg);
-  }
-
-  50% {
-    transform: translateY(-18px) rotate(4deg);
-  }
+/* ---------- Single definitions (deduplicated) ---------- */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(4deg); }
 }
-
-@keyframes heroFloatSlow {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-14px);
-  }
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
-
 @keyframes heroGlow {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.8;
-    transform: scale(1.08);
-  }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.08); }
 }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInBottom { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseSlow { 0%,100% { transform: scale(1); opacity:0.4; } 50% { transform: scale(1.2); opacity:0.6; } }
+@keyframes gradient { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
 
-.animate-hero-float {
-  animation: heroFloat 7s ease-in-out infinite;
-}
+/* ---------- Utility classes ---------- */
+.animate-float { animation: float 7s ease-in-out infinite; }
+.animate-float-slow { animation: floatSlow 10s ease-in-out infinite; }
+.animate-hero-glow { animation: heroGlow 8s ease-in-out infinite; }
+.animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
+.animate-slideInLeft { animation: slideInLeft 0.6s ease-out forwards; }
+.animate-slideInRight { animation: slideInRight 0.6s ease-out forwards; }
+.animate-slideInBottom { animation: slideInBottom 0.5s ease-out forwards; }
+.animate-pulse-slow { animation: pulseSlow 6s ease-in-out infinite; }
+.animate-gradient { background-size: 200% 200%; animation: gradient 3s ease-in-out infinite; }
 
-.animate-hero-float-slow {
-  animation: heroFloatSlow 8s ease-in-out infinite;
-}
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-600 { animation-delay: 600ms; }
 
-.animate-hero-glow {
-  animation: heroGlow 8s ease-in-out infinite;
-}
-
-
-
-/* globals.css or animations.css */
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInBottom {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(30px, -30px) scale(1.1);
-  }
-}
-
-@keyframes floatDelayed {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(-30px, 30px) scale(1.1);
-  }
-}
-
-@keyframes pulseSlow {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.6;
-  }
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-
-
-
-
-
-.animate-fadeIn {
-  animation: fadeIn 0.6s ease-out forwards;
-}
-
-.animate-slideInLeft {
-  animation: slideInLeft 0.6s ease-out forwards;
-}
-
-.animate-slideInRight {
-  animation: slideInRight 0.6s ease-out forwards;
-}
-
-.animate-slideInBottom {
-  animation: slideInBottom 0.5s ease-out forwards;
-}
-
-.animate-float {
-  animation: float 8s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-  animation: floatDelayed 10s ease-in-out infinite;
-}
-
-.animate-pulse-slow {
-  animation: pulseSlow 6s ease-in-out infinite;
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 3s ease-in-out infinite;
-}
-
-.animation-delay-200 {
-  animation-delay: 200ms;
-}
-
-.animation-delay-400 {
-  animation-delay: 400ms;
-}
-
-.animation-delay-600 {
-  animation-delay: 600ms;
-}
-
-
-
-/* Add to your global styles or tailwind.config.js */
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(10deg); }
-}
-
-@keyframes float-delayed {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(-10deg); }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-  animation: float-delayed 3.5s ease-in-out infinite;
-  animation-delay: 0.5s;
-}
-
-
-/* globals.css - add these for enhanced effects */
+/* Glass effects */
 @layer utilities {
-  .animate-pulse-slow {
-    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
   .glass {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255,255,255,0.1);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255,255,255,0.15);
   }
   .glass-dark {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0,0,0,0.2);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255,255,255,0.05);
   }
 }

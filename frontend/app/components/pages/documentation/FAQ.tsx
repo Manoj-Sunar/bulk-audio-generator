@@ -34,10 +34,11 @@ const faqs: FAQItem[] = [
     answer:
       "Login to your ElevenLabs dashboard, go to your profile settings, navigate to API Keys, and create a new key. Make sure to grant it Text to Speech (for generating audio) and Voice Read (to fetch available voice profiles) permissions. Then copy the key and paste it into this application.",
   },
+  // Inside the faqs array:
   {
     question: "Is my API key stored securely?",
     answer:
-      "Yes. Your API key is stored only inside your browser using localStorage. It is never saved on our servers.",
+      "Yes. Your API key is encrypted (using Fernet symmetric encryption) and stored securely in our database. The raw key is never exposed in the browser or to any third party. Only your authenticated requests can use it to generate audio.",
   },
   {
     question: "How do I separate multiple scripts?",
@@ -113,11 +114,10 @@ export const FAQSection = () => {
             return (
               <motion.div key={faq.question} variants={fadeInUp}>
                 <Card
-                  className={`overflow-hidden rounded-2xl border transition-all duration-300 ${
-                    open
+                  className={`overflow-hidden rounded-2xl border transition-all duration-300 ${open
                       ? "border-primary/20 bg-white/80 shadow-xl shadow-primary/5 backdrop-blur-sm"
                       : "border-transparent bg-white/50 hover:border-primary/10 hover:bg-white/70 hover:shadow-lg hover:shadow-primary/5"
-                  }`}
+                    }`}
                 >
                   <button
                     onClick={() => setOpenIndex(open ? null : index)}
@@ -127,20 +127,18 @@ export const FAQSection = () => {
                       as="h5"
                       size="lg"
                       weight="bold"
-                      className={`pr-6 transition-colors ${
-                        open ? "text-primary" : "text-on-surface"
-                      }`}
+                      className={`pr-6 transition-colors ${open ? "text-primary" : "text-on-surface"
+                        }`}
                     >
                       {faq.question}
                     </Heading>
                     <motion.div
                       animate={{ rotate: open ? 180 : 0 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all ${
-                        open
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all ${open
                           ? "bg-primary/10 text-primary"
                           : "bg-surface-container text-on-surface-variant group-hover:bg-primary/5 group-hover:text-primary"
-                      }`}
+                        }`}
                     >
                       <ChevronDown size={18} />
                     </motion.div>

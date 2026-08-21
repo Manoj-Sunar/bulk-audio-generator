@@ -10,6 +10,7 @@ import {
   ServerCog,
   Sparkles,
   Upload,
+  Bot,
 } from "lucide-react";
 
 import {
@@ -26,7 +27,7 @@ const WORKFLOW_STEPS = [
     icon: Upload,
     title: "User Input",
     color: "bg-primary-fixed text-primary",
-    description: "Paste your ElevenLabs API key and multiple scripts separated by blank lines.",
+    description: "Paste your API key (ElevenLabs or Google AI Studio) and multiple scripts separated by blank lines.",
   },
   {
     icon: Sparkles,
@@ -38,13 +39,13 @@ const WORKFLOW_STEPS = [
     icon: ServerCog,
     title: "Backend Processing",
     color: "bg-primary-fixed text-primary",
-    description: "Processes every script, manages requests, queues generation and communicates with ElevenLabs.",
+    description: "Processes every script, manages requests, queues generation and communicates with the selected TTS provider.",
   },
   {
     icon: Brain,
-    title: "ElevenLabs API",
+    title: "TTS Provider API",
     color: "bg-secondary-fixed text-secondary",
-    description: "Generates realistic AI voices for every script simultaneously.",
+    description: "Generates realistic AI voices using ElevenLabs or Google AI Studio's Text-to-Speech.",
   },
   {
     icon: Download,
@@ -78,7 +79,8 @@ export const ApiWorkflowSection = memo(() => {
 
           <Paragraph className="mt-5 text-on-surface-variant">
             Every request follows a secure workflow from your browser to the backend,
-            then to ElevenLabs, before returning a ZIP containing all generated audio files.
+            then to your chosen TTS provider (ElevenLabs or Google AI Studio), before
+            returning a ZIP containing all generated audio files.
           </Paragraph>
         </motion.div>
 
@@ -137,11 +139,11 @@ export const ApiWorkflowSection = memo(() => {
               </Heading>
               <Paragraph className="mt-6 leading-8 text-on-surface-variant">
                 Your browser never generates audio directly. The frontend validates
-                your scripts and securely sends them to the backend. The
-                backend communicates with the ElevenLabs API, generates every audio
-                file, bundles them into a ZIP archive, and returns the download to
-                your browser. This architecture keeps the application secure,
-                scalable and easy to maintain.
+                your scripts and securely sends them to the backend. The backend
+                communicates with your chosen TTS provider (ElevenLabs or Google AI Studio),
+                generates every audio file, bundles them into a ZIP archive, and returns
+                the download to your browser. This architecture keeps the application
+                secure, scalable and easy to maintain.
               </Paragraph>
             </CardContent>
           </Card>

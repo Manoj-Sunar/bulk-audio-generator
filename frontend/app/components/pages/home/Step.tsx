@@ -1,3 +1,4 @@
+// app/components/pages/home/Step.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -41,7 +42,7 @@ export const HowToUse = () => {
 
           <motion.div variants={fadeInUp}>
             <Paragraph size="lg" className="mt-5 text-on-surface-variant/80 max-w-2xl mx-auto leading-relaxed text-center">
-              From creating your ElevenLabs API key to downloading hundreds of generated voices,
+              From creating your ElevenLabs or Google AI Studio API key to downloading hundreds of generated voices,
               the entire workflow takes only a few minutes.
             </Paragraph>
           </motion.div>
@@ -92,6 +93,18 @@ export const HowToUse = () => {
                   <Paragraph className="leading-7 text-on-surface-variant/80 group-hover:text-on-surface-variant transition-colors duration-300">
                     {description}
                   </Paragraph>
+
+                  {/* Provider badge for step 1 */}
+                  {index === 0 && (
+                    <div className="flex gap-2 pt-2">
+                      <span className="text-xs font-medium text-primary bg-primary-fixed/30 px-3 py-1 rounded-full border border-primary/10">
+                        ElevenLabs
+                      </span>
+                      <span className="text-xs font-medium text-secondary bg-secondary-fixed/30 px-3 py-1 rounded-full border border-secondary/10">
+                        Google AI Studio
+                      </span>
+                    </div>
+                  )}
 
                   {/* Decorative line */}
                   <div className="absolute bottom-0 left-8 right-8 h-0.5 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

@@ -2,12 +2,18 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
+from enum import Enum
+
+class ProviderType(str, Enum):
+    ELEVENLABS = "elevenlabs"
+    GEMINI = "gemini"
 
 class GenerateAudioRequest(BaseModel):
     script: str = Field(..., description="Full script with double newline separators")
-    api_keys: List[str] = Field(..., min_items=1, description="List of ElevenLabs API keys (plain text)")
-    voice_id: str = Field("21m00Tcm4TlvDq8ikWAM", description="ElevenLabs voice ID")
-    model_id: str = Field("eleven_multilingual_v2", description="ElevenLabs model ID")
+    api_keys: List[str] = Field(..., min_items=1, description="List of API keys (ElevenLabs or Gemini)")
+    voice_id: str = Field("21m00Tcm4TlvDq8ikWAM", description="ElevenLabs voice ID or Gemini voice name")
+    model_id: str = Field("eleven_multilingual_v2", description="ElevenLabs model ID (ignored for Gemini)")
+    provider: ProviderType = Field(ProviderType.ELEVENLABS, description="Provider to use")
 
 class SegmentResponse(BaseModel):
     index: int

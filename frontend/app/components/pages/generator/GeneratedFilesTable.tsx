@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Archive, CheckCircle2, Download, Loader2, Pause, Play, Trash2, XCircle, Music } from 'lucide-react';
+import { Archive, CheckCircle2, Download, Loader2, Pause, Play, Trash2, XCircle, Music, Globe, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '../../ui/Card';
 import { Heading } from '../../typography/Heading';
 import { Button } from '../../ui/Button';
@@ -17,8 +17,22 @@ interface GeneratedFilesTableProps {
   onDownloadZip?: () => void;
 }
 
+// Helper to get provider label and color
+const getProviderInfo = (provider: string) => {
+  switch (provider) {
+    case 'elevenlabs':
+      return { label: 'ElevenLabs', color: 'bg-indigo-100 text-indigo-700 border-indigo-200', icon: <Globe size={12} /> };
+    case 'gemini':
+      return { label: 'Gemini', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: <Sparkles size={12} /> };
+    default:
+      return { label: provider, color: 'bg-slate-100 text-slate-700 border-slate-200', icon: null };
+  }
+};
+
 const TableRow = memo(({ file, currentlyPlaying, onPlay, onDownload, onDelete }: any) => {
   const isPlaying = currentlyPlaying === file.id;
+  const providerInfo = getProviderInfo(file.provider || 'elevenlabs');
+
   return (
     <tr className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
       <td className="px-4 py-3">
@@ -43,7 +57,18 @@ const TableRow = memo(({ file, currentlyPlaying, onPlay, onDownload, onDelete }:
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Music size={15} className="text-slate-400" />
-          <span className="font-medium text-slate-700 text-sm truncate max-w-[180px]">{file.fileName}</span>
+          <span className="font-medium text-slate-700 text-sm truncate max-w-[160px]">{file.fileName}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${providerInfo.color}`}>
+            {providerInfo.icon}
+            {providerInfo.label}
+          </span>
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 border border-slate-200">
+            {file.format?.toUpperCase() || 'MP3'}
+          </span>
         </div>
       </td>
       <td className="px-4 py-3">
@@ -129,6 +154,7 @@ export const GeneratedFilesTable = ({ files, currentlyPlaying, onPlay, onDownloa
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Preview</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Filename</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Provider / Format</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
                 </tr>

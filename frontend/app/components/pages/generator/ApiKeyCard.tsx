@@ -1,3 +1,4 @@
+// app/components/pages/generator/ApiKeyCard.tsx
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -10,37 +11,24 @@ import {
   KeyRound,
   ShieldCheck,
   Trash2,
-  Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "../../ui/Card";
 import { Heading } from "../../typography/Heading";
 import { Paragraph } from "../../typography/Paragraph";
 import { Input } from "../../Inputs/InputText";
 import { Button } from "../../ui/Button";
-import { Label } from "../../typography/Label";
 import { fadeInUp, scaleUp } from "@/app/lib/animations";
+import { Provider } from "@/app/types/generator";
 
 interface ApiKeyCardProps {
   value: string;
   onChange: (value: string) => void;
+  provider: Provider; // new
 }
 
-const STORAGE_KEY = "elevenlabs_api_key";
-
-export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
+export const ApiKeyCard = ({ value, onChange, provider }: ApiKeyCardProps) => {
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      onChange(saved);
-    }
-    setIsLoaded(true);
-  }, [onChange]);
-
-
 
   const handleCopy = useCallback(async () => {
     if (!value) return;
@@ -50,11 +38,11 @@ export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
   }, [value]);
 
   const clearKey = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
     onChange("");
   }, [onChange]);
 
-  if (!isLoaded) return null;
+  const providerLabel = provider === 'elevenlabs' ? 'ElevenLabs' : 'Gemini';
+  const providerColor = provider === 'elevenlabs' ? 'indigo' : 'emerald';
 
   return (
     <motion.div
@@ -64,38 +52,44 @@ export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
       transition={{ duration: 0.5 }}
     >
       <Card className="group overflow-hidden rounded-2xl border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-lg shadow-slate-200/30 hover:shadow-xl hover:shadow-indigo-200/20 transition-all duration-500">
-        {/* Top gradient accent */}
-        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className={`h-1 w-full bg-gradient-to-r from-${providerColor}-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
         
         <CardContent className="space-y-5 py-6 px-6">
-          {/* Header */}
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 text-indigo-600 group-hover:scale-110 transition-transform duration-300">
+            <div className={`p-2.5 rounded-xl bg-gradient-to-br from-${providerColor}-500/10 to-purple-500/10 text-${providerColor}-600 group-hover:scale-110 transition-transform duration-300`}>
               <KeyRound size={20} />
             </div>
             <div>
               <Heading as="h3" size="md" weight="semibold" className="text-slate-800">
-                ElevenLabs API Key
+                {providerLabel} API Key
               </Heading>
               <Paragraph size="xs" className="text-slate-500">
-                Securely stored in your browser
+                {provider === 'elevenlabs'
+                  ? 'Enter your ElevenLabs API key from the dashboard'
+                  : 'Enter your Google Gemini API key from AI Studio'}
               </Paragraph>
             </div>
           </div>
 
-          {/* Input */}
           <div className="relative">
             <Input
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter your ElevenLabs API key..."
+              placeholder={
+                provider === 'elevenlabs'
+                  ? 'Enter your ElevenLabs API key...'
+                  : 'Enter your Gemini API key...'
+              }
               type={showKey ? "text" : "password"}
-              helperText="Your API key never leaves your browser."
+              helperText={
+                provider === 'elevenlabs'
+                  ? 'Your key is encrypted and stored securely.'
+                  : 'Your key is used only for this request and never stored unencrypted.'
+              }
               className="w-full py-3 px-4 rounded-xl border-slate-200/80 bg-white/50 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all duration-200 outline-none"
             />
           </div>
 
-          {/* Actions */}
           <div className="flex flex-wrap gap-2.5">
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
@@ -148,22 +142,22 @@ export const ApiKeyCard = ({ value, onChange }: ApiKeyCardProps) => {
             </motion.div>
           </div>
 
-          {/* Privacy Notice */}
           <motion.div
             variants={scaleUp}
             initial="hidden"
             animate="visible"
             transition={{ delay: 0.3 }}
-            className="flex items-start gap-3 rounded-xl bg-gradient-to-br from-indigo-50/80 to-purple-50/80 border border-indigo-100/50 px-4 py-3.5"
+            className={`flex items-start gap-3 rounded-xl bg-gradient-to-br from-${providerColor}-50/80 to-purple-50/80 border border-${providerColor}-100/50 px-4 py-3.5`}
           >
-            <ShieldCheck size={20} className="mt-0.5 shrink-0 text-indigo-600" />
+            <ShieldCheck size={20} className={`mt-0.5 shrink-0 text-${providerColor}-600`} />
             <div>
-              <Paragraph size="sm" weight="semibold" className="text-indigo-900">
-                🔒 Privacy First
+              <Paragraph size="sm" weight="semibold" className={`text-${providerColor}-900`}>
+                🔒 Enterprise‑Grade Security
               </Paragraph>
               <Paragraph size="xs" className="mt-0.5 text-slate-600 leading-relaxed">
-                Your API key is saved only in your browser's localStorage. 
-                It is never stored on our servers.
+                {provider === 'elevenlabs'
+                  ? 'Your ElevenLabs API key is encrypted (Fernet) and stored in our database. It is never exposed in the browser.'
+                  : 'Your Gemini API key is sent directly to the backend and never stored in plaintext.'}
               </Paragraph>
             </div>
           </motion.div>

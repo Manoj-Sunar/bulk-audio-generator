@@ -1,8 +1,9 @@
+// app/components/pages/home/HeroSection.tsx
 "use client";
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Sparkles, Zap, ShieldCheck, ArrowRight } from "lucide-react";
+import { Sparkles, Zap, ShieldCheck, ArrowRight, Bot } from "lucide-react";
 
 import { Heading } from "../../typography/Heading";
 import { Paragraph } from "../../typography/Paragraph";
@@ -32,7 +33,7 @@ export const DocsHeroSection = () => {
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-fixed px-5 py-2 shadow-sm">
                 <Sparkles size={16} className="text-primary" />
                 <Paragraph size="sm" className="font-semibold text-primary">
-                  Powered by ElevenLabs API
+                  Powered by ElevenLabs & Google AI Studio
                 </Paragraph>
               </div>
             </motion.div>
@@ -45,7 +46,7 @@ export const DocsHeroSection = () => {
                   100+
                 </Span>{" "}
                 Bulk AI Voices{" "}
-                <Span  className="text-on-background" size="6xl" weight="extrabold" >
+                <Span className="text-on-background" size="6xl" weight="extrabold">
                   in One Click
                 </Span>
               </Heading>
@@ -56,7 +57,8 @@ export const DocsHeroSection = () => {
               <Paragraph size="lg" className="max-w-xl leading-8 text-on-surface-variant/80">
                 Upload hundreds of scripts, generate AI voices in parallel,
                 and download everything instantly using your own
-                <Span className="font-semibold text-primary"> ElevenLabs API key</Span>.
+                <Span className="font-semibold text-primary"> ElevenLabs</Span> or
+                <Span className="font-semibold text-secondary"> Google AI Studio</Span> API key.
                 Save hours of manual work with blazing-fast AI voice generation.
               </Paragraph>
             </motion.div>
@@ -67,7 +69,7 @@ export const DocsHeroSection = () => {
                 size="lg"
                 className="rounded-full px-8 shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 group"
               >
-                <Link href={"/bulk-audio/bulk-audio-login"}>Get Started</Link>
+                <Link href={"/bulk-audio/generator"}>Get Started</Link>
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
@@ -99,6 +101,18 @@ export const DocsHeroSection = () => {
                 </div>
                 <Paragraph size="sm" className="font-medium">Instant ZIP Export</Paragraph>
               </div>
+            </motion.div>
+
+            {/* Provider Badges */}
+            <motion.div variants={fadeInUp} className="flex flex-wrap gap-3 pt-2">
+              <motion.a href="https://elevenlabs.io/app/home" target="_blank" className="flex items-center gap-2 rounded-full bg-primary-fixed/30 px-4 py-1.5 border border-primary/10">
+                <Sparkles size={14} className="text-primary" />
+                <Paragraph size="sm" className="font-medium text-primary">ElevenLabs</Paragraph>
+              </motion.a>
+              <motion.a href="https://aistudio.google.com/prompts/new_chat" target="_blank" className="flex items-center gap-2 rounded-full bg-secondary-fixed/30 px-4 py-1.5 border border-secondary/10">
+                <Bot size={14} className="text-secondary" />
+                <Paragraph size="sm" className="font-medium text-secondary">Google AI Studio</Paragraph>
+              </motion.a>
             </motion.div>
           </div>
 
