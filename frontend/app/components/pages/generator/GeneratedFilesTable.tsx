@@ -1,3 +1,4 @@
+// app/components/pages/generator/GeneratedFilesTable.tsx - Simplified version
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,87 +29,6 @@ const getProviderInfo = (provider: string) => {
       return { label: provider, color: 'bg-slate-100 text-slate-700 border-slate-200', icon: null };
   }
 };
-
-const TableRow = memo(({ file, currentlyPlaying, onPlay, onDownload, onDelete }: any) => {
-  const isPlaying = currentlyPlaying === file.id;
-  const providerInfo = getProviderInfo(file.provider || 'elevenlabs');
-
-  return (
-    <tr className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
-      <td className="px-4 py-3">
-        {file.status === 'processing' ? (
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
-            <Loader2 size={16} className="animate-spin text-slate-400" />
-          </div>
-        ) : (
-          <button
-            onClick={() => onPlay?.(file)}
-            disabled={!file.audioUrl}
-            className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
-              isPlaying
-                ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            } disabled:opacity-50`}
-          >
-            {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} className="ml-0.5" fill="currentColor" />}
-          </button>
-        )}
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Music size={15} className="text-slate-400" />
-          <span className="font-medium text-slate-700 text-sm truncate max-w-[160px]">{file.fileName}</span>
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${providerInfo.color}`}>
-            {providerInfo.icon}
-            {providerInfo.label}
-          </span>
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 border border-slate-200">
-            {file.format?.toUpperCase() || 'MP3'}
-          </span>
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium ${
-          file.status === 'success' ? 'bg-green-50 text-green-700 border-green-200' :
-          file.status === 'processing' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-          'bg-red-50 text-red-700 border-red-200'
-        }`}>
-          {file.status === 'success' && <CheckCircle2 size={12} />}
-          {file.status === 'processing' && <Loader2 size={12} className="animate-spin" />}
-          {file.status === 'failed' && <XCircle size={12} />}
-          {file.status === 'success' ? 'Ready' : file.status === 'processing' ? 'Generating' : 'Failed'}
-        </span>
-      </td>
-      <td className="px-4 py-3 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <button
-            disabled={file.status !== 'success'}
-            onClick={() => onDownload?.(file)}
-            className={`p-1.5 rounded transition ${
-              file.status === 'success' ? 'text-slate-600 hover:bg-slate-100' : 'text-slate-300 cursor-not-allowed'
-            }`}
-          >
-            <Download size={16} />
-          </button>
-          <button
-            disabled={file.status === 'processing'}
-            onClick={() => onDelete?.(file)}
-            className={`p-1.5 rounded transition ${
-              file.status === 'processing' ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'
-            }`}
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
-});
-TableRow.displayName = 'TableRow';
 
 export const GeneratedFilesTable = ({ files, currentlyPlaying, onPlay, onDownload, onDelete, onDownloadZip }: GeneratedFilesTableProps) => {
   const successCount = files.filter(f => f.status === 'success').length;
@@ -161,23 +81,92 @@ export const GeneratedFilesTable = ({ files, currentlyPlaying, onPlay, onDownloa
               </thead>
               <tbody>
                 <AnimatePresence mode="popLayout">
-                  {files.map((file) => (
-                    <motion.tr
-                      key={file.id}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <TableRow
-                        file={file}
-                        currentlyPlaying={currentlyPlaying}
-                        onPlay={onPlay}
-                        onDownload={onDownload}
-                        onDelete={onDelete}
-                      />
-                    </motion.tr>
-                  ))}
+                  {files.map((file) => {
+                    const isPlaying = currentlyPlaying === file.id;
+                    const providerInfo = getProviderInfo(file.provider || 'elevenlabs');
+                    
+                    return (
+                      <motion.tr
+                        key={file.id}
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors"
+                      >
+                        <td className="px-4 py-3">
+                          {file.status === 'processing' ? (
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+                              <Loader2 size={16} className="animate-spin text-slate-400" />
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => onPlay?.(file)}
+                              disabled={!file.audioUrl}
+                              className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
+                                isPlaying
+                                  ? 'bg-red-500 text-white hover:bg-red-600'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              } disabled:opacity-50`}
+                            >
+                              {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} className="ml-0.5" fill="currentColor" />}
+                            </button>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <Music size={15} className="text-slate-400" />
+                            <span className="font-medium text-slate-700 text-sm truncate max-w-[160px]">{file.fileName}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${providerInfo.color}`}>
+                              {providerInfo.icon}
+                              {providerInfo.label}
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 border border-slate-200">
+                              {file.format?.toUpperCase() || 'MP3'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium ${
+                            file.status === 'success' ? 'bg-green-50 text-green-700 border-green-200' :
+                            file.status === 'processing' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            'bg-red-50 text-red-700 border-red-200'
+                          }`}>
+                            {file.status === 'success' && <CheckCircle2 size={12} />}
+                            {file.status === 'processing' && <Loader2 size={12} className="animate-spin" />}
+                            {file.status === 'failed' && <XCircle size={12} />}
+                            {file.status === 'success' ? 'Ready' : file.status === 'processing' ? 'Generating' : 'Failed'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              disabled={file.status !== 'success'}
+                              onClick={() => onDownload?.(file)}
+                              className={`p-1.5 rounded transition ${
+                                file.status === 'success' ? 'text-slate-600 hover:bg-slate-100' : 'text-slate-300 cursor-not-allowed'
+                              }`}
+                            >
+                              <Download size={16} />
+                            </button>
+                            <button
+                              disabled={file.status === 'processing'}
+                              onClick={() => onDelete?.(file)}
+                              className={`p-1.5 rounded transition ${
+                                file.status === 'processing' ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'
+                              }`}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </AnimatePresence>
               </tbody>
             </table>

@@ -8,30 +8,35 @@ import zipfile
 import base64
 import logging
 import time
-from typing import Any, List, Tuple
+import json
+from typing import Any, List, Tuple, Generator
 
 from src.utils.constants import VOICE_INSIGHTS
 from src.audio.model import AudioGeneration, AudioSegment, GenerationStatus
 from src.audio.dtos import GenerateAudioRequest
-from src.audio.elevenlabs_service import split_script_into_chunks, generate_audio_for_chunks
+from src.audio.elevenlabs_service import split_script_into_chunks, generate_audio_for_single_chunk
 from src.utils.encryption import encrypt_api_keys
 from src.user.model import User
 from src.utils.security import sanitize_script_input, sanitize_filename
 from src.audio.dtos import ProviderType
 from src.audio import gemini_service
+
 logger = logging.getLogger(__name__)
 
-def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
+def generate_and_stream_audio(req: GenerateAudioRequest, user: User, db: Session):
+    """
+    Stream audio generation progress and results via SSE.
+    Each chunk is sent to the client as soon as it's generated.
+    """
     try:
         sanitized_script = sanitize_script_input(req.script)
         encrypted_keys = encrypt_api_keys(req.api_keys)
         
-        # Use the same chunking function (either service's version)
         chunks = split_script_into_chunks(sanitized_script)
         if not chunks:
             raise HTTPException(400, "Script is empty or contains no paragraphs.")
 
-        # Create generation record (unchanged)
+        # Create generation record
         generation = AudioGeneration(
             user_id=user.id,
             encrypted_api_keys=encrypted_keys,
@@ -44,19 +49,135 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         db.commit()
         db.refresh(generation)
 
-        api_key = req.api_keys[0]  # Use the first key
+        api_key = req.api_keys[0]
+        
+        # Determine provider
+        provider_name = "gemini" if req.provider == ProviderType.GEMINI else "elevenlabs"
 
-        # --- Route to the appropriate provider ---
+        # --- Streaming generator ---
+        def event_generator() -> Generator[str, None, None]:
+            try:
+                total_chunks = len(chunks)
+                total_chars = 0
+                results = []
+                
+                # Send initial status
+                yield f"data: {json.dumps({'type': 'start', 'generation_id': generation.id, 'total': total_chunks, 'provider': provider_name})}\n\n"
+
+                for idx, chunk in enumerate(chunks, 1):
+                    # Generate audio for this chunk
+                    try:
+                        if req.provider == ProviderType.GEMINI:
+                            chunk_result, chars_used = gemini_service.generate_audio_for_single_chunk(
+                                chunk, api_key, req.voice_id
+                            )
+                        else:
+                            chunk_result, chars_used = generate_audio_for_single_chunk(
+                                chunk, api_key, req.voice_id, req.model_id
+                            )
+                        
+                        title, audio_bytes = chunk_result
+                        total_chars += chars_used
+                        
+                        # Store in database
+                        sanitized_title = sanitize_filename(title)
+                        segment = AudioSegment(
+                            generation_id=generation.id,
+                            index=idx,
+                            title=sanitized_title,
+                            audio_data=audio_bytes
+                        )
+                        db.add(segment)
+                        db.commit()
+                        
+                        # Prepare response
+                        audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+                        segment_data = {
+                            "id": str(segment.id),
+                            "index": idx,
+                            "title": sanitized_title,
+                            "audio_data": audio_base64,
+                            "created_at": segment.created_at.isoformat() if segment.created_at else None,
+                            "chars_used": chars_used
+                        }
+                        
+                        # Send progress update with the file
+                        yield f"data: {json.dumps({'type': 'progress', 'current': idx, 'total': total_chunks, 'segment': segment_data})}\n\n"
+                        
+                        results.append(segment_data)
+                        
+                    except Exception as e:
+                        # Send error for this chunk
+                        yield f"data: {json.dumps({'type': 'error', 'index': idx, 'message': str(e)})}\n\n"
+                        logger.error(f"Failed to generate chunk {idx}: {str(e)}")
+                
+                # Update generation status
+                generation.status = GenerationStatus.COMPLETED
+                db.commit()
+                
+                # Send completion event
+                yield f"data: {json.dumps({'type': 'complete', 'generation_id': generation.id, 'total': len(results), 'total_chars': total_chars})}\n\n"
+                
+            except Exception as e:
+                db.rollback()
+                logger.error(f"Stream generation failed: {str(e)}")
+                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            finally:
+                db.close()
+
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",  # Disable Nginx buffering
+            }
+        )
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Audio generation failed: {str(e)}")
+        raise HTTPException(500, f"Audio generation failed: {str(e)}")
+
+
+def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
+    """Legacy batch generation - kept for backward compatibility"""
+    try:
+        sanitized_script = sanitize_script_input(req.script)
+        encrypted_keys = encrypt_api_keys(req.api_keys)
+        
+        chunks = split_script_into_chunks(sanitized_script)
+        if not chunks:
+            raise HTTPException(400, "Script is empty or contains no paragraphs.")
+
+        generation = AudioGeneration(
+            user_id=user.id,
+            encrypted_api_keys=encrypted_keys,
+            script_chunks=chunks,
+            voice_id=req.voice_id,
+            model_id=req.model_id,
+            status=GenerationStatus.PROCESSING
+        )
+        db.add(generation)
+        db.commit()
+        db.refresh(generation)
+
+        api_key = req.api_keys[0]
+
         if req.provider == ProviderType.GEMINI:
             results, usage = gemini_service.generate_audio_for_chunks(
                 chunks, api_key, req.voice_id
             )
-        else:  # ElevenLabs (default)
-            results, usage = generate_audio_for_chunks(
+        else:
+            from src.audio.elevenlabs_service import generate_audio_for_chunks as eleven_generate
+            results, usage = eleven_generate(
                 chunks, api_key, req.voice_id, req.model_id
             )
 
-        # Store segments (unchanged – both return (title, audio_bytes))
         segments = []
         for idx, (title, audio_bytes) in enumerate(results, 1):
             sanitized_title = sanitize_filename(title)
@@ -72,7 +193,6 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         generation.status = GenerationStatus.COMPLETED
         db.commit()
 
-        # Build response (unchanged)
         response_data = []
         for seg in segments:
             audio_base64 = base64.b64encode(seg.audio_data).decode('utf-8')
@@ -88,7 +208,7 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         return {
             "generation_id": generation.id,
             "segments": response_data,
-            "usage": usage   # now can be either characters (ElevenLabs) or tokens (Gemini)
+            "usage": usage
         }
 
     except HTTPException:
@@ -98,34 +218,6 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
         db.rollback()
         logger.error(f"Audio generation failed: {str(e)}")
         raise HTTPException(500, f"Audio generation failed: {str(e)}")
-
-
-
-
-
-
-def generate_audio_for_chunks_with_retry(
-    chunks: List[str],
-    api_key: str,
-    voice_id: str,
-    model_id: str,
-    max_retries: int = 3,
-    base_delay: float = 1.0
-) -> Tuple[List[Tuple[str, bytes]], int]:
-    for attempt in range(max_retries):
-        try:
-            return generate_audio_for_chunks(chunks, api_key, voice_id, model_id)
-        except HTTPException as e:
-            if attempt == max_retries - 1:
-                raise
-            delay = base_delay * (2 ** attempt)
-            logger.warning(f"Attempt {attempt+1} failed, retrying in {delay:.2f}s...")
-            time.sleep(delay)
-    raise HTTPException(500, "Maximum retries exceeded")
-
-
-
-
 
 
 def get_voice_insights(voice_id: str) -> Dict[str, Any]:

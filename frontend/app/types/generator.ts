@@ -1,6 +1,8 @@
+// app/types/generator.ts
 export type GenerationStatus = 'idle' | 'generating' | 'completed' | 'failed';
 export type FileStatus = 'success' | 'processing' | 'failed';
 export type Provider = 'elevenlabs' | 'gemini';
+export type LogStatus = 'success' | 'processing' | 'error'; // ✅ Add this
 
 export interface GeneratedAudioFile {
   id: string;
@@ -10,15 +12,15 @@ export interface GeneratedAudioFile {
   blob?: Blob;
   index: number;
   created_at?: string;
-  provider: Provider;          // new
-  format: 'mp3' | 'wav';       // new
+  provider: Provider;
+  format: 'mp3' | 'wav';
 }
 
 export interface GenerationLog {
   id: number;
   time: string;
   message: string;
-  status: 'success' | 'processing' | 'error';
+  status: LogStatus; // ✅ Use LogStatus instead of FileStatus
 }
 
 export interface GeneratorStats {

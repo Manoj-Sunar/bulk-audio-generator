@@ -1,4 +1,4 @@
-// src/lib/axios/client.ts
+// app/lib/axios/client.ts (add getCsrfToken function)
 import axios, { AxiosError } from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
@@ -11,6 +11,14 @@ export interface ApiErrorResponse {
   errors?: Record<string, string[]>;
 }
 
+// Helper to get CSRF token from cookie
+export function getCsrfToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const cookies = document.cookie.split('; ');
+  const csrfCookie = cookies.find(row => row.startsWith('csrf_token='));
+  return csrfCookie ? csrfCookie.split('=')[1] : null;
+}
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -18,19 +26,13 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 120000, // 30 seconds timeout for production
+  timeout: 120000,
 });
-
-
-
 
 // Request Interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    const csrfToken = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('csrf_token='))
-      ?.split('=')[1];
+    const csrfToken = getCsrfToken();
     
     if (csrfToken) {
       config.headers['X-CSRF-Token'] = csrfToken;
@@ -58,14 +60,11 @@ const processQueue = (error: any = null) => {
   failedQueue = [];
 };
 
-
-
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
     
-    // If 401 and not a refresh request
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -97,14 +96,10 @@ apiClient.interceptors.response.use(
   }
 );
 
-
-
-// ✅ Production Error Extractor
 export function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as ApiErrorResponse;
     
-    // Use our structured response
     if (data?.message) {
       return data.message;
     }

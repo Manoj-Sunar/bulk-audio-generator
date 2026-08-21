@@ -9,8 +9,9 @@ import { Card, CardContent } from '../../ui/Card';
 import { Heading } from '../../typography/Heading';
 import { Paragraph } from '../../typography/Paragraph';
 import { fadeInUp, listItemVariants } from '@/app/lib/animations';
+import { GenerationLog } from '@/app/types/generator';
 
-interface ProgressLog {
+interface ProgressLog{
   id: number;
   time: string;
   message: string;
@@ -40,7 +41,6 @@ export const LiveProgress = ({
   const [elapsed, setElapsed] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Calculate statistics using useMemo
   const stats = useMemo(() => ({
     successCount: logs.filter(l => l.status === 'success').length,
     errorCount: logs.filter(l => l.status === 'error').length,
@@ -57,7 +57,6 @@ export const LiveProgress = ({
     return () => clearInterval(timer);
   }, [running]);
 
-  // ETA calculation using useMemo (optimised)
   const eta = useMemo(() => {
     if (!running || completed === 0) return 'Calculating...';
     const remaining = total - completed;
@@ -71,12 +70,10 @@ export const LiveProgress = ({
     return `~${mins}m ${secs}s`;
   }, [running, completed, total, elapsed, estimatedTimePerFile]);
 
-  // Speed
   const processingSpeed = useMemo(() => {
     return completed / Math.max(elapsed, 1);
   }, [completed, elapsed]);
 
-  // Celebration
   useEffect(() => {
     if (completed === total && total > 0 && !running) {
       setShowCelebration(true);
@@ -137,7 +134,6 @@ export const LiveProgress = ({
                 )}
               </motion.div>
             </div>
-            {/* Stats grid */}
             <div className="grid grid-cols-4 gap-2 pt-1">
               <div className="flex items-center gap-1.5"><div className="p-1 rounded bg-emerald-100/50"><CheckCircle2 size={12} className="text-emerald-600" /></div><span className="text-xs font-medium text-slate-600">{stats.successCount}</span></div>
               <div className="flex items-center gap-1.5"><div className="p-1 rounded bg-amber-100/50"><Loader2 size={12} className="text-amber-600 animate-spin" /></div><span className="text-xs font-medium text-slate-600">{stats.processingCount}</span></div>

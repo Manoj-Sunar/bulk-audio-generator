@@ -11,7 +11,7 @@ class ProviderType(str, Enum):
 class GenerateAudioRequest(BaseModel):
     script: str = Field(..., description="Full script with double newline separators")
     api_keys: List[str] = Field(..., min_items=1, description="List of API keys (ElevenLabs or Gemini)")
-    voice_id: str = Field("21m00Tcm4TlvDq8ikWAM", description="ElevenLabs voice ID or Gemini voice name")
+    voice_id: str = Field("pNInz6obpgDQGcFmaJgB", description="ElevenLabs voice ID or Gemini voice name")
     model_id: str = Field("eleven_multilingual_v2", description="ElevenLabs model ID (ignored for Gemini)")
     provider: ProviderType = Field(ProviderType.ELEVENLABS, description="Provider to use")
 

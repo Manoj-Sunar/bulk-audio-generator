@@ -1,18 +1,15 @@
-// src/lib/audio/hook.ts
+// app/lib/audio/hook.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, extractErrorMessage } from '../axios/client';
 import { toast } from 'sonner';
-
-
 
 export type GenerateAudioInput = {
   script: string;
   api_keys: string[];
   voice_id?: string;
   model_id?: string;
+  provider?: string;
 };
-
-
 
 export type SegmentResponse = {
   id: number;
@@ -23,14 +20,11 @@ export type SegmentResponse = {
   created_at: string | null;
 };
 
-
-
 export type GenerateAudioResponse = {
   generation_id: number;
   segments: SegmentResponse[];
+  usage?: number;
 };
-
-
 
 export type GenerationListResponse = {
   data: {
@@ -41,6 +35,7 @@ export type GenerationListResponse = {
     created_at: string;
     voice_id: string;
     model_id: string;
+    voice_insights?: any;
   }[];
   pagination: {
     total: number;
@@ -49,9 +44,6 @@ export type GenerationListResponse = {
     has_more: boolean;
   };
 };
-
-
-
 
 export function useGenerateAudio() {
   return useMutation({
@@ -66,8 +58,6 @@ export function useGenerateAudio() {
   });
 }
 
-
-
 export function useGenerateAndPlayAudio() {
   return useMutation({
     mutationFn: async (data: GenerateAudioInput) => {
@@ -75,7 +65,6 @@ export function useGenerateAndPlayAudio() {
         const response = await apiClient.post('/audio/generate-play', data);
         return response.data as GenerateAudioResponse;
       } catch (error: any) {
-        // Re-throw with proper error message
         throw new Error(extractErrorMessage(error));
       }
     },
@@ -86,25 +75,18 @@ export function useGenerateAndPlayAudio() {
   });
 }
 
-
-
-
-export function useGenerationsList(skip: number = 0, limit: number = 50,includeAudio:boolean=true) {
+export function useGenerationsList(skip: number = 0, limit: number = 50, includeAudio: boolean = true) {
   return useQuery({
-    queryKey: ['audio-generations', skip, limit,includeAudio],
+    queryKey: ['audio-generations', skip, limit, includeAudio],
     queryFn: async () => {
       const response = await apiClient.get('/audio/generations', {
-        params: { skip, limit, includeAudio, include_audio: includeAudio },
+        params: { skip, limit, include_audio: includeAudio },
       });
       return response.data as GenerationListResponse;
     },
-    staleTime: 30000, // 30 seconds
+    staleTime: 30000,
   });
 }
-
-
-
-
 
 export function useGenerationDetails(generationId: number | null) {
   return useQuery({
@@ -117,10 +99,6 @@ export function useGenerationDetails(generationId: number | null) {
     staleTime: 60000,
   });
 }
-
-
-
-
 
 export function useDeleteGeneration() {
   const queryClient = useQueryClient();
@@ -141,9 +119,6 @@ export function useDeleteGeneration() {
   });
 }
 
-
-
-
 export function useDownloadGeneration() {
   return useMutation({
     mutationFn: async (generationId: number) => {
@@ -151,7 +126,6 @@ export function useDownloadGeneration() {
         responseType: 'blob',
       });
       
-      // Trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;

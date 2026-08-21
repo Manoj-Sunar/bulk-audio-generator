@@ -1,10 +1,10 @@
 # src/audio/route.py
-from fastapi import APIRouter, Depends, Query, Request, HTTPException   # <-- add Request
+from fastapi import APIRouter, Depends, Query, Request, HTTPException
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from src.utils.db import get_db
-from src.utils.auth import get_current_user, require_csrf_token
+from src.utils.auth import get_current_user, require_csrf_token, optional_csrf_token
 from src.audio import controllers
 from src.audio.dtos import GenerateAudioRequest
 from src.user.model import User
@@ -15,7 +15,7 @@ limiter = Limiter(key_func=get_remote_address)
 @audio_routes.post("/generate-play")
 @limiter.limit("5/minute")
 def generate_and_play(
-    request: Request,              # <-- added
+    request: Request,
     req: GenerateAudioRequest,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -23,10 +23,25 @@ def generate_and_play(
 ):
     return controllers.generate_and_play_audio(req, user, db)
 
+@audio_routes.post("/generate-stream")
+@limiter.limit("5/minute")
+def generate_and_stream(
+    request: Request,
+    req: GenerateAudioRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    csrf_valid: bool = Depends(optional_csrf_token)  # Use optional CSRF
+):
+    """
+    Stream audio generation with Server-Sent Events (SSE).
+    Each file is sent to the client as soon as it's generated.
+    """
+    return controllers.generate_and_stream_audio(req, user, db)
+
 @audio_routes.get("/generations")
 @limiter.limit("10/minute")
 def list_generations(
-    request: Request,              # <-- added
+    request: Request,
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     include_audio: bool = Query(False),
@@ -36,10 +51,20 @@ def list_generations(
 ):
     return controllers.list_generations(user, db, skip, limit, include_audio, max_audio_previews)
 
+@audio_routes.get("/generation/{generation_id}")
+@limiter.limit("10/minute")
+def get_generation(
+    request: Request,
+    generation_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    return controllers.get_generation(generation_id, user, db)
+
 @audio_routes.get("/generation/{generation_id}/download")
 @limiter.limit("10/minute")
 def download_generation(
-    request: Request,              # <-- added
+    request: Request,
     generation_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
@@ -49,7 +74,7 @@ def download_generation(
 @audio_routes.delete("/generation/{generation_id}")
 @limiter.limit("5/minute")
 def delete_generation(
-    request: Request,              # <-- added
+    request: Request,
     generation_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
