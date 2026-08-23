@@ -5,11 +5,8 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/app/lib/auth/context';
 import { 
-  Sparkles, 
-  Grid,        // ✅ Use 'Grid' instead of 'LayoutGrid' or 'Grid3x3'
-  List,        // ✅ Use 'List' instead of 'LayoutList' 
-  Plus, 
-  RefreshCw 
+  Sparkles, Grid, List, Plus, RefreshCw,
+  LayoutDashboard, Music
 } from 'lucide-react';
 import { useGenerationsList, useDeleteGeneration, useDownloadGeneration } from '@/app/lib/audio/hook';
 import { staggerContainer } from '@/app/lib/animations';
@@ -24,6 +21,7 @@ import { Paragraph } from '@/app/components/typography/Paragraph';
 import { EmptyState } from '@/app/components/pages/profile/EmptyState';
 import { GenerationCard } from '@/app/components/pages/profile/GenerationCard';
 import Link from 'next/link';
+import { Background } from '@/app/components/ui/Background';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -53,82 +51,73 @@ const ProfilePage = () => {
 
   return (
     <AuthGuard>
-      <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30"
-      >
-        <div className="max-w-7xl mx-auto px-4 py-8 lg:px-6 lg:py-10">
+      <main className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+        <Background />
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 lg:px-6 lg:py-8">
           {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25">
-                <Sparkles className="w-7 h-7" />
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+                <LayoutDashboard className="w-6 h-6" />
               </div>
               <div>
-                <Heading as="h1" size="4xl" weight="extrabold" className="text-slate-900 tracking-tight">
-                  My Studio
+                <Heading as="h1" size="2xl" weight="bold" className="text-slate-900">
+                  Studio
                 </Heading>
-                <Paragraph size="md" className="text-slate-500 flex items-center gap-2 mt-1">
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <Paragraph size="sm" className="text-slate-500 flex items-center gap-2">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   {stats.total} generations • {stats.totalSegments} audio files
                 </Paragraph>
               </div>
             </div>
             
-            <Link href="/bulk-audio">
+            <Link href="/bulk-audio/generator">
               <Button
-                size="lg"
-                leftIcon={<Plus className="w-5 h-5" />}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transition-all duration-300 rounded-2xl px-8 py-4 text-base font-semibold group"
+                size="md"
+                leftIcon={<Plus className="w-4 h-4" />}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 rounded-xl px-5 py-2.5 text-sm font-medium"
               >
                 New Generation
-                <motion.span
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="ml-2 inline-block"
-                >
-                  →
-                </motion.span>
               </Button>
             </Link>
           </motion.div>
 
-          {/* Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-            {/* Left sidebar */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
+          {/* Content Grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            {/* Left Sidebar */}
+            <motion.aside
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="xl:col-span-5 space-y-3"
+              transition={{ duration: 0.4 }}
+              className="xl:col-span-4 space-y-4"
             >
               <UserProfileCard user={user!} />
               <StatsCard stats={stats} />
-            </motion.div>
+            </motion.aside>
 
-            {/* Main content */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
+            {/* Main Content */}
+            <motion.section
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="xl:col-span-7 space-y-6"
+              transition={{ duration: 0.4, delay: 0.05 }}
+              className="xl:col-span-8 space-y-4"
             >
               {/* Toolbar */}
-              <Card className="border border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl bg-white/80 backdrop-blur-sm">
-                <CardContent className="p-5">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 w-full sm:w-auto">
-                      <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+              <Card className="border-0 shadow-md shadow-slate-200/50 rounded-xl bg-white">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
                         <button
                           onClick={() => setViewMode('grid')}
-                          className={`p-2.5 rounded-lg transition-all duration-300 ${
+                          className={`p-2 rounded-lg transition-all duration-200 ${
                             viewMode === 'grid'
-                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                               : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'
                           }`}
                           aria-label="Grid view"
@@ -137,9 +126,9 @@ const ProfilePage = () => {
                         </button>
                         <button
                           onClick={() => setViewMode('list')}
-                          className={`p-2.5 rounded-lg transition-all duration-300 ${
+                          className={`p-2 rounded-lg transition-all duration-200 ${
                             viewMode === 'list'
-                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                               : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'
                           }`}
                           aria-label="List view"
@@ -147,43 +136,41 @@ const ProfilePage = () => {
                           <List className="w-4 h-4" />
                         </button>
                       </div>
-                      <Span size="sm" className="text-slate-500 font-medium hidden sm:block">
+                      <Span size="sm" className="text-slate-500 font-medium">
                         {filteredGenerations.length} results
                       </Span>
                     </div>
                     
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => refetch()}
-                        className="hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl px-4 transition-all duration-300"
-                      >
-                        <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                        <span className="ml-2 text-sm font-medium">Refresh</span>
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => refetch()}
+                      className="text-slate-400 hover:text-slate-600 rounded-lg px-3 py-1.5"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                      <span className="ml-2 text-sm">Refresh</span>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Generations */}
+              {/* Generations List */}
               <AnimatePresence mode="wait">
                 {isLoading ? (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center justify-center py-32"
+                    className="flex items-center justify-center py-20"
                   >
-                    <div className="flex flex-col items-center gap-6">
+                    <div className="flex flex-col items-center gap-4">
                       <div className="relative">
-                        <div className="w-16 h-16 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin" />
+                        <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-2xl">🎵</span>
+                          <Music className="w-5 h-5 text-blue-600" />
                         </div>
                       </div>
-                      <Paragraph className="text-slate-500 font-medium">
+                      <Paragraph className="text-slate-500 text-sm">
                         Loading your generations...
                       </Paragraph>
                     </div>
@@ -197,8 +184,8 @@ const ProfilePage = () => {
                     animate="visible"
                     className={`grid ${
                       viewMode === 'grid'
-                        ? 'grid-cols-1 md:grid-cols-2 gap-6'
-                        : 'grid-cols-1 gap-6'
+                        ? 'grid-cols-1 md:grid-cols-2 gap-4'
+                        : 'grid-cols-1 gap-4'
                     }`}
                   >
                     {filteredGenerations.map((generation, index) => (
@@ -216,10 +203,10 @@ const ProfilePage = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </motion.section>
           </div>
         </div>
-      </motion.main>
+      </main>
     </AuthGuard>
   );
 };
