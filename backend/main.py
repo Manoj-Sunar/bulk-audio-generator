@@ -1,66 +1,79 @@
 # src/main.py
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
-import logging
-import uuid
-from src.utils.db import Base, engine
+from slowapi.errors import RateLimitExceeded
+import asyncio
+from contextlib import asynccontextmanager
+
+from src.utils.settings import settings
+from src.utils.logging import setup_logging, get_logger
+from src.utils.middleware import (
+    RequestIDMiddleware,
+    SecurityHeadersMiddleware,
+    RequestLoggingMiddleware,
+    RateLimitOverrideMiddleware
+)
+from src.utils.db import engine, check_db_health
 from src.user.routes import user_routes
 from src.audio.route import audio_routes
-from src.utils.settings import settings
 
-# ─── Logging with request ID ───────────────────────────────
-class RequestIDFilter(logging.Filter):
-    def filter(self, record):
-        # Ensure request_id is present; if not, set to 'N/A'
-        if not hasattr(record, 'request_id'):
-            record.request_id = 'N/A'
-        return True
+# Setup logging
+setup_logging()
+logger = get_logger(__name__)
 
-# Configure basic logging with the format including request_id
-logging.basicConfig(
-    level=settings.LOG_LEVEL,
-    format="%(asctime)s [%(levelname)s] %(name)s (request_id=%(request_id)s): %(message)s",
-)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup/shutdown events"""
+    # Startup
+    logger.info("🚀 Starting Bulk Audio Generator API v2.0.0")
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    
+    # Check database connectivity
+    if not check_db_health():
+        logger.error("Database connection failed on startup")
+        # Don't exit, but log critical error
+    
+    yield
+    
+    # Shutdown
+    logger.info("🛑 Shutting down application...")
+    engine.dispose()
+    logger.info("✓ Database connections closed")
 
-# Add the filter to the root logger and all existing handlers
-root_logger = logging.getLogger()
-root_logger.addFilter(RequestIDFilter())
-for handler in root_logger.handlers:
-    handler.addFilter(RequestIDFilter())
-
-# Now create the module logger (it will inherit the filter from root)
-logger = logging.getLogger(__name__)
-
-# ─── Rate Limiter ───────────────────────────────────────────
-limiter = Limiter(key_func=get_remote_address)
+# Initialize FastAPI
 app = FastAPI(
     title="Bulk Audio Generator API",
     version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
+    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+    lifespan=lifespan
 )
-app.state.limiter = limiter
-app.add_exception_handler(429, _rate_limit_exceeded_handler)
 
-# ─── Middleware (order matters) ────────────────────────────
+# Rate Limiter
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Middleware (order matters!)
+app.add_middleware(RateLimitOverrideMiddleware)  # First
+app.add_middleware(RequestLoggingMiddleware)     # Second
+app.add_middleware(SecurityHeadersMiddleware)    # Third
+
+# Add request ID middleware
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
-    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-    request.state.request_id = request_id
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = request_id
-    return response
+    middleware = RequestIDMiddleware()
+    return await middleware(request, call_next)
 
-# Trusted Hosts (from env) – filter out empty strings
-allowed_hosts = ["localhost", "127.0.0.1"] + [h for h in settings.ALLOWED_ORIGINS.split(",") if h.strip()]
+# Trusted Hosts
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=allowed_hosts,
+    allowed_hosts=settings.allowed_hosts_list + ["*"] if settings.ENVIRONMENT == "development" else settings.allowed_hosts_list,
 )
 
 # CORS
@@ -71,16 +84,34 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["Set-Cookie", "X-CSRF-Token", "X-Request-ID"],
+    max_age=3600,
 )
 
 # Rate limiting middleware (after CORS)
 app.add_middleware(SlowAPIMiddleware)
 
-# ─── Global Exception Handler ──────────────────────────────
+# Global Exception Handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
-    logger.error(f"Unhandled error: {exc}", exc_info=True, extra={"request_id": request_id})
+    
+    if isinstance(exc, RateLimitExceeded):
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={
+                "success": False,
+                "message": "Rate limit exceeded. Please try again later.",
+                "error_code": "RATE_LIMIT_EXCEEDED",
+                "request_id": request_id,
+            }
+        )
+    
+    logger.error(
+        f"Unhandled error: {exc}",
+        exc_info=True,
+        extra={"request_id": request_id}
+    )
+    
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -91,20 +122,37 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-# ─── Health Checks ──────────────────────────────────────────
+# Health Checks
 @app.get("/")
 async def root():
-    return {"message": "Bulk Audio Generator API", "version": "2.0.0"}
+    return {
+        "message": "Bulk Audio Generator API",
+        "version": "2.0.0",
+        "environment": settings.ENVIRONMENT
+    }
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "environment": settings.ENVIRONMENT}
 
 @app.get("/ready")
 async def ready_check():
-    # Optional: check DB connectivity here
-    return {"status": "ready"}
+    db_status = check_db_health()
+    if not db_status:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "database": "disconnected"}
+        )
+    return {"status": "ready", "database": "connected"}
 
-# ─── Routers ────────────────────────────────────────────────
+# Metrics endpoint (if enabled)
+if settings.ENABLE_METRICS:
+    from src.utils.metrics import metrics_router
+    app.include_router(metrics_router)
+
+# Routers
 app.include_router(user_routes)
 app.include_router(audio_routes)
+
+# Startup log
+logger.info(f"✓ API initialized. Environment: {settings.ENVIRONMENT}")

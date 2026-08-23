@@ -1,5 +1,6 @@
-// app/lib/axios/client.ts (add getCsrfToken function)
+// app/lib/axios/client.ts
 import axios, { AxiosError } from 'axios';
+import { API_ROUTES } from '../constants';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
@@ -33,7 +34,6 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const csrfToken = getCsrfToken();
-    
     if (csrfToken) {
       config.headers['X-CSRF-Token'] = csrfToken;
     }
@@ -78,7 +78,7 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await apiClient.post('/user/refresh');
+        await apiClient.post(API_ROUTES.USER_REFRESH);
         processQueue(null);
         return apiClient(originalRequest);
       } catch (refreshError) {

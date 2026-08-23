@@ -1,5 +1,4 @@
-
-
+// app/page.tsx
 import type { Metadata } from "next";
 import { Docs } from "./components/pages/home/Docs";
 
@@ -18,7 +17,19 @@ export const metadata: Metadata = {
     "Google TTS API",
     "Bulk Voice Generation",
   ],
-  // ... बाँकी metadata तपाईंको जस्तै छ
+  openGraph: {
+    title: "Bulk Audio Generator",
+    description: "Generate AI audio in bulk with ElevenLabs and Google AI Studio.",
+    type: "website",
+    url: "/",
+    images: [{ url: "/hero.jpg", width: 1200, height: 630, alt: "Bulk Audio Generator" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bulk Audio Generator",
+    description: "Generate AI audio in bulk with ElevenLabs and Google AI Studio.",
+    images: ["/hero.jpg"],
+  },
 };
 
 const softwareJsonLd = {
@@ -27,17 +38,15 @@ const softwareJsonLd = {
   name: "Bulk Audio Generator",
   applicationCategory: "Multimedia",
   operatingSystem: "Web",
-  description: "Generate bulk AI audio using ElevenLabs or Google AI Studio Text-to-Speech APIs. Process hundreds of scripts simultaneously.",
+  description: "Generate bulk AI audio using ElevenLabs or Google AI Studio Text-to-Speech APIs.",
   offers: {
     "@type": "Offer",
     price: "0",
     priceCurrency: "USD",
   },
-  // ... बाँकी JSON-LD तपाईंको जस्तै छ
 };
 
-export default async function Home() {
-  // ✅ यदि access_token छैन भने, Docs (होम पेज) देखाउनुहोस्
+export default function Home() {
   return (
     <>
       <script
@@ -46,8 +55,7 @@ export default async function Home() {
           __html: JSON.stringify(softwareJsonLd),
         }}
       />
-
-      <main>
+      <main className="min-h-screen">
         <Docs />
       </main>
     </>

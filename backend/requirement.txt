@@ -14,3 +14,4 @@ cryptography==41.0.7
 slowapi==0.1.9
 pwdlib==0.1.2
 requests==2.31.0
+prometheus_client

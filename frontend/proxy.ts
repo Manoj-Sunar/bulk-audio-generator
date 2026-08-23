@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 
 // Define paths
 const PROTECTED_PATHS = ['/bulk-audio/generator'];
-const AUTH_PATHS = ['/bulk-audio/bulk-audio-login', '/bulk-audio/bulk-audio-register'];
+const AUTH_PATHS = ['/bulk-audio/bulk-audio-login', '/bulk-audio/bulk-audio-register','/bulk-audio/forgot-password','/bulk-audio/reset-password'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -34,5 +34,7 @@ export const config = {
     '/bulk-audio/generator',
     '/bulk-audio/bulk-audio-login',
     '/bulk-audio/bulk-audio-register',
+    '/bulk-audio/forgot-password',
+    '/bulk-audio/reset-password'
   ],
 };

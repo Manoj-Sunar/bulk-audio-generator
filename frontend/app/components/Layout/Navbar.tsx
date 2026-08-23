@@ -388,14 +388,7 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link
-                      href="/bulk-audio/bulk-audio-login"
-                      className="hidden rounded-full px-4 py-2 text-sm font-medium text-on-surface-variant transition-all hover:text-primary md:block"
-                    >
-                      Sign In
-                    </Link>
-                  </motion.div>
+                 
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

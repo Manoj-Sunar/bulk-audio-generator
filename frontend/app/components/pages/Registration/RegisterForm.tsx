@@ -98,24 +98,7 @@ export const RegisterForm = ({
                 className="bg-white/50 outline-none w-full ml-2"
             />
 
-            <Input
-                label="Confirm Password"
-                placeholder="Confirm your password"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => onConfirmPasswordChange(e.target.value)}
-                leftIcon={<Lock size={18} />}
-                rightIcon={
-                    <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="text-on-surface-variant transition hover:text-primary"
-                    >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                }
-                className="transition-all w-full border-none outline-none ml-2"
-            />
+           
 
             <AnimatePresence>
                 {confirmPassword && (

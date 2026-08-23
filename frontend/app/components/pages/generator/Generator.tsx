@@ -19,6 +19,7 @@ import { AuthGuard } from '@/app/components/AuthGuard';
 import { Sparkles, Zap, Clock, Layers, Download, CheckCircle } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Card, CardContent } from '../../ui/Card';
+import { ELEVENLABS_VOICES, GEMINI_VOICES, PROVIDERS, AUDIO_FORMATS, MIME_TYPES } from '@/app/lib/constants';
 
 // Helper: convert base64 data to Blob
 function dataURLtoBlob(dataURL: string, mimeType: string = 'audio/mpeg'): Blob {
@@ -51,30 +52,17 @@ export const Generator = () => {
   // State
   const [apiKey, setApiKey] = useState('');
   const [scripts, setScripts] = useState('');
-  const [selectedProvider, setSelectedProvider] = useState<Provider>('elevenlabs');
-  const [voiceId, setVoiceId] = useState('pNInz6obpgDQGcFmaJgB');
+  const [selectedProvider, setSelectedProvider] = useState<Provider>(PROVIDERS.ELEVENLABS);
+  const [voiceId, setVoiceId] = useState(ELEVENLABS_VOICES[0].value);
   const [status, setStatus] = useState<'idle' | 'generating' | 'completed' | 'failed'>('idle');
   const [files, setFiles] = useState<GeneratedAudioFile[]>([]);
 
-  // --- Voice options based on provider ---
+  // Voice options based on provider
   const voiceOptions = useMemo(() => {
-    if (selectedProvider === 'elevenlabs') {
-      return [
-        { value: 'pNInz6obpgDQGcFmaJgB', label: '🎙️ Adam (Default)' },
-        { value: '21m00Tcm4TlvDq8ikWAM', label: '🎙️ Rachel' },
-        { value: 'AZnzlk1XvdvUeBnXmlld', label: '🎙️ Domi' },
-        { value: 'EXAVITQu4vrIxn12LM3J', label: '🎙️ Bella' },
-        { value: 'yoZ06aMxZJJ28mfd3POQ', label: '🎙️ Sam' },
-      ];
+    if (selectedProvider === PROVIDERS.ELEVENLABS) {
+      return ELEVENLABS_VOICES;
     } else {
-      return [
-        { value: 'Kore', label: '🗣️ Kore' },
-        { value: 'Charon', label: '🗣️ Charon' },
-        { value: 'Fenrir', label: '🗣️ Fenrir' },
-        { value: 'Aoede', label: '🗣️ Aoede' },
-        { value: 'Puck', label: '🗣️ Puck' },
-        { value: 'Leda', label: '🗣️ Leda' },
-      ];
+      return GEMINI_VOICES;
     }
   }, [selectedProvider]);
 
@@ -88,8 +76,8 @@ export const Generator = () => {
   // Update files when segments arrive via streaming
   useEffect(() => {
     if (segments.length > 0) {
-      const audioFormat = selectedProvider === 'elevenlabs' ? 'mp3' : 'wav';
-      const mimeType = selectedProvider === 'elevenlabs' ? 'audio/mpeg' : 'audio/wav';
+      const audioFormat = selectedProvider === PROVIDERS.ELEVENLABS ? AUDIO_FORMATS.MP3 : AUDIO_FORMATS.WAV;
+      const mimeType = selectedProvider === PROVIDERS.ELEVENLABS ? MIME_TYPES.mp3 : MIME_TYPES.wav;
       
       const newFiles: GeneratedAudioFile[] = segments.map((seg) => ({
         id: seg.id || `temp-${seg.index}`,
@@ -100,7 +88,7 @@ export const Generator = () => {
         index: seg.index,
         created_at: seg.created_at || undefined,
         provider: selectedProvider,
-        format: audioFormat as 'mp3' | 'wav', // ✅ Fix: Type assertion
+        format: audioFormat,
       }));
       
       setFiles(newFiles);
@@ -122,14 +110,14 @@ export const Generator = () => {
     }
   }, [error]);
 
-  // --- Generate handler ---
+  // Generate handler
   const handleGenerate = useCallback(async () => {
     if (!scripts.trim()) { toast.error('Please enter some scripts'); return; }
     const chunks = scripts.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
     if (!chunks.length) { toast.error('No valid scripts found'); return; }
     if (chunks.length > 100) { toast.error('Too many scripts (max 100)'); return; }
     if (!apiKey.trim()) { 
-      toast.error(`Please enter your ${selectedProvider === 'elevenlabs' ? 'ElevenLabs' : 'Gemini'} API key`); 
+      toast.error(`Please enter your ${selectedProvider === PROVIDERS.ELEVENLABS ? 'ElevenLabs' : 'Gemini'} API key`); 
       return; 
     }
 
@@ -141,7 +129,7 @@ export const Generator = () => {
       script: scripts,
       api_keys: [apiKey],
       voice_id: voiceId,
-      model_id: selectedProvider === 'elevenlabs' ? 'eleven_multilingual_v2' : '',
+      model_id: selectedProvider === PROVIDERS.ELEVENLABS ? 'eleven_multilingual_v2' : '',
       provider: selectedProvider,
     };
 
@@ -152,20 +140,20 @@ export const Generator = () => {
     }
   }, [scripts, apiKey, voiceId, selectedProvider, generate, stop]);
 
-  // --- Cancel handler ---
+  // Cancel handler
   const handleCancel = useCallback(() => {
     cancel();
     setStatus('failed');
   }, [cancel]);
 
-  // --- Play handler ---
+  // Play handler
   const handlePlay = useCallback((file: GeneratedAudioFile) => {
     if (file.audioUrl) {
       play(file.audioUrl, file.id);
     }
   }, [play]);
 
-  // --- Download single file ---
+  // Download single file
   const handleDownload = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
     const link = document.createElement('a');
@@ -176,13 +164,13 @@ export const Generator = () => {
     link.remove();
   }, []);
 
-  // --- Delete file ---
+  // Delete file
   const handleDelete = useCallback((file: GeneratedAudioFile) => {
     setFiles(prev => prev.filter(f => f.id !== file.id));
     toast.info(`🗑️ Removed: ${file.fileName}`);
   }, []);
 
-  // --- Download all as ZIP ---
+  // Download all as ZIP
   const handleDownloadZip = useCallback(async () => {
     const successFiles = files.filter(f => f.status === 'success');
     if (!successFiles.length) { toast.error('No completed files to download'); return; }
@@ -214,27 +202,27 @@ export const Generator = () => {
   }, [files]);
 
   // Convert progress to logs format for LiveProgress
- const logs = useMemo(() => {
-  const logEntries: GenerationLog[] = files.map((file, index) => ({
-    id: index,
-    time: new Date().toLocaleTimeString(),
-    message: `✅ Generated: ${file.fileName}`,
-    status: 'success' as const,
-  }));
-  
-  if (isGenerating && progress.current > 0) {
-    logEntries.push({
-      id: -1,
+  const logs = useMemo<GenerationLog[]>(() => {
+    const logEntries: GenerationLog[] = files.map((file, index) => ({
+      id: index,
       time: new Date().toLocaleTimeString(),
-      message: `⏳ Generating file ${progress.current}/${progress.total}...`,
-      status: 'processing' as const, // ✅ This is now valid with GenerationLog type
-    });
-  }
-  
-  return logEntries.length > 0 ? logEntries : [
-    { id: 0, time: new Date().toLocaleTimeString(), message: '🚀 System ready. Waiting for scripts...', status: 'success' as const }
-  ];
-}, [files, isGenerating, progress]);
+      message: `✅ Generated: ${file.fileName}`,
+      status: 'success' as const,
+    }));
+    
+    if (isGenerating && progress.current > 0) {
+      logEntries.push({
+        id: -1,
+        time: new Date().toLocaleTimeString(),
+        message: `⏳ Generating file ${progress.current}/${progress.total}...`,
+        status: 'processing' as const,
+      });
+    }
+    
+    return logEntries.length > 0 ? logEntries : [
+      { id: 0, time: new Date().toLocaleTimeString(), message: '🚀 System ready. Waiting for scripts...', status: 'success' as const }
+    ];
+  }, [files, isGenerating, progress]);
 
   const stats = useMemo(() => ({
     total: files.length,
@@ -341,8 +329,8 @@ export const Generator = () => {
                     disabled={isGenerating}
                     className="w-full rounded-xl border-slate-200/80 bg-white/50 px-4 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all disabled:opacity-50"
                   >
-                    <option value="elevenlabs">ElevenLabs</option>
-                    <option value="gemini">Google Gemini</option>
+                    <option value={PROVIDERS.ELEVENLABS}>ElevenLabs</option>
+                    <option value={PROVIDERS.GEMINI}>Google Gemini</option>
                   </select>
                 </div>
                 <div>

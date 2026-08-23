@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
   Calendar, Download, Trash2, Play, Pause, ChevronDown, ChevronUp,
-  Music, Loader2, CheckCircle, XCircle, Clock, Volume2, Mic2, ListMusic,
+  Music, Loader2, CheckCircle, XCircle, Clock, Mic2, ListMusic,
+  FileAudio, BadgeCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/app/components/ui/Card';
@@ -26,6 +27,7 @@ interface GenerationCardProps {
   isDeleting: boolean;
   isDownloading: boolean;
   viewMode?: 'grid' | 'list';
+  index?: number;
 }
 
 export const GenerationCard = ({
@@ -35,6 +37,7 @@ export const GenerationCard = ({
   isDeleting,
   isDownloading,
   viewMode = 'grid',
+  index = 0,
 }: GenerationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -45,7 +48,6 @@ export const GenerationCard = ({
   const hasAudioData = segments.some(s => s.audio_data);
   const completedSegments = segments.filter(s => s.audio_data).length;
 
-  // When the global playing id changes, update the local segment state
   useEffect(() => {
     if (currentlyPlaying && currentlyPlaying.startsWith('segment-')) {
       const segId = parseInt(currentlyPlaying.split('-')[1]);
@@ -75,93 +77,160 @@ export const GenerationCard = ({
   };
 
   return (
-    <motion.div variants={listItemVariants} initial="hidden" animate="visible" layout
-      onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}
+    <motion.div
+      variants={listItemVariants}
+      initial="hidden"
+      animate="visible"
+      layout
+      custom={index}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <Card className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-        <div className={`h-0.5 bg-blue-600 transition-all duration-200 ${isHovered ? 'opacity-100' : 'opacity-40'}`} />
-        <CardContent className="p-5">
+      <Card className={`border border-slate-200/60 shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden rounded-2xl bg-white ${
+        isHovered ? 'scale-[1.02]' : ''
+      }`}>
+        {/* Premium gradient bar */}
+        <div className={`h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all duration-500 ${
+          isHovered ? 'h-1.5 opacity-100' : 'opacity-60'
+        }`} />
+        
+        <CardContent className="p-6">
           {/* Header */}
-          <div className="flex items-start justify-between mb-4 gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className={`p-3 rounded-xl bg-slate-100 text-slate-600 transition-all duration-300 flex-shrink-0 ${isHovered ? 'scale-105' : ''}`}>
-                <Music className="w-5 h-5" />
-              </div>
+          <div className="flex items-start justify-between mb-5 gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <motion.div 
+                className={`p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 text-blue-600 transition-all duration-300 flex-shrink-0 ${
+                  isHovered ? 'scale-110 shadow-md shadow-blue-500/20' : ''
+                }`}
+                animate={isHovered ? { rotate: [0, -5, 5, 0] } : {}}
+                transition={{ duration: 0.5 }}
+              >
+                <Music className="w-6 h-6" />
+              </motion.div>
+              
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Heading as="h4" size="sm" weight="semibold" className="text-slate-800 truncate">Generation #{generation.id}</Heading>
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} flex-shrink-0`}>
-                    <StatusIcon className={`w-3 h-3 ${statusConfig.spin ? 'animate-spin' : ''}`} />
+                  <Heading as="h4" size="lg" weight="bold" className="text-slate-800 truncate">
+                    Generation #{generation.id}
+                  </Heading>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} flex-shrink-0`}>
+                    <StatusIcon className={`w-3.5 h-3.5 ${statusConfig.spin ? 'animate-spin' : ''}`} />
                     {statusConfig.label}
                   </span>
                   {hasAudioData && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 flex-shrink-0">
-                      <Volume2 className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 flex-shrink-0">
+                      <BadgeCheck className="w-3.5 h-3.5" />
                       {completedSegments}/{segments.length} ready
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-1 flex-wrap">
-                  <Span size="xs" className="text-slate-500 flex items-center gap-1 truncate">
-                    <Mic2 className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{generation.voice_insights?.name || generation.voice_id.slice(0, 8)}...</span>
+                
+                <div className="flex items-center gap-4 mt-1.5 flex-wrap">
+                  <Span size="sm" className="text-slate-500 flex items-center gap-1.5 truncate">
+                    <Mic2 className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate font-medium">
+                      {generation.voice_insights?.name || generation.voice_id.slice(0, 8)}...
+                    </span>
                   </Span>
-                  <Span size="xs" className="text-slate-500 flex items-center gap-1 flex-shrink-0">
-                    <Calendar className="w-3 h-3" />
+                  <Span size="sm" className="text-slate-500 flex items-center gap-1.5 flex-shrink-0">
+                    <Calendar className="w-4 h-4" />
                     {formatDate(generation.created_at)}
                   </Span>
-                  <Span size="xs" className="text-slate-500 flex-shrink-0">📁 {segments.length} files</Span>
+                  <Span size="sm" className="text-slate-500 flex items-center gap-1.5 flex-shrink-0">
+                    <FileAudio className="w-4 h-4" />
+                    {segments.length} files
+                  </Span>
                 </div>
               </div>
             </div>
+            
             {/* Actions */}
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {generation.status === 'completed' && (
-                <Button variant="outline" size="icon" onClick={() => onDownload(generation.id)} disabled={isDownloading}
-                  className="border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-200"
-                  leftIcon={isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                />
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onDownload(generation.id)}
+                    disabled={isDownloading}
+                    className="border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 rounded-xl w-11 h-11"
+                    leftIcon={isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                  />
+                </motion.div>
               )}
-              <Button variant="outline" size="icon" onClick={() => onDelete(generation.id)} disabled={isDeleting}
-                className="border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-all duration-200"
-                leftIcon={isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-              />
-              <button onClick={() => setIsExpanded(!isExpanded)} className="w-11 h-11 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onDelete(generation.id)}
+                  disabled={isDeleting}
+                  className="border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-all duration-300 rounded-xl w-11 h-11"
+                  leftIcon={isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                />
+              </motion.div>
+              <motion.button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-all duration-300 ${
+                  isExpanded 
+                    ? 'border-blue-300 bg-blue-50 text-blue-600' 
+                    : 'border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </motion.button>
             </div>
           </div>
 
           {/* Stats summary */}
-          <div className="grid grid-cols-4 gap-2 mb-4">
-            <div className="text-center p-2 rounded-lg bg-slate-50 border border-slate-200">
-              <Span size="lg" weight="bold" className="text-blue-600">{segments.length}</Span>
-              <Paragraph size="xs" className="text-slate-500">Total Files</Paragraph>
-            </div>
-            <div className="text-center p-2 rounded-lg bg-slate-50 border border-slate-200">
-              <Span size="lg" weight="bold" className="text-emerald-600">{completedSegments}</Span>
-              <Paragraph size="xs" className="text-slate-500">With Audio</Paragraph>
-            </div>
-            <div className="text-center p-2 rounded-lg bg-slate-50 border border-slate-200">
-              <Span size="lg" weight="bold" className="text-amber-600">{generation.chunk_count}</Span>
-              <Paragraph size="xs" className="text-slate-500">Chunks</Paragraph>
-            </div>
-            <div className="text-center p-2 rounded-lg bg-slate-50 border border-slate-200">
-              <Span size="lg" weight="bold" className="text-slate-600 truncate block">{generation.voice_insights?.name || 'N/A'}</Span>
-              <Paragraph size="xs" className="text-slate-500">Voice</Paragraph>
-            </div>
+          <div className="grid grid-cols-4 gap-3 mb-5">
+            {[
+              { label: 'Total Files', value: segments.length, color: 'blue' },
+              { label: 'With Audio', value: completedSegments, color: 'emerald' },
+              { label: 'Chunks', value: generation.chunk_count, color: 'amber' },
+              { label: 'Voice', value: generation.voice_insights?.name || 'N/A', color: 'purple' },
+            ].map((stat, idx) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="text-center p-3 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100/50 border border-slate-200 hover:shadow-md transition-all duration-300"
+              >
+                <Span size="lg" weight="bold" className={`text-${stat.color}-600 block`}>
+                  {stat.value}
+                </Span>
+                <Paragraph size="xs" className="text-slate-500 mt-0.5">
+                  {stat.label}
+                </Paragraph>
+              </motion.div>
+            ))}
           </div>
 
           {/* Expandable content */}
           <AnimatePresence>
             {isExpanded && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
                 {/* Voice Insights */}
                 {generation.voice_insights && (
-                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 mb-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="p-4 rounded-xl bg-gradient-to-br from-slate-50 to-indigo-50/50 border border-slate-200 mb-4"
+                  >
                     <div className="flex items-center gap-2 flex-wrap">
                       <Mic2 className="w-4 h-4 text-slate-500" />
-                      <Span size="xs" weight="semibold" className="text-slate-700">{generation.voice_insights.name}</Span>
+                      <Span size="sm" weight="semibold" className="text-slate-700">
+                        {generation.voice_insights.name}
+                      </Span>
                       <Span size="xs" className="text-slate-400">•</Span>
                       <Span size="xs" className="text-slate-500">{generation.voice_insights.gender}</Span>
                       <Span size="xs" className="text-slate-400">•</Span>
@@ -169,69 +238,103 @@ export const GenerationCard = ({
                       <Span size="xs" className="text-slate-400">•</Span>
                       <Span size="xs" className="text-slate-500">{generation.voice_insights.age}</Span>
                     </div>
-                    <Paragraph size="xs" className="text-slate-500 mt-1">{generation.voice_insights.description}</Paragraph>
-                  </div>
+                    <Paragraph size="sm" className="text-slate-500 mt-2 leading-relaxed">
+                      {generation.voice_insights.description}
+                    </Paragraph>
+                  </motion.div>
                 )}
+                
                 {/* Audio Files List */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Paragraph size="xs" weight="semibold" className="text-slate-600 flex items-center gap-2">
-                      <ListMusic className="w-3.5 h-3.5" />
+                    <Paragraph size="sm" weight="semibold" className="text-slate-700 flex items-center gap-2">
+                      <ListMusic className="w-4 h-4" />
                       Audio Files ({segments.length})
                     </Paragraph>
+                    <Span size="xs" className="text-slate-400">
+                      {completedSegments} ready
+                    </Span>
                   </div>
-                  <div className="max-h-56 overflow-y-auto scrollbar-hide space-y-2 pr-1">
-                    {segments.map((segment) => (
-                      <div key={segment.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors group">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <Span size="xs" className="font-mono text-slate-400 w-8 flex-shrink-0">#{segment.index}</Span>
-                          <div className="flex-1 min-w-0">
-                            <Paragraph size="sm" weight="medium" className="text-slate-700 truncate">{segment.title}</Paragraph>
-                            <Span size="xs" className="text-slate-400">{formatDate(segment.created_at)}</Span>
-                          </div>
+                  
+                  <div className="max-h-64 overflow-y-auto scrollbar-hide space-y-2 pr-1">
+                    {segments.map((segment, idx) => (
+                      <motion.div
+                        key={segment.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all duration-300 group"
+                      >
+                        <Span size="xs" className="font-mono text-slate-400 w-8 flex-shrink-0 text-center">
+                          #{segment.index}
+                        </Span>
+                        
+                        <div className="flex-1 min-w-0">
+                          <Paragraph size="sm" weight="medium" className="text-slate-700 truncate">
+                            {segment.title}
+                          </Paragraph>
+                          <Span size="xs" className="text-slate-400">
+                            {formatDate(segment.created_at)}
+                          </Span>
                         </div>
+                        
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {segment.audio_data ? (
                             <>
                               <Button
                                 variant={currentlyPlayingSegment === segment.id ? "primary" : "outline"}
                                 size="sm"
-                                leftIcon={currentlyPlayingSegment === segment.id ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                                leftIcon={currentlyPlayingSegment === segment.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                                 onClick={() => handleSegmentPlay(segment)}
-                                className={currentlyPlayingSegment === segment.id ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 flex-shrink-0" : "border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0"}
+                                className={`transition-all duration-300 rounded-lg px-3 py-1.5 ${
+                                  currentlyPlayingSegment === segment.id 
+                                    ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600' 
+                                    : 'border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-300'
+                                }`}
                               >
                                 {currentlyPlayingSegment === segment.id ? 'Playing' : 'Play'}
                               </Button>
-                              <Span size="xs" className="text-emerald-500 flex items-center gap-1 flex-shrink-0">
-                                <CheckCircle className="w-3 h-3" /> Ready
+                              <Span size="xs" className="text-emerald-500 flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                Ready
                               </Span>
                             </>
                           ) : (
-                            <Span size="xs" className="text-slate-400 flex items-center gap-1 flex-shrink-0">
-                              <Clock className="w-3 h-3" /> No audio
+                            <Span size="xs" className="text-slate-400 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              No audio
                             </Span>
                           )}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
-                {/* Play All */}
+
+                {/* Play All Button */}
                 {generation.status === 'completed' && hasAudioData && (
-                  <Button
-                    fullWidth size="md"
-                    leftIcon={currentlyPlaying === `generation-${generation.id}` ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                    onClick={() => {
-                      const firstSegment = segments.find(s => s.audio_data);
-                      if (firstSegment) {
-                        const audioUrl = `data:audio/mp3;base64,${firstSegment.audio_data}`;
-                        play(audioUrl, `generation-${generation.id}`);
-                      }
-                    }}
-                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors rounded-lg"
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-4"
                   >
-                    {currentlyPlaying === `generation-${generation.id}` ? '⏸ Pause Preview' : '▶ Play First Audio'}
-                  </Button>
+                    <Button
+                      fullWidth
+                      size="md"
+                      leftIcon={currentlyPlaying === `generation-${generation.id}` ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      onClick={() => {
+                        const firstSegment = segments.find(s => s.audio_data);
+                        if (firstSegment) {
+                          const audioUrl = `data:audio/mp3;base64,${firstSegment.audio_data}`;
+                          play(audioUrl, `generation-${generation.id}`);
+                        }
+                      }}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 rounded-xl py-3.5 font-semibold"
+                    >
+                      {currentlyPlaying === `generation-${generation.id}` ? '⏸ Pause Preview' : '▶ Play First Audio'}
+                    </Button>
+                  </motion.div>
                 )}
               </motion.div>
             )}
