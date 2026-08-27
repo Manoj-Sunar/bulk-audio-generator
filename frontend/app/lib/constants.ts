@@ -12,6 +12,7 @@ import {
   BookOpen,
   Mic,
 } from "lucide-react";
+import { MdWhereToVote } from "react-icons/md";
 
 // Navigation Links
 export interface NavLink {
@@ -31,6 +32,12 @@ export const NAV_LINKS: NavLink[] = [
     icon: FaGithub,
     external: true,
   },
+
+ {
+  name:"Where to Use",
+  href:"/bulk-audio/where",
+  icon:MdWhereToVote
+ }
 ];
 
 // Steps for home page

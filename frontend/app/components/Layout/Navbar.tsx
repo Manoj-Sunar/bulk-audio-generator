@@ -6,20 +6,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { 
-  Menu, 
-  X, 
-  Sparkles, 
-  User, 
-  LogOut, 
-  Settings, 
-  HelpCircle,
-  LayoutDashboard,
-  ChevronDown,
-  Crown
+import {
+  Menu, X, Sparkles, User, LogOut, Settings, HelpCircle,
+  LayoutDashboard, ChevronDown
 } from 'lucide-react';
 
-import { FaGithub,FaLinkedin,FaTwitter } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 import { NAV_LINKS } from '@/app/lib/constants';
 import { Heading } from '../typography/Heading';
 import { cn } from '@/app/lib/helpers';
@@ -36,7 +28,6 @@ const NavbarGradient = () => (
   </div>
 );
 
-// User menu dropdown item type
 interface DropdownItem {
   icon: React.ElementType;
   label: string;
@@ -103,13 +94,13 @@ export function Navbar() {
   ];
 
   const mobileMenuVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       height: 0,
       transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       height: 'auto',
       transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
     },
@@ -117,27 +108,27 @@ export function Navbar() {
 
   const linkVariants: Variants = {
     hidden: { opacity: 0, x: -20, scale: 0.95 },
-    visible: (i: number) => ({ 
-      opacity: 1, 
-      x: 0, 
+    visible: (i: number) => ({
+      opacity: 1,
+      x: 0,
       scale: 1,
-      transition: { 
-        delay: i * 0.06, 
-        duration: 0.4, 
-        ease: [0.4, 0, 0.2, 1] 
+      transition: {
+        delay: i * 0.06,
+        duration: 0.4,
+        ease: [0.4, 0, 0.2, 1]
       }
     }),
   };
 
   const dropdownVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       y: -10,
       scale: 0.95,
       transition: { duration: 0.15, ease: [0.4, 0, 0.2, 1] }
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       scale: 1,
       transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
@@ -166,52 +157,55 @@ export function Navbar() {
           <NavbarGradient />
 
           <nav className="relative flex h-[72px] items-center justify-between px-4 sm:px-6">
-            {/* Logo */}
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="flex items-center"
-            >
-              <Link href="/" className="group flex items-center gap-3 transition-all">
-                <div className="relative">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-secondary blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
-                  <Image
-                    src="/wave.svg"
-                    alt="Bulk Voice Generator"
-                    width={44}
-                    height={44}
-                    priority
-                    className="relative transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110"
-                  />
-                  <motion.div
-                    className="absolute -top-1 -right-1"
-                    animate={{ 
-                      scale: [1, 1.3, 1],
-                      rotate: [0, 20, -20, 0]
-                    }}
-                    transition={{ 
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'easeInOut'
-                    }}
-                  >
-                    <Sparkles size={14} className="text-primary drop-shadow-lg" />
-                  </motion.div>
-                </div>
-                <div className="hidden sm:block">
-                  <Heading as="h1" size="lg" weight="bold" className="leading-tight">
-                    <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                      Bulk Voice
-                    </span>
-                    <span className="ml-1 text-on-surface">Generator</span>
-                  </Heading>
-                  <p className="text-[10px] font-medium text-on-surface-variant/60 tracking-wider uppercase">
-                    AI Audio Studio
-                  </p>
-                </div>
-              </Link>
-            </motion.div>
+            {/* Logo - FIXED: Consistent className with shrink-0 */}
 
+
+            <div className="flex shrink-0 items-center">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex  items-center"
+              >
+                <Link href="/" className="group flex items-center gap-3 transition-all">
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-secondary blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+                    <Image
+                      src="/wave.svg"
+                      alt="Bulk Voice Generator"
+                      width={44}
+                      height={44}
+                      priority
+                      className="relative transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110"
+                    />
+                    <motion.div
+                      className="absolute -top-1 -right-1"
+                      animate={{
+                        scale: [1, 1.3, 1],
+                        rotate: [0, 20, -20, 0]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'easeInOut'
+                      }}
+                    >
+                      <Sparkles size={14} className="text-primary drop-shadow-lg" />
+                    </motion.div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <Heading as="h1" size="lg" weight="bold" className="leading-tight">
+                      <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        Bulk Voice
+                      </span>
+                      <span className="ml-1 text-on-surface">Generator</span>
+                    </Heading>
+                    <p className="text-[10px] font-medium text-on-surface-variant/60 tracking-wider uppercase">
+                      AI Audio Studio
+                    </p>
+                  </div>
+                </Link>
+              </motion.div>
+            </div>
             {/* Desktop Nav Links */}
             <ul className="hidden items-center gap-1 lg:flex">
               {NAV_LINKS.map(({ name, href, icon: Icon, external }) => {
@@ -259,7 +253,6 @@ export function Navbar() {
                       </span>
                     </Link>
 
-                    {/* Hover glow effect */}
                     {hoveredLink === href && (
                       <motion.div
                         layoutId="hoverGlow"
@@ -275,11 +268,8 @@ export function Navbar() {
               })}
             </ul>
 
-            {/* Right side - Actions */}
-            <div className="flex items-center gap-2">
-              {/* Premium Badge */}
-              
-
+            {/* Right side - Actions - FIXED: Consistent className with shrink-0 */}
+            <div className="flex shrink-0 items-center gap-2">
               {user ? (
                 <div className="relative" ref={dropdownRef}>
                   <motion.button
@@ -319,7 +309,6 @@ export function Navbar() {
                         exit="hidden"
                         className="absolute right-0 mt-3 w-64 rounded-2xl border border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl shadow-primary/10 py-2 overflow-hidden"
                       >
-                        {/* User Info */}
                         <div className="border-b border-gray-100/50 px-4 py-3 mb-1">
                           <p className="font-semibold text-on-surface">{user.name || 'User'}</p>
                           <p className="text-sm text-on-surface-variant/60 truncate">{user.email}</p>
@@ -362,7 +351,6 @@ export function Navbar() {
                           </motion.div>
                         ))}
 
-                        {/* Social Links */}
                         <div className="border-t border-gray-100/50 px-4 py-3 mt-1 flex gap-3 justify-center">
                           {[
                             { icon: FaGithub, href: 'https://github.com/Manoj-Sunar' },
@@ -388,7 +376,6 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                 
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -490,7 +477,6 @@ export function Navbar() {
                     );
                   })}
 
-                  {/* Mobile CTA */}
                   {!user && (
                     <motion.li
                       variants={linkVariants}
@@ -514,7 +500,6 @@ export function Navbar() {
                     </motion.li>
                   )}
 
-                  {/* Mobile User Info */}
                   {user && (
                     <motion.li
                       variants={linkVariants}
