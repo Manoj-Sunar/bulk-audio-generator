@@ -20,6 +20,7 @@ from src.user.model import User
 from src.utils.security import sanitize_script_input, sanitize_filename
 from src.audio.dtos import ProviderType
 from src.audio import gemini_service
+from src.utils.errors import AppException, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +30,19 @@ def generate_and_stream_audio(req: GenerateAudioRequest, user: User, db: Session
     Each chunk is sent to the client as soon as it's generated.
     """
     try:
+        # Validate script
+        if not req.script or not req.script.strip():
+            raise AppException(400, "The script is empty. Please provide some text.", ErrorCode.EMPTY_SCRIPT)
+        
         sanitized_script = sanitize_script_input(req.script)
         encrypted_keys = encrypt_api_keys(req.api_keys)
         
         chunks = split_script_into_chunks(sanitized_script)
         if not chunks:
-            raise HTTPException(400, "Script is empty or contains no paragraphs.")
+            raise AppException(400, "The script contains no paragraphs. Please add content.", ErrorCode.EMPTY_SCRIPT)
+        
+        if len(chunks) > 1000:
+            raise AppException(400, f"Script has {len(chunks)} chunks, exceeding maximum of 1000.", ErrorCode.SCRIPT_TOO_LONG)
 
         # Create generation record
         generation = AudioGeneration(
@@ -50,22 +58,17 @@ def generate_and_stream_audio(req: GenerateAudioRequest, user: User, db: Session
         db.refresh(generation)
 
         api_key = req.api_keys[0]
-        
-        # Determine provider
         provider_name = "gemini" if req.provider == ProviderType.GEMINI else "elevenlabs"
 
-        # --- Streaming generator ---
         def event_generator() -> Generator[str, None, None]:
             try:
                 total_chunks = len(chunks)
                 total_chars = 0
                 results = []
                 
-                # Send initial status
                 yield f"data: {json.dumps({'type': 'start', 'generation_id': generation.id, 'total': total_chunks, 'provider': provider_name})}\n\n"
 
                 for idx, chunk in enumerate(chunks, 1):
-                    # Generate audio for this chunk
                     try:
                         if req.provider == ProviderType.GEMINI:
                             chunk_result, chars_used = gemini_service.generate_audio_for_single_chunk(
@@ -79,7 +82,6 @@ def generate_and_stream_audio(req: GenerateAudioRequest, user: User, db: Session
                         title, audio_bytes = chunk_result
                         total_chars += chars_used
                         
-                        # Store in database
                         sanitized_title = sanitize_filename(title)
                         segment = AudioSegment(
                             generation_id=generation.id,
@@ -90,7 +92,6 @@ def generate_and_stream_audio(req: GenerateAudioRequest, user: User, db: Session
                         db.add(segment)
                         db.commit()
                         
-                        # Prepare response
                         audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
                         segment_data = {
                             "id": str(segment.id),
@@ -101,27 +102,46 @@ def generate_and_stream_audio(req: GenerateAudioRequest, user: User, db: Session
                             "chars_used": chars_used
                         }
                         
-                        # Send progress update with the file
                         yield f"data: {json.dumps({'type': 'progress', 'current': idx, 'total': total_chunks, 'segment': segment_data})}\n\n"
-                        
                         results.append(segment_data)
                         
+                    except AppException as e:
+                        # Send structured error event
+                        error_event = {
+                            "type": "error",
+                            "index": idx,
+                            "message": e.message,
+                            "error_code": e.error_code.value if e.error_code else None,
+                            "details": e.details
+                        }
+                        yield f"data: {json.dumps(error_event)}\n\n"
+                        logger.error(f"Chunk {idx} failed: {e.message}")
+                        # Continue to next chunk
                     except Exception as e:
-                        # Send error for this chunk
-                        yield f"data: {json.dumps({'type': 'error', 'index': idx, 'message': str(e)})}\n\n"
-                        logger.error(f"Failed to generate chunk {idx}: {str(e)}")
+                        # Unexpected error
+                        error_event = {
+                            "type": "error",
+                            "index": idx,
+                            "message": "An unexpected error occurred on this chunk.",
+                            "error_code": ErrorCode.GENERATION_FAILED.value,
+                        }
+                        yield f"data: {json.dumps(error_event)}\n\n"
+                        logger.error(f"Unexpected error on chunk {idx}: {str(e)}")
                 
-                # Update generation status
-                generation.status = GenerationStatus.COMPLETED
-                db.commit()
-                
-                # Send completion event
-                yield f"data: {json.dumps({'type': 'complete', 'generation_id': generation.id, 'total': len(results), 'total_chars': total_chars})}\n\n"
+                # Update generation status only if at least one segment succeeded
+                if results:
+                    generation.status = GenerationStatus.COMPLETED
+                    db.commit()
+                    yield f"data: {json.dumps({'type': 'complete', 'generation_id': generation.id, 'total': len(results), 'total_chars': total_chars})}\n\n"
+                else:
+                    generation.status = GenerationStatus.FAILED
+                    db.commit()
+                    yield f"data: {json.dumps({'type': 'complete', 'generation_id': generation.id, 'total': 0, 'message': 'All chunks failed.'})}\n\n"
                 
             except Exception as e:
                 db.rollback()
                 logger.error(f"Stream generation failed: {str(e)}")
-                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred. Please try again.', 'error_code': ErrorCode.INTERNAL_ERROR.value})}\n\n"
             finally:
                 db.close()
 
@@ -131,28 +151,37 @@ def generate_and_stream_audio(req: GenerateAudioRequest, user: User, db: Session
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Accel-Buffering": "no",  # Disable Nginx buffering
+                "X-Accel-Buffering": "no",
             }
         )
 
+    except AppException:
+        db.rollback()
+        raise
     except HTTPException:
         db.rollback()
         raise
     except Exception as e:
         db.rollback()
         logger.error(f"Audio generation failed: {str(e)}")
-        raise HTTPException(500, f"Audio generation failed: {str(e)}")
+        raise AppException(500, "An internal error occurred. Please try again later.", ErrorCode.INTERNAL_ERROR)
 
 
 def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
     """Legacy batch generation - kept for backward compatibility"""
     try:
+        if not req.script or not req.script.strip():
+            raise AppException(400, "The script is empty. Please provide some text.", ErrorCode.EMPTY_SCRIPT)
+        
         sanitized_script = sanitize_script_input(req.script)
         encrypted_keys = encrypt_api_keys(req.api_keys)
         
         chunks = split_script_into_chunks(sanitized_script)
         if not chunks:
-            raise HTTPException(400, "Script is empty or contains no paragraphs.")
+            raise AppException(400, "The script contains no paragraphs. Please add content.", ErrorCode.EMPTY_SCRIPT)
+        
+        if len(chunks) > 1000:
+            raise AppException(400, f"Script has {len(chunks)} chunks, exceeding maximum of 1000.", ErrorCode.SCRIPT_TOO_LONG)
 
         generation = AudioGeneration(
             user_id=user.id,
@@ -211,13 +240,16 @@ def generate_and_play_audio(req: GenerateAudioRequest, user: User, db: Session):
             "usage": usage
         }
 
+    except AppException:
+        db.rollback()
+        raise
     except HTTPException:
         db.rollback()
         raise
     except Exception as e:
         db.rollback()
         logger.error(f"Audio generation failed: {str(e)}")
-        raise HTTPException(500, f"Audio generation failed: {str(e)}")
+        raise AppException(500, "An internal error occurred. Please try again later.", ErrorCode.INTERNAL_ERROR)
 
 
 def get_voice_insights(voice_id: str) -> Dict[str, Any]:
@@ -295,7 +327,7 @@ def get_generation(generation_id: int, user: User, db: Session):
         AudioGeneration.user_id == user.id
     ).first()
     if not gen:
-        raise HTTPException(404, "Generation not found or not yours")
+        raise AppException(404, "Generation not found or you don't have access.", ErrorCode.NOT_FOUND)
 
     segments_with_audio = []
     for seg in gen.segments:
@@ -328,9 +360,9 @@ def download_generation_zip(generation_id: int, user: User, db: Session):
         AudioGeneration.user_id == user.id
     ).first()
     if not gen:
-        raise HTTPException(404, "Generation not found or not yours")
+        raise AppException(404, "Generation not found or you don't have access.", ErrorCode.NOT_FOUND)
     if not gen.segments:
-        raise HTTPException(404, "No audio segments found")
+        raise AppException(404, "No audio segments found to download.", ErrorCode.NOT_FOUND)
 
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
@@ -354,7 +386,7 @@ def delete_generation(generation_id: int, user: User, db: Session):
         AudioGeneration.user_id == user.id
     ).first()
     if not gen:
-        raise HTTPException(404, "Generation not found or not yours")
+        raise AppException(404, "Generation not found or you don't have access.", ErrorCode.NOT_FOUND)
     db.delete(gen)
     db.commit()
     return {"success": True, "message": "Generation deleted successfully"}

@@ -9,7 +9,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 import asyncio
 from contextlib import asynccontextmanager
-
+from src.utils.errors import AppException, ErrorCode
 from src.utils.settings import settings
 from src.utils.logging import setup_logging, get_logger
 from src.utils.middleware import (
@@ -90,7 +90,24 @@ app.add_middleware(
 # Rate limiting middleware (after CORS)
 app.add_middleware(SlowAPIMiddleware)
 
-# Global Exception Handler
+
+
+@app.exception_handler(AppException)
+async def app_exception_handler(request: Request, exc: AppException):
+    request_id = getattr(request.state, "request_id", "unknown")
+    content = {
+        "success": False,
+        "message": exc.message,
+        "error_code": exc.error_code.value if exc.error_code else None,
+        "details": exc.details,
+        "request_id": request_id,
+    }
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content
+    )
+
+# Also modify the existing global exception handler to return a consistent format:
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
@@ -106,6 +123,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             }
         )
     
+    # For any other unhandled exception
     logger.error(
         f"Unhandled error: {exc}",
         exc_info=True,
@@ -121,6 +139,8 @@ async def global_exception_handler(request: Request, exc: Exception):
             "request_id": request_id,
         }
     )
+
+
 
 # Health Checks
 @app.get("/")
