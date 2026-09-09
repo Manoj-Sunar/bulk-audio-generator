@@ -1,4 +1,4 @@
 .env
-env
+env/
 alembic.ini 
 alembic
