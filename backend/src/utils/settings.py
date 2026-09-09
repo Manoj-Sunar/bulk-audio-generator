@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str
 
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000"
+    ALLOWED_ORIGINS: str = "http://localhost:3001"
     ALLOWED_HOSTS: str = "localhost,127.0.0.1"
 
     # Rate Limiting
