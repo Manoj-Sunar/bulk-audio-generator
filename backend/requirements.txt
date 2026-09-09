@@ -1,8 +1,7 @@
 fastapi[standard]==0.115.6
-fastapi==0.115.6
 uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
-psycopg==3.2.3
+psycopg2-binary>=2.9.9
 python-dotenv==1.0.1
 pydantic>=2.10.0,<3.0.0
 pydantic-settings>=2.6.0,<3.0.0
@@ -13,6 +12,10 @@ httpx==0.28.1
 google-auth==2.36.0
 cryptography==44.0.0
 slowapi==0.1.9
-pwdlib>=0.1.0,<0.2.0
+pwdlib[argon2]>=0.1.0,<0.2.0
 requests==2.32.3
 prometheus-client==0.21.1
+bcrypt>=4.0.0
+argon2-cffi>=23.1.0
+PyJWT>=2.8.0
+google-genai>=1.0.0

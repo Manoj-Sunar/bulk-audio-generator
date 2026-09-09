@@ -55,7 +55,7 @@ SessionLocal = sessionmaker(
 # FASTAPI DATABASE DEPENDENCY
 # ============================================================
 
-def get_db() -> Session:
+def get_db() -> Session: 
     """
     Get a database session for FastAPI dependencies.
 
