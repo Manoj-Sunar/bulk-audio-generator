@@ -3,7 +3,7 @@
 const nextConfig = {
   // Use environment variable for API URL
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
     return [
       {
         source: '/api/:path*',
@@ -52,7 +52,7 @@ const nextConfig = {
               "img-src 'self' data: https://*.googleusercontent.com https://avatars.githubusercontent.com",
               "font-src 'self' data:",
               "media-src 'self' data: blob:", // ✅ IMPORTANT: Allows audio data URLs
-              "connect-src 'self' https://api.elevenlabs.io https://*.googleapis.com " + (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'),
+              "connect-src 'self' https://api.elevenlabs.io https://*.googleapis.com " + (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'),
               "frame-src https://accounts.google.com",
               "worker-src 'self' blob:",
               "child-src 'self' blob:",
