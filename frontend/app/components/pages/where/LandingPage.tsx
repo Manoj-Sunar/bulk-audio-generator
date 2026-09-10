@@ -27,7 +27,6 @@ import {
  
   Rocket,
  
-  Infinity,
   Check,
   X,
  
