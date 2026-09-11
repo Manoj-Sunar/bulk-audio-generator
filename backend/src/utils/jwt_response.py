@@ -19,7 +19,7 @@ def build_auth_response(
             value=access_token,
             httponly=True,
             secure=settings.COOKIE_SECURE,
-            samesite="lax",
+            samesite=settings.COOKIE_SAMESITE,   # ← FIXED
             max_age=900,
             path="/",
         )
@@ -28,7 +28,7 @@ def build_auth_response(
             value=refresh_token,
             httponly=True,
             secure=settings.COOKIE_SECURE,
-            samesite="lax",
+            samesite=settings.COOKIE_SAMESITE,   # ← FIXED
             max_age=604800,
             path="/",
         )
@@ -36,7 +36,7 @@ def build_auth_response(
             key="csrf_token",
             value=user.csrf_token or "",
             secure=settings.COOKIE_SECURE,
-            samesite="lax",
+            samesite=settings.COOKIE_SAMESITE,   # ← FIXED
             max_age=900,
             path="/",
         )
@@ -53,5 +53,8 @@ def build_auth_response(
     return {
         "success": True,
         "message": message,
-        "data": {"user": user_data},
+        "data": {
+            "user": user_data,
+            "csrf_token": user.csrf_token or "",   # ← expose for cross-domain frontend
+        },
     }
