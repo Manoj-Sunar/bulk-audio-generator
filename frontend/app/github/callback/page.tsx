@@ -1,13 +1,13 @@
 // app/github/callback/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGithubLogin } from '@/app/lib/auth/hooks';
 import { toast } from 'sonner';
 import { FaGithub } from 'react-icons/fa';
 
-export default function GithubCallback() {
+function GithubCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { mutate: githubLogin } = useGithubLogin();
@@ -54,7 +54,6 @@ export default function GithubCallback() {
     <div className="flex h-screen w-full items-center justify-center bg-gray-50">
       <div className="w-full max-w-md px-4">
         <div className="rounded-xl bg-white border border-gray-200 shadow-lg p-8 text-center transition-shadow hover:shadow-xl">
-          {/* GitHub Icon */}
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
             <FaGithub className="h-10 w-10 text-gray-800" />
           </div>
@@ -62,7 +61,6 @@ export default function GithubCallback() {
           <h1 className="mb-2 text-2xl font-semibold text-gray-800">GitHub Authentication</h1>
           <p className="mb-6 text-sm text-gray-500">{statusMessages[status]}</p>
 
-          {/* Status Indicator */}
           <div className="flex justify-center">
             {status === 'verifying' && (
               <div className="relative">
@@ -88,7 +86,6 @@ export default function GithubCallback() {
             )}
           </div>
 
-          {/* Loading dots (for verifying) */}
           {status === 'verifying' && (
             <div className="mt-4 flex justify-center space-x-1.5">
               <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]" />
@@ -103,5 +100,21 @@ export default function GithubCallback() {
         </p>
       </div>
     </div>
+  );
+}
+
+function GithubCallbackFallback() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+      <p className="text-sm text-gray-500">Connecting to GitHub…</p>
+    </div>
+  );
+}
+
+export default function GithubCallback() {
+  return (
+    <Suspense fallback={<GithubCallbackFallback />}>
+      <GithubCallbackInner />
+    </Suspense>
   );
 }
