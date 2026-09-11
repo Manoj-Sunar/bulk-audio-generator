@@ -53,6 +53,7 @@ def UserRegister(body: UserSchema, db: Session):
         email = body.email.strip().lower()
 
         existing_user = db.query(User).filter(User.email == email).first()
+        print(existing_user)
         if existing_user:
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
@@ -114,35 +115,38 @@ def UserRegister(body: UserSchema, db: Session):
 def UserLogin(body: UserLoginSchema, db: Session, response: Response):
     try:
         email = body.email.strip().lower()
-        user = db.query(User).filter(User.email == email).first()
-        if not user:
+        print(email)
+        print(body.password)
+        existing_user = db.query(User).filter(User.email == email).first()
+        print(existing_user)
+        if not existing_user:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password.")
 
-        if not user.is_active:
+        if not existing_user.is_active:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Your account has been disabled.")
 
         local_provider = (
             db.query(UserProvider)
             .filter(
-                UserProvider.user_id == user.id,
+                UserProvider.user_id == existing_user.id,
                 UserProvider.provider == "local",
             )
             .first()
         )
-        if not local_provider or not user.password:
+        if not local_provider or not existing_user.password:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 "This account does not use password login. Please sign in with a linked provider.",
             )
 
-        if not verify_password(body.password, user.password):
+        if not verify_password(body.password, existing_user.password):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password.")
 
-        user.csrf_token = generate_csrf_token()
+        existing_user.csrf_token = generate_csrf_token()
         db.commit()
 
-        logger.info(f"User logged in: {user.email}")
-        return build_auth_response(user, "Login successful.", response)
+        logger.info(f"User logged in: {existing_user.email}")
+        return build_auth_response(existing_user, "Login successful.", response)
     except HTTPException:
         raise
     except Exception as e:

@@ -37,7 +37,9 @@ def verify_password(password: str, hashed: str) -> bool:
     """Verify password against hash"""
     try:
         return password_hash.verify(password, hashed)
-    except Exception:
+    except Exception as e:
+        # ✅ ADD THIS: Log the actual error so you can see why it fails
+        logger.error(f"Password verification failed: {str(e)}")
         return False
 
 def validate_password_strength(password: str) -> Tuple[bool, Optional[str]]:
