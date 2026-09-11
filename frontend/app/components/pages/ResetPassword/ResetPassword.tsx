@@ -13,19 +13,19 @@ import { Paragraph } from '@/app/components/typography/Paragraph';
 import { ResetPasswordForm } from './ResetPasswordForm';
 import { ResetPasswordGuard } from '@/app/lib/auth/guard';
 import { ROUTES } from '@/app/lib/constants';
+import { Suspense } from 'react';
 
 const StepIndicator = () => (
   <div className="flex items-center justify-center gap-2 mb-6">
     {[1, 2, 3].map((step) => (
       <div key={step} className="flex items-center gap-2">
         <div
-          className={`w-3 h-3 rounded-full transition-all duration-500 ${
-            step === 3
+          className={`w-3 h-3 rounded-full transition-all duration-500 ${step === 3
               ? "bg-gradient-to-r from-primary to-secondary shadow-lg shadow-primary/30 scale-125"
               : step < 3
                 ? "bg-primary/60"
                 : "bg-gray-300/60"
-          }`}
+            }`}
         />
         {step < 3 && <div className="w-12 h-0.5 bg-primary/30" />}
       </div>
@@ -92,10 +92,25 @@ const ResetPasswordContent = () => {
   );
 };
 
+const ResetPasswordFallback = () => (
+  <main className="relative flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <Background />
+    <div className="relative z-10 w-full max-w-md">
+      <Card className="rounded-[40px] border border-white/20 bg-white/80 p-10 text-center shadow-2xl backdrop-blur-xl">
+        <Paragraph size="sm" className="text-on-surface-variant/80">
+          Loading…
+        </Paragraph>
+      </Card>
+    </div>
+  </main>
+);
+
 export const ResetPassword = () => {
   return (
     <ResetPasswordGuard>
-      <ResetPasswordContent />
+      <Suspense fallback={<ResetPasswordFallback />}>
+        <ResetPasswordContent />
+      </Suspense>
     </ResetPasswordGuard>
   );
 };
