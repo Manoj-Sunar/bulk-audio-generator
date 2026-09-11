@@ -1,9 +1,16 @@
 // src/lib/auth/context.tsx
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
 import { apiClient, extractErrorMessage } from '../axios/client';
-
 
 export interface User {
   id: number;
@@ -26,7 +33,6 @@ type AuthContextType = {
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   setUser: (user: User | null) => void;
-
 };
 
 type RegisterData = {
@@ -45,32 +51,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializedRef = useRef(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-useEffect(() => {
+  // Helper to persist csrf_token for cross-domain usage
+  const persistCsrf = (payload: any) => {
+    if (typeof window === 'undefined') return;
+    if (payload?.csrf_token) {
+      window.localStorage.setItem('csrf_token', payload.csrf_token);
+    }
+  };
+
+  // ── Initial auth check ─────────────────────────────────────────
+  useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
     const safetyTimeout = setTimeout(() => {
       if (isLoading) {
-        console.warn('Auth loading timeout reached - forcing UI to render');
+        console.warn('Auth loading timeout reached — forcing UI to render');
         setIsLoading(false);
       }
     }, 5000);
 
-
-
-    
     const initAuth = async () => {
       try {
         const response = await apiClient.get('/user/me');
         setUser(response.data);
-      } catch (error) {
-        // Try refresh once
+      } catch {
         try {
           await apiClient.post('/user/refresh');
           const retry = await apiClient.get('/user/me');
           setUser(retry.data);
-        } catch (refreshError) {
-          setUser(null); // ✅ Explicitly set to null so Navbar updates
+        } catch {
+          setUser(null);
         }
       } finally {
         clearTimeout(safetyTimeout);
@@ -80,142 +91,15 @@ useEffect(() => {
 
     initAuth();
 
-    return () => {
-      clearTimeout(safetyTimeout);
-    };
-  }, []);
+    return () => clearTimeout(safetyTimeout);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-
-
-
-  // Auto refresh token every 10 minutes
-  useEffect(() => {
-    if (!user) return;
-
-    const setupRefreshTimer = () => {
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-      }
-
-      refreshTimerRef.current = setInterval(() => {
-        console.log('Auto-refreshing token...');
-        refreshToken();
-      }, 10 * 60 * 1000); // 10 minutes
-    };
-
-    setupRefreshTimer();
-
-    return () => {
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-      }
-    };
-  }, [user]);
-
-
-
-
-  const login = useCallback(async (email: string, password: string): Promise<User> => {
-    const response = await apiClient.post('/user/login', { email, password });
-    const userData = response.data?.data?.user || response.data?.data || response.data;
-    setUser(userData);
-    return userData;
-  }, []);
-
-
-
-
-  const register = useCallback(async (data: RegisterData): Promise<User> => {
-    const response = await apiClient.post('/user/register', {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.confirmPassword,
-    });
-    const userData = response.data?.data || response.data;
-    setUser(userData);
-    return userData;
-  }, []);
-
-
-
-
-  const googleLogin = useCallback(async (code: string): Promise<User> => {
-    const response = await apiClient.post('/user/google', { token: code });
-    const userData = response.data?.data?.user || response.data?.data || response.data;
-    setUser(userData);
-    return userData;
-  }, []);
-
-
-
-
-  const githubLogin = useCallback(async (code: string): Promise<User> => {
-    const response = await apiClient.post('/user/github', { code });
-    const userData = response.data?.data?.user || response.data?.data || response.data;
-    setUser(userData);
-    return userData;
-  }, []);
-
-
-
-  const logout = useCallback(async (): Promise<void> => {
-    try {
-      await apiClient.post('/user/logout');
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
-      setUser(null);
-    } catch (error) {
-      setUser(null);
-      throw error;
-    }
-  }, []);
-
-
-
-
-  useEffect(() => {
-    if (!user) return;
-
-    const setupRefreshTimer = () => {
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-      }
-
-      refreshTimerRef.current = setInterval(() => {
-        console.log('Auto-refreshing token...');
-        refreshToken();
-      }, 8 * 60 * 1000); // 8 minutes
-    };
-
-    setupRefreshTimer();
-
-    return () => {
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-      }
-    };
-  }, [user]);
-
-
-
-
-
-
-
-
-
-
+  // ── Refresh token method ───────────────────────────────────────
   const refreshToken = useCallback(async (): Promise<void> => {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
-      // ✅ यहाँ response interceptor ले automatically cookie update गर्छ
       await apiClient.post('/user/refresh');
-
-      // ✅ Re-fetch user data
       const response = await apiClient.get('/user/me');
       setUser(response.data);
     } catch (error) {
@@ -225,6 +109,84 @@ useEffect(() => {
       setIsRefreshing(false);
     }
   }, [isRefreshing]);
+
+  // ── Auto refresh token every 8 minutes ─────────────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+
+    refreshTimerRef.current = setInterval(() => {
+      console.log('Auto-refreshing token...');
+      refreshToken();
+    }, 8 * 60 * 1000);
+
+    return () => {
+      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    };
+  }, [user, refreshToken]);
+
+  // ── Login ──────────────────────────────────────────────────────
+  const login = useCallback(async (email: string, password: string): Promise<User> => {
+    const response = await apiClient.post('/user/login', { email, password });
+    const payload = response.data?.data || response.data;
+    persistCsrf(payload);
+    const userData = payload?.user || payload;
+    setUser(userData);
+    return userData;
+  }, []);
+
+  // ── Register ───────────────────────────────────────────────────
+  const register = useCallback(async (data: RegisterData): Promise<User> => {
+    const response = await apiClient.post('/user/register', {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      confirmPassword: data.confirmPassword,
+    });
+    const payload = response.data?.data || response.data;
+    persistCsrf(payload);
+    setUser(payload);
+    return payload;
+  }, []);
+
+  // ── Google login ───────────────────────────────────────────────
+  const googleLogin = useCallback(async (code: string): Promise<User> => {
+    const response = await apiClient.post('/user/google', { token: code });
+    const payload = response.data?.data || response.data;
+    persistCsrf(payload);
+    const userData = payload?.user || payload;
+    setUser(userData);
+    return userData;
+  }, []);
+
+  // ── GitHub login ───────────────────────────────────────────────
+  const githubLogin = useCallback(async (code: string): Promise<User> => {
+    const response = await apiClient.post('/user/github', { code });
+    const payload = response.data?.data || response.data;
+    persistCsrf(payload);
+    const userData = payload?.user || payload;
+    setUser(userData);
+    return userData;
+  }, []);
+
+  // ── Logout ─────────────────────────────────────────────────────
+  const logout = useCallback(async (): Promise<void> => {
+    try {
+      await apiClient.post('/user/logout');
+    } catch {
+      // ignore
+    } finally {
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('csrf_token');
+      }
+      setUser(null);
+    }
+  }, []);
 
   const value = {
     user,
@@ -237,7 +199,6 @@ useEffect(() => {
     logout,
     refreshToken,
     setUser,
-  
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

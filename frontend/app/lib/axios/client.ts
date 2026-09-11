@@ -16,12 +16,20 @@ export interface ApiErrorResponse {
   errors?: Record<string, string[]>;
 }
 
-// ── Helper: read CSRF token from cookie ─────────────────────────
+// ── Helper: read CSRF token ─────────────────────────────────────
 export function getCsrfToken(): string | null {
   if (typeof document === 'undefined') return null;
+
+  // 1) Same-site cookie
   const cookies = document.cookie.split('; ');
   const csrfCookie = cookies.find((row) => row.startsWith('csrf_token='));
-  return csrfCookie ? csrfCookie.split('=')[1] : null;
+  if (csrfCookie) return csrfCookie.split('=')[1];
+
+  // 2) Cross-site fallback
+  if (typeof window !== 'undefined') {
+    return window.localStorage.getItem('csrf_token');
+  }
+  return null;
 }
 
 export const apiClient = axios.create({
@@ -73,6 +81,10 @@ const NO_REFRESH_URLS = [
   '/user/google',
   '/user/github',
   '/user/logout',
+  // ✅ ADD — these are auth-flow endpoints; the user isn't logged in yet
+  '/user/reset-password',
+  '/user/verify-otp',
+  '/user/request-password-reset',
 ];
 
 apiClient.interceptors.response.use(
@@ -81,7 +93,7 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as any;
     const url = originalRequest?.url || '';
 
-    // 1. Skip Next.js RSC prefetch requests entirely
+    // 1. Skip Next.js RSC prefetch requests
     if (originalRequest?.headers?.['RSC'] === '1') {
       return Promise.reject(error);
     }
@@ -91,12 +103,12 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 3. Only 401s on non-auth endpoints should trigger refresh
+    // 3. Only 401s should trigger refresh
     if (error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
-    // 4. Don't refresh on auth endpoints themselves (avoids recursion)
+    // 4. Never refresh on auth endpoints themselves
     const isAuthEndpoint = NO_REFRESH_URLS.some((p) => url.includes(p));
     if (isAuthEndpoint) {
       return Promise.reject(error);
@@ -107,7 +119,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 6. If a refresh is already in flight, queue this request
+    // 6. Queue if a refresh is already in flight
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -126,8 +138,6 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError);
-
-      // Do NOT redirect from here. AuthGuard handles navigation.
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
@@ -142,7 +152,14 @@ export function extractErrorMessage(error: unknown): string {
 
     if (data?.message) return data.message;
     if (data?.detail) return data.detail;
-    if (error.message) return error.message;
+
+    // Network-level errors (no response at all)
+    if (!error.response && error.message) {
+      if (error.message.includes('Network Error') || error.code === 'ERR_NETWORK') {
+        return 'Network error — please check your connection and try again.';
+      }
+      return error.message;
+    }
   }
   if (error instanceof Error) {
     return error.message;

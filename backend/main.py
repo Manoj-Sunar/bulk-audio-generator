@@ -65,33 +65,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ────────────────────────────────────────────────────────────────
 # MIDDLEWARE ORDER (Starlette = LIFO: last added = first executed)
-#
-# Request path (outermost → innermost):
-#   1. CORSMiddleware          ← handles OPTIONS preflight first
-#   2. SlowAPIMiddleware
-#   3. TrustedHostMiddleware
-#   4. RequestIDMiddleware
-#   5. SecurityHeadersMiddleware
-#   6. RequestLoggingMiddleware
-#   7. RateLimitOverrideMiddleware
-#   8. Route
-#
-# So we add them in REVERSE order below.
 # ────────────────────────────────────────────────────────────────
-
-# 7 — innermost
 app.add_middleware(RateLimitOverrideMiddleware)
-
-# 6
 app.add_middleware(RequestLoggingMiddleware)
-
-# 5
 app.add_middleware(SecurityHeadersMiddleware)
-
-# 4
 app.add_middleware(RequestIDMiddleware)
-
-# 3
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=(
@@ -100,29 +78,43 @@ app.add_middleware(
         else settings.allowed_hosts_list
     ),
 )
-
-# 2
 app.add_middleware(SlowAPIMiddleware)
 
-# 1 — outermost: CORS must run before anything else
+# CORS must be added LAST so it runs FIRST on requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    # NOTE: "Set-Cookie" is a forbidden response header; browsers ignore it.
-    # Only expose what the frontend actually needs to read.
     expose_headers=["X-Request-ID"],
     max_age=3600,
 )
+
+
+# ────────────────────────────────────────────────────────────────
+# Helper: attach CORS headers to a JSONResponse
+# ────────────────────────────────────────────────────────────────
+def _with_cors_headers(response: JSONResponse, request: Request) -> JSONResponse:
+    """
+    Starlette's exception handlers run OUTSIDE the middleware stack, so
+    CORSMiddleware cannot add headers to responses generated here. We
+    must add them manually — otherwise 500s appear in the browser as
+    'CORS errors' and hide the real problem.
+    """
+    origin = request.headers.get("origin")
+    if origin and origin in settings.cors_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Vary"] = "Origin"
+    return response
 
 
 # ── Exception handlers ──────────────────────────────────────────
 @app.exception_handler(AppException)
 async def app_exception_handler(request: Request, exc: AppException):
     request_id = getattr(request.state, "request_id", "unknown")
-    return JSONResponse(
+    response = JSONResponse(
         status_code=exc.status_code,
         content={
             "success": False,
@@ -132,6 +124,7 @@ async def app_exception_handler(request: Request, exc: AppException):
             "request_id": request_id,
         },
     )
+    return _with_cors_headers(response, request)
 
 
 @app.exception_handler(Exception)
@@ -139,7 +132,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
 
     if isinstance(exc, RateLimitExceeded):
-        return JSONResponse(
+        response = JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             content={
                 "success": False,
@@ -148,6 +141,7 @@ async def global_exception_handler(request: Request, exc: Exception):
                 "request_id": request_id,
             },
         )
+        return _with_cors_headers(response, request)
 
     logger.error(
         f"Unhandled error: {exc}",
@@ -155,7 +149,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         extra={"request_id": request_id},
     )
 
-    return JSONResponse(
+    response = JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "success": False,
@@ -164,6 +158,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "request_id": request_id,
         },
     )
+    return _with_cors_headers(response, request)
 
 
 # ── Health checks ───────────────────────────────────────────────

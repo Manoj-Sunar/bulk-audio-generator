@@ -8,7 +8,9 @@ from pydantic import (
 )
 import re
 
-def validate_password_strength(password: str) -> str:
+
+def validate_password_strength_local(password: str) -> str:
+    """Raises ValueError if password is weak; returns the stripped password otherwise."""
     password = password.strip()
     if not re.search(r"[A-Z]", password):
         raise ValueError("Password must contain at least one uppercase letter.")
@@ -19,6 +21,7 @@ def validate_password_strength(password: str) -> str:
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
         raise ValueError("Password must contain at least one special character.")
     return password
+
 
 class UserSchema(BaseModel):
     name: str = Field(..., min_length=3, max_length=100, examples=["John Doe"])
@@ -44,12 +47,12 @@ class UserSchema(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str):
-        return validate_password_strength(value)
+        return validate_password_strength_local(value)
 
     @field_validator("confirmPassword")
     @classmethod
     def validate_confirm_password(cls, value: str):
-        return validate_password_strength(value)
+        return validate_password_strength_local(value)
 
     @model_validator(mode="after")
     def validate_passwords(self):
@@ -67,6 +70,7 @@ class UserSchema(BaseModel):
             }
         }
     }
+
 
 class UserLoginSchema(BaseModel):
     email: EmailStr = Field(..., examples=["john@example.com"])
@@ -94,26 +98,27 @@ class UserLoginSchema(BaseModel):
         }
     }
 
+
 class GoogleLoginSchema(BaseModel):
     token: str = Field(..., min_length=10, description="Google ID Token")
+
 
 class GithubLoginSchema(BaseModel):
     code: str = Field(..., min_length=10, description="GitHub OAuth authorization code")
 
+
 class RefreshTokenSchema(BaseModel):
     refresh_token: str = Field(..., min_length=10)
-    
-    
-    
-    
-    
+
 
 class RequestPasswordResetSchema(BaseModel):
     email: EmailStr
 
+
 class VerifyOTPSchema(BaseModel):
     email: EmailStr
     otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP")
+
 
 class ResetPasswordSchema(BaseModel):
     email: EmailStr
@@ -123,11 +128,12 @@ class ResetPasswordSchema(BaseModel):
 
     @field_validator("new_password")
     @classmethod
-    def validate_password_strength(cls, value: str):
-        # reuse existing password strength validator from security.py
+    def validate_new_password(cls, value: str):
+        # ✅ FIX: unpack the tuple returned by src.utils.security
         from src.utils.security import validate_password_strength
-        if not validate_password_strength(value):
-            raise ValueError("Password does not meet security requirements")
+        is_valid, error = validate_password_strength(value)
+        if not is_valid:
+            raise ValueError(error or "Password does not meet security requirements")
         return value
 
     @model_validator(mode="after")
@@ -135,6 +141,7 @@ class ResetPasswordSchema(BaseModel):
         if self.new_password != self.confirm_password:
             raise ValueError("Passwords do not match")
         return self
+
 
 class OTPVerificationResponse(BaseModel):
     success: bool
