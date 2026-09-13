@@ -1,12 +1,20 @@
 # src/utils/settings.py
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator, model_validator
 from typing import List, Optional, Literal
 
 
+# Decide which env file to load.
+#   ENVIRONMENT=production  → .env.production
+#   otherwise               → .env.local
+_env_name = os.getenv("ENVIRONMENT", "development").lower()
+_env_file = ".env.production" if _env_name == "production" else ".env.local"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_env_file,
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -24,13 +32,9 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str
     ENCRYPTION_SALT: str
 
-    # Cookie behaviour.
-    #   SameSite=None  → required for cross-site (e.g. Vercel ↔ Render) auth.
-    #                    MUST be paired with Secure=True or browsers drop the cookie.
-    #   SameSite=Lax   → fine for same-site dev (localhost).
     COOKIE_SECURE: bool = True
     COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
-    COOKIE_DOMAIN: Optional[str] = None  # e.g. ".example.com"; leave None for default
+    COOKIE_DOMAIN: Optional[str] = None
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -40,11 +44,10 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str
     GITHUB_CLIENT_ID: str
     GITHUB_CLIENT_SECRET: str
-    
-    # src/utils/settings.py — add
-    FRONTEND_URL: str 
-    GOOGLE_REDIRECT_URI: str 
-    GITHUB_REDIRECT_URI: str 
+
+    FRONTEND_URL: str
+    GOOGLE_REDIRECT_URI: str
+    GITHUB_REDIRECT_URI: str
 
     # ── CORS ────────────────────────────────────────────────────
     ALLOWED_ORIGINS: str = "http://localhost:3000"
@@ -92,39 +95,25 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _enforce_cookie_safety(self):
-        """
-        Browsers will silently drop cookies that violate these rules:
-
-          1. SameSite=None  →  Secure MUST be True
-          2. Secure=True    →  requires HTTPS (handled by the platform)
-
-        Rather than crash the whole app, we log a warning and coerce
-        the safest combination so cross-domain auth still works.
-        """
         import logging
         log = logging.getLogger(__name__)
 
         if self.COOKIE_SAMESITE == "none" and not self.COOKIE_SECURE:
             log.warning(
                 "COOKIE_SAMESITE=none requires COOKIE_SECURE=True. "
-                "Forcing COOKIE_SECURE=True to keep cross-domain auth working."
+                "Forcing COOKIE_SECURE=True."
             )
             object.__setattr__(self, "COOKIE_SECURE", True)
 
         if self.ENVIRONMENT == "production" and self.COOKIE_SAMESITE != "none":
             log.warning(
                 "ENVIRONMENT=production but COOKIE_SAMESITE=%s. "
-                "Cross-domain frontend↔backend auth will FAIL unless the "
-                "frontend is served from the same site as the API. "
-                "Set COOKIE_SAMESITE=none in production for cross-origin setups.",
+                "Cross-domain auth will FAIL. Set COOKIE_SAMESITE=none.",
                 self.COOKIE_SAMESITE,
             )
 
         if self.ENVIRONMENT == "production" and not self.COOKIE_SECURE:
-            log.warning(
-                "ENVIRONMENT=production but COOKIE_SECURE=False. "
-                "Cookies will be sent over plain HTTP — insecure."
-            )
+            log.warning("COOKIE_SECURE=False in production — insecure.")
 
         return self
 
@@ -140,11 +129,6 @@ class Settings(BaseSettings):
 
     @property
     def is_cross_site(self) -> bool:
-        """
-        True when the API and the frontend live on different registrable
-        domains (e.g. onrender.com vs vercel.app). In that case cookies
-        MUST use SameSite=None; Secure.
-        """
         return self.COOKIE_SAMESITE == "none"
 
 
