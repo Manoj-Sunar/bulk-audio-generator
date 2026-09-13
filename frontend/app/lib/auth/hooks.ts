@@ -1,4 +1,4 @@
-// src/lib/auth/hooks.ts
+// app/lib/auth/hooks.ts
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -13,7 +13,7 @@ export function useRegister() {
     mutationFn: register,
     onSuccess: () => {
       toast.success('Registration successful!');
-      router.push('/bulk-audio/generator');
+      router.replace('/bulk-audio/generator');
     },
     onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
@@ -28,7 +28,7 @@ export function useLogin() {
       login(email, password),
     onSuccess: () => {
       toast.success('Welcome back!');
-      router.push('/bulk-audio/generator');
+      router.replace('/bulk-audio/generator');
     },
     onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
@@ -56,7 +56,7 @@ export function useGoogleLogin() {
     mutationFn: (code: string) => googleLogin(code),
     onSuccess: () => {
       toast.success('Google login successful!');
-      router.push('/bulk-audio/generator');
+      router.replace('/bulk-audio/generator');
     },
     onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
@@ -70,7 +70,7 @@ export function useGithubLogin() {
     mutationFn: (code: string) => githubLogin(code),
     onSuccess: () => {
       toast.success('GitHub login successful!');
-      router.push('/bulk-audio/generator');
+      router.replace('/bulk-audio/generator');
     },
     onError: (error: any) => toast.error(extractErrorMessage(error)),
   });

@@ -25,7 +25,10 @@ export interface StreamingProgress {
 
 export function useStreamingGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
+  const [progress, setProgress] = useState<{ current: number; total: number }>({
+    current: 0,
+    total: 0,
+  });
   const [segments, setSegments] = useState<StreamingSegment[]>([]);
   const [generationId, setGenerationId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,6 @@ export function useStreamingGeneration() {
       model_id: string;
       provider: string;
     }) => {
-      // Reset state
       setIsGenerating(true);
       setProgress({ current: 0, total: 0 });
       setSegments([]);
@@ -52,13 +54,12 @@ export function useStreamingGeneration() {
       setGenerationId(null);
       setTotalChars(0);
 
-      // Create abort controller
       abortControllerRef.current = new AbortController();
 
       try {
         const csrfToken = getCsrfToken();
 
-        // ✅ FIX: /api path मा जान्छ — Vercel proxy ले backend मा forward गर्छ
+        // ✅ /api path — reverse proxy ले onrender.com मा forward गर्छ
         const response = await fetch(`/api/audio/generate-stream`, {
           method: 'POST',
           headers: {
@@ -78,9 +79,7 @@ export function useStreamingGeneration() {
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
 
-        if (!reader) {
-          throw new Error('Failed to read response stream');
-        }
+        if (!reader) throw new Error('Failed to read response stream');
 
         let buffer = '';
 
@@ -102,11 +101,16 @@ export function useStreamingGeneration() {
                     setGenerationId(data.generation_id || null);
                     setProgress({ current: 0, total: data.total || 0 });
                     setProvider(data.provider || null);
-                    toast.info(`🎙️ Starting generation with ${data.provider || 'provider'}...`);
+                    toast.info(
+                      `🎙️ Starting generation with ${data.provider || 'provider'}...`
+                    );
                     break;
 
                   case 'progress':
-                    setProgress({ current: data.current || 0, total: data.total || 0 });
+                    setProgress({
+                      current: data.current || 0,
+                      total: data.total || 0,
+                    });
                     if (data.segment) {
                       setSegments((prev) => [...prev, data.segment!]);
                       toast.success(`✅ Generated: ${data.segment.title}`);
@@ -117,7 +121,7 @@ export function useStreamingGeneration() {
                     setIsComplete(true);
                     setIsGenerating(false);
                     setTotalChars(data.total_chars || 0);
-                    toast.success(`🎉 All ${data.total} files generated successfully!`);
+                    toast.success(`🎉 All ${data.total} files generated!`);
                     break;
 
                   case 'error':
@@ -136,11 +140,9 @@ export function useStreamingGeneration() {
         setIsGenerating(false);
         return { segments, generationId, totalChars };
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          // User cancelled — do nothing
-          return;
-        }
-        const errorMessage = err instanceof Error ? err.message : 'Generation failed';
+        if (err instanceof Error && err.name === 'AbortError') return;
+        const errorMessage =
+          err instanceof Error ? err.message : 'Generation failed';
         setError(errorMessage);
         setIsGenerating(false);
         toast.error(errorMessage);

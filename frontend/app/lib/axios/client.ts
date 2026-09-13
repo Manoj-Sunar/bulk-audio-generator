@@ -12,16 +12,13 @@ export interface ApiErrorResponse {
   errors?: Record<string, string[]>;
 }
 
-// ── Helper: read CSRF token ─────────────────────────────────────
 export function getCsrfToken(): string | null {
   if (typeof document === 'undefined') return null;
 
-  // 1) Same-site cookie
   const cookies = document.cookie.split('; ');
   const csrfCookie = cookies.find((row) => row.startsWith('csrf_token='));
   if (csrfCookie) return csrfCookie.split('=')[1];
 
-  // 2) Fallback
   if (typeof window !== 'undefined') {
     return window.localStorage.getItem('csrf_token');
   }
@@ -38,7 +35,6 @@ export const apiClient = axios.create({
   timeout: 120000,
 });
 
-// ── Request Interceptor: attach CSRF token ──────────────────────
 apiClient.interceptors.request.use(
   (config) => {
     const csrfToken = getCsrfToken();
@@ -50,7 +46,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Response Interceptor: refresh-once, no redirect loops ──────
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value: any) => void;
@@ -59,16 +54,12 @@ let failedQueue: Array<{
 
 const processQueue = (error: any = null) => {
   failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(null);
-    }
+    if (error) prom.reject(error);
+    else prom.resolve(null);
   });
   failedQueue = [];
 };
 
-// URLs that should NEVER trigger a refresh attempt
 const NO_REFRESH_URLS = [
   '/user/me',
   '/user/refresh',
@@ -88,33 +79,14 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as any;
     const url = originalRequest?.url || '';
 
-    // 1. Skip Next.js RSC prefetch
-    if (originalRequest?.headers?.['RSC'] === '1') {
-      return Promise.reject(error);
-    }
+    if (originalRequest?.headers?.['RSC'] === '1') return Promise.reject(error);
+    if (url.startsWith('/_next/')) return Promise.reject(error);
+    if (error.response?.status !== 401) return Promise.reject(error);
 
-    // 2. Skip /_next/ prefetch
-    if (url.startsWith('/_next/')) {
-      return Promise.reject(error);
-    }
-
-    // 3. Only 401s trigger refresh
-    if (error.response?.status !== 401) {
-      return Promise.reject(error);
-    }
-
-    // 4. Never refresh on auth endpoints
     const isAuthEndpoint = NO_REFRESH_URLS.some((p) => url.includes(p));
-    if (isAuthEndpoint) {
-      return Promise.reject(error);
-    }
+    if (isAuthEndpoint) return Promise.reject(error);
+    if (originalRequest._retry) return Promise.reject(error);
 
-    // 5. Only retry once
-    if (originalRequest._retry) {
-      return Promise.reject(error);
-    }
-
-    // 6. Queue if a refresh is already in flight
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -123,7 +95,6 @@ apiClient.interceptors.response.use(
         .catch((err) => Promise.reject(err));
     }
 
-    // 7. Perform refresh
     originalRequest._retry = true;
     isRefreshing = true;
 
@@ -140,11 +111,9 @@ apiClient.interceptors.response.use(
   }
 );
 
-// ── Error message extractor ─────────────────────────────────────
 export function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as ApiErrorResponse;
-
     if (data?.message) return data.message;
     if (data?.detail) return data.detail;
 
@@ -158,8 +127,6 @@ export function extractErrorMessage(error: unknown): string {
       return error.message;
     }
   }
-  if (error instanceof Error) {
-    return error.message;
-  }
+  if (error instanceof Error) return error.message;
   return 'An unexpected error occurred. Please try again.';
 }

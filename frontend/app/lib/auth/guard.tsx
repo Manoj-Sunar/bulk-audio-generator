@@ -22,34 +22,20 @@ export function AuthGuard({
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
+  // Middleware already redirects — यो safety net मात्र
   useEffect(() => {
     if (isLoading) return;
 
     if (!requireAuth && user) {
-      router.push(ROUTES.GENERATOR);
-      return;
-    }
-
-    if (requireAuth && !user) {
-      const t = setTimeout(() => router.push(redirectTo), 300);
-      return () => clearTimeout(t);
+      router.replace(ROUTES.GENERATOR);
+    } else if (requireAuth && !user) {
+      router.replace(redirectTo);
     }
   }, [user, isLoading, router, requireAuth, redirectTo]);
 
-  if (isLoading) {
-    return (
-      fallback ?? (
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-center">
-            <div className="relative mx-auto h-16 w-16">
-              <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin" />
-            </div>
-            <p className="mt-4 text-slate-600 font-medium">Loading...</p>
-          </div>
-        </div>
-      )
-    );
+  // Show spinner ONLY on very first load (no cache)
+  if (isLoading && !user) {
+    return fallback ?? <FullPageSpinner />;
   }
 
   if (requireAuth && !user) return null;
@@ -58,7 +44,21 @@ export function AuthGuard({
   return <>{children}</>;
 }
 
-// Reset Password Guard
+function FullPageSpinner() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="relative mx-auto h-16 w-16">
+          <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
+          <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin" />
+        </div>
+        <p className="mt-4 text-slate-600 font-medium">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// Reset Password Guard — session-storage based OTP flow
 export function ResetPasswordGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
@@ -66,7 +66,7 @@ export function ResetPasswordGuard({ children }: { children: React.ReactNode }) 
     const hasOTP = sessionStorage.getItem('otp_verified') === 'true';
     const hasEmail = sessionStorage.getItem('reset_email');
     if (!hasOTP || !hasEmail) {
-      router.push(ROUTES.FORGOT_PASSWORD);
+      router.replace(ROUTES.FORGOT_PASSWORD);
     }
   }, [router]);
 

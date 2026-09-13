@@ -1,4 +1,4 @@
-// src/lib/auth/context.tsx
+// app/lib/auth/context.tsx
 'use client';
 
 import {
@@ -44,12 +44,42 @@ type RegisterData = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USER_CACHE_KEY = 'auth_user_cache';
+
+function readCachedUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(USER_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedUser(user: User | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (user) {
+      window.localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+    } else {
+      window.localStorage.removeItem(USER_CACHE_KEY);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const initializedRef = useRef(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const setUser = useCallback((u: User | null) => {
+    setUserState(u);
+    writeCachedUser(u);
+  }, []);
 
   const persistCsrf = (payload: any) => {
     if (typeof window === 'undefined') return;
@@ -58,15 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ── Initial auth check ─────────────────────────────────────────
+  // ── Initial auth check ────────────────────────────────────────
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    const safetyTimeout = setTimeout(() => {
+    // 1) Instant hydrate from cache — no flicker
+    const cached = readCachedUser();
+    if (cached) {
+      setUserState(cached);
       setIsLoading(false);
-    }, 5000);
+    }
 
+    // 2) Verify with backend in background
     const initAuth = async () => {
       try {
         const response = await apiClient.get('/user/me');
@@ -80,17 +114,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
         }
       } finally {
-        clearTimeout(safetyTimeout);
         setIsLoading(false);
       }
     };
 
     initAuth();
+  }, [setUser]);
 
-    return () => clearTimeout(safetyTimeout);
-  }, []);
-
-  // ── Refresh token ──────────────────────────────────────────────
+  // ── Refresh token ─────────────────────────────────────────────
   const refreshToken = useCallback(async (): Promise<void> => {
     if (isRefreshing) return;
     setIsRefreshing(true);
@@ -104,9 +135,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing]);
+  }, [isRefreshing, setUser]);
 
-  // ── Auto refresh every 8 minutes ───────────────────────────────
+  // ── Auto refresh every 8 minutes ──────────────────────────────
   useEffect(() => {
     if (!user) return;
     if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
@@ -120,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user, refreshToken]);
 
-  // ── Login ──────────────────────────────────────────────────────
+  // ── Login ─────────────────────────────────────────────────────
   const login = useCallback(
     async (email: string, password: string): Promise<User> => {
       const response = await apiClient.post('/user/login', { email, password });
@@ -130,49 +161,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       return userData;
     },
-    []
+    [setUser]
   );
 
-  // ── Register ───────────────────────────────────────────────────
-  const register = useCallback(async (data: RegisterData): Promise<User> => {
-    const response = await apiClient.post('/user/register', {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.confirmPassword,
-    });
-    const payload = response.data?.data || response.data;
-    persistCsrf(payload);
-    setUser(payload);
-    return payload;
-  }, []);
+  // ── Register ──────────────────────────────────────────────────
+  const register = useCallback(
+    async (data: RegisterData): Promise<User> => {
+      const response = await apiClient.post('/user/register', {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      });
+      const payload = response.data?.data || response.data;
+      persistCsrf(payload);
+      setUser(payload);
+      return payload;
+    },
+    [setUser]
+  );
 
-  // ── Google login ───────────────────────────────────────────────
-  const googleLogin = useCallback(async (code: string): Promise<User> => {
-    const response = await apiClient.post('/user/google', { token: code });
-    const payload = response.data?.data || response.data;
-    persistCsrf(payload);
-    const userData = payload?.user || payload;
-    setUser(userData);
-    return userData;
-  }, []);
+  // ── Google login ──────────────────────────────────────────────
+  const googleLogin = useCallback(
+    async (code: string): Promise<User> => {
+      const response = await apiClient.post('/user/google', { token: code });
+      const payload = response.data?.data || response.data;
+      persistCsrf(payload);
+      const userData = payload?.user || payload;
+      setUser(userData);
+      return userData;
+    },
+    [setUser]
+  );
 
-  // ── GitHub login ───────────────────────────────────────────────
-  const githubLogin = useCallback(async (code: string): Promise<User> => {
-    const response = await apiClient.post('/user/github', { code });
-    const payload = response.data?.data || response.data;
-    persistCsrf(payload);
-    const userData = payload?.user || payload;
-    setUser(userData);
-    return userData;
-  }, []);
+  // ── GitHub login ──────────────────────────────────────────────
+  const githubLogin = useCallback(
+    async (code: string): Promise<User> => {
+      const response = await apiClient.post('/user/github', { code });
+      const payload = response.data?.data || response.data;
+      persistCsrf(payload);
+      const userData = payload?.user || payload;
+      setUser(userData);
+      return userData;
+    },
+    [setUser]
+  );
 
-  // ── Logout ─────────────────────────────────────────────────────
+  // ── Logout ────────────────────────────────────────────────────
   const logout = useCallback(async (): Promise<void> => {
     try {
       await apiClient.post('/user/logout');
     } catch {
-      // ignore
+      /* ignore */
     } finally {
       if (refreshTimerRef.current) {
         clearInterval(refreshTimerRef.current);
@@ -180,19 +220,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem('csrf_token');
-        // Clear all JS-accessible cookies for this domain
-        document.cookie.split(';').forEach((c) => {
-          const name = c.split('=')[0].trim();
-          if (name) {
-            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-          }
-        });
+        window.localStorage.removeItem(USER_CACHE_KEY);
       }
-      setUser(null);
-      // Hard redirect to fully reset state
-      if (typeof window !== 'undefined') {
-        window.location.href = '/bulk-audio/bulk-audio-login';
-      }
+      setUserState(null);
+      // Hard redirect — middleware ले clean state देख्छ
+      window.location.replace('/bulk-audio/bulk-audio-login');
     }
   }, []);
 
