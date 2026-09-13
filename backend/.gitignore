@@ -1,0 +1,7 @@
+.env
+env/
+alembic.ini 
+alembic
+.env.local
+.env.production
+.env*

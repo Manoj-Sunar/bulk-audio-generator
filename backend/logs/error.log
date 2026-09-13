@@ -1,0 +1,13 @@
+Login error: cannot access local variable 'existing_user' where it is not associated with a value
+Traceback (most recent call last):
+  File "H:\My all projects\Bulk Audio Generator\backend\src\user\controllers.py", line 119, in UserLogin
+    print(existing_user.password)
+          ^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'existing_user' where it is not associated with a value
+Login error: cannot access local variable 'existing_user' where it is not associated with a value
+Traceback (most recent call last):
+  File "H:\My all projects\Bulk Audio Generator\backend\src\user\controllers.py", line 119, in UserLogin
+    print(existing_user.password)
+          ^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'existing_user' where it is not associated with a value
+Password verification failed: This hash can't be identified. Make sure it's valid and that its corresponding hasher is enabled.
