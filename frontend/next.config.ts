@@ -2,9 +2,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
+    // Server-side env only — browser मा expose हुँदैन
     const apiUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      'https://bulk-audio-generator.onrender.com';
+      process.env.API_BASE_URL ||
+      (process.env.NODE_ENV === 'production'
+        ? 'https://bulk-audio-generator.onrender.com'
+        : 'http://localhost:8000');
     return [
       {
         source: '/api/:path*',
@@ -15,18 +18,15 @@ const nextConfig = {
 
   async headers() {
     const isDev = process.env.NODE_ENV !== 'production';
-    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-    const backendUrl = apiUrl.startsWith('http') ? apiUrl : 'https://bulk-audio-generator.onrender.com';
 
-    // connect-src मा development र production दुबै URL राख्नुहोस्
+    // CSP मा दुबै environment को URL राख्नुहोस्
     const connectSrc = [
       "'self'",
       "https://api.elevenlabs.io",
       "https://*.googleapis.com",
       "https://bulk-audio-generator.onrender.com",
-      "http://localhost:8000",       // ← development
-      "http://127.0.0.1:8000",       // ← development fallback
-      backendUrl,
+      "http://localhost:8000",
+      "http://127.0.0.1:8000",
     ]
       .filter(Boolean)
       .join(' ');
@@ -63,7 +63,6 @@ const nextConfig = {
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              // ⚠️ development मा upgrade-insecure-requests हटाउनुहोस्
               ...(isDev ? [] : ["upgrade-insecure-requests"]),
             ].join('; '),
           },
