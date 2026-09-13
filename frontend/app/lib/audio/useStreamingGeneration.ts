@@ -56,7 +56,7 @@ export function useStreamingGeneration() {
       const csrfToken = getCsrfToken();
       
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/audio/generate-stream`,
+        `${process.env.API_BASE_URL || 'http://localhost:8000'}/audio/generate-stream`,
         {
           method: 'POST',
           headers: {
