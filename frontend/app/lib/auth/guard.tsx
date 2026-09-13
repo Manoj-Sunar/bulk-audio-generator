@@ -25,12 +25,14 @@ export function AuthGuard({
   useEffect(() => {
     if (isLoading) return;
 
-    if (requireAuth && !user) {
-      router.push(redirectTo);
-    }
-
     if (!requireAuth && user) {
       router.push(ROUTES.GENERATOR);
+      return;
+    }
+
+    if (requireAuth && !user) {
+      const t = setTimeout(() => router.push(redirectTo), 300);
+      return () => clearTimeout(t);
     }
   }, [user, isLoading, router, requireAuth, redirectTo]);
 
@@ -56,24 +58,16 @@ export function AuthGuard({
   return <>{children}</>;
 }
 
-// Reset Password Guard - prevents direct access without OTP verification
+// Reset Password Guard
 export function ResetPasswordGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user } = useAuth();
 
   useEffect(() => {
-    // Check if user came from OTP verification flow
     const hasOTP = sessionStorage.getItem('otp_verified') === 'true';
     const hasEmail = sessionStorage.getItem('reset_email');
-
     if (!hasOTP || !hasEmail) {
       router.push(ROUTES.FORGOT_PASSWORD);
     }
-
-    // Clean up after component unmount
-    return () => {
-      // Don't clear immediately - allow form submission
-    };
   }, [router]);
 
   return <>{children}</>;

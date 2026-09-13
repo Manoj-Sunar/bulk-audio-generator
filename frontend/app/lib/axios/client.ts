@@ -2,11 +2,7 @@
 import axios, { AxiosError } from 'axios';
 import { API_ROUTES } from '../constants';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  (process.env.NODE_ENV === 'production'
-    ? 'https://bulk-audio-generator.onrender.com'
-    : 'http://localhost:8000');
+const API_BASE_URL = '/api';
 
 export interface ApiErrorResponse {
   success: boolean;
@@ -25,7 +21,7 @@ export function getCsrfToken(): string | null {
   const csrfCookie = cookies.find((row) => row.startsWith('csrf_token='));
   if (csrfCookie) return csrfCookie.split('=')[1];
 
-  // 2) Cross-site fallback
+  // 2) Fallback
   if (typeof window !== 'undefined') {
     return window.localStorage.getItem('csrf_token');
   }
@@ -81,7 +77,6 @@ const NO_REFRESH_URLS = [
   '/user/google',
   '/user/github',
   '/user/logout',
-  // ✅ ADD — these are auth-flow endpoints; the user isn't logged in yet
   '/user/reset-password',
   '/user/verify-otp',
   '/user/request-password-reset',
@@ -93,22 +88,22 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as any;
     const url = originalRequest?.url || '';
 
-    // 1. Skip Next.js RSC prefetch requests
+    // 1. Skip Next.js RSC prefetch
     if (originalRequest?.headers?.['RSC'] === '1') {
       return Promise.reject(error);
     }
 
-    // 2. Skip requests that initiate navigation prefetch
+    // 2. Skip /_next/ prefetch
     if (url.startsWith('/_next/')) {
       return Promise.reject(error);
     }
 
-    // 3. Only 401s should trigger refresh
+    // 3. Only 401s trigger refresh
     if (error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
-    // 4. Never refresh on auth endpoints themselves
+    // 4. Never refresh on auth endpoints
     const isAuthEndpoint = NO_REFRESH_URLS.some((p) => url.includes(p));
     if (isAuthEndpoint) {
       return Promise.reject(error);
@@ -128,7 +123,7 @@ apiClient.interceptors.response.use(
         .catch((err) => Promise.reject(err));
     }
 
-    // 7. Perform the refresh
+    // 7. Perform refresh
     originalRequest._retry = true;
     isRefreshing = true;
 
@@ -153,9 +148,11 @@ export function extractErrorMessage(error: unknown): string {
     if (data?.message) return data.message;
     if (data?.detail) return data.detail;
 
-    // Network-level errors (no response at all)
     if (!error.response && error.message) {
-      if (error.message.includes('Network Error') || error.code === 'ERR_NETWORK') {
+      if (
+        error.message.includes('Network Error') ||
+        error.code === 'ERR_NETWORK'
+      ) {
         return 'Network error — please check your connection and try again.';
       }
       return error.message;

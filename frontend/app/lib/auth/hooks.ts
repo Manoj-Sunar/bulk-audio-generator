@@ -6,123 +6,91 @@ import { useAuth } from './context';
 import { apiClient, extractErrorMessage } from '../axios/client';
 
 export function useRegister() {
-  const { register, setUser } = useAuth();
+  const { register } = useAuth();
   const router = useRouter();
 
   return useMutation({
     mutationFn: register,
-    onSuccess: (user) => {
-      setUser(user);
+    onSuccess: () => {
       toast.success('Registration successful!');
       router.push('/bulk-audio/generator');
     },
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
-    },
+    onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
 }
 
 export function useLogin() {
-  const { login, setUser } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
 
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       login(email, password),
-    onSuccess: (user) => {
-      setUser(user);
+    onSuccess: () => {
       toast.success('Welcome back!');
       router.push('/bulk-audio/generator');
     },
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
-    },
+    onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
 }
 
 export function useLogout() {
-  const { logout, setUser } = useAuth();
-  const router = useRouter();
+  const { logout } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      setUser(null);
       queryClient.clear();
       toast.success('Logged out');
-      router.push('/bulk-audio/bulk-audio-login');
     },
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
-    },
+    onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
 }
 
 export function useGoogleLogin() {
-  const { googleLogin, setUser } = useAuth();
+  const { googleLogin } = useAuth();
   const router = useRouter();
 
   return useMutation({
     mutationFn: (code: string) => googleLogin(code),
-    onSuccess: (user) => {
-      setUser(user);
+    onSuccess: () => {
       toast.success('Google login successful!');
       router.push('/bulk-audio/generator');
     },
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
-    },
+    onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
 }
 
 export function useGithubLogin() {
-  const { githubLogin, setUser } = useAuth();
+  const { githubLogin } = useAuth();
   const router = useRouter();
 
   return useMutation({
     mutationFn: (code: string) => githubLogin(code),
-    onSuccess: (user) => {
-      setUser(user);
+    onSuccess: () => {
       toast.success('GitHub login successful!');
       router.push('/bulk-audio/generator');
     },
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
-    },
+    onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
 }
 
 export function useRefreshToken() {
   const { refreshToken } = useAuth();
-
   return useMutation({
     mutationFn: refreshToken,
-    onSuccess: () => {
-      toast.success('Token refreshed successfully');
-    },
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
-    },
+    onSuccess: () => toast.success('Token refreshed successfully'),
+    onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
 }
-
 
 export function useRequestPasswordReset() {
   return useMutation({
     mutationFn: (data: { email: string }) =>
-      // Replace with your API client call
       apiClient.post('/user/request-password-reset', data),
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message || 'Failed to send OTP.');
-    },
+    onError: (error: any) =>
+      toast.error(extractErrorMessage(error) || 'Failed to send OTP.'),
   });
 }
 
@@ -130,10 +98,8 @@ export function useVerifyOTP() {
   return useMutation({
     mutationFn: (data: { email: string; otp: string }) =>
       apiClient.post('/user/verify-otp', data),
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message || 'Invalid or expired OTP.');
-    },
+    onError: (error: any) =>
+      toast.error(extractErrorMessage(error) || 'Invalid or expired OTP.'),
   });
 }
 
@@ -145,12 +111,9 @@ export function useResetPassword() {
       new_password: string;
       confirm_password: string;
     }) => apiClient.post('/user/reset-password', data),
-    onSuccess: () => {
-      toast.success('Password reset successfully! Redirecting to login...');
-    },
-    onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message || 'Password reset failed.');
-    },
+    onSuccess: () =>
+      toast.success('Password reset successfully! Redirecting to login...'),
+    onError: (error: any) =>
+      toast.error(extractErrorMessage(error) || 'Password reset failed.'),
   });
 }

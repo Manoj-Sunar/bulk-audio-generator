@@ -5,9 +5,7 @@ from pydantic import field_validator, model_validator
 from typing import List, Optional, Literal
 
 
-# Decide which env file to load.
-#   ENVIRONMENT=production  → .env.production
-#   otherwise               → .env.local
+# ENVIRONMENT=production → .env.production, otherwise .env.local
 _env_name = os.getenv("ENVIRONMENT", "development").lower()
 _env_file = ".env.production" if _env_name == "production" else ".env.local"
 
@@ -104,13 +102,6 @@ class Settings(BaseSettings):
                 "Forcing COOKIE_SECURE=True."
             )
             object.__setattr__(self, "COOKIE_SECURE", True)
-
-        if self.ENVIRONMENT == "production" and self.COOKIE_SAMESITE != "none":
-            log.warning(
-                "ENVIRONMENT=production but COOKIE_SAMESITE=%s. "
-                "Cross-domain auth will FAIL. Set COOKIE_SAMESITE=none.",
-                self.COOKIE_SAMESITE,
-            )
 
         if self.ENVIRONMENT == "production" and not self.COOKIE_SECURE:
             log.warning("COOKIE_SECURE=False in production — insecure.")

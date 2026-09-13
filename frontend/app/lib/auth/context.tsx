@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializedRef = useRef(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Helper to persist csrf_token for cross-domain usage
   const persistCsrf = (payload: any) => {
     if (typeof window === 'undefined') return;
     if (payload?.csrf_token) {
@@ -65,10 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializedRef.current = true;
 
     const safetyTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn('Auth loading timeout reached — forcing UI to render');
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }, 5000);
 
     const initAuth = async () => {
@@ -92,9 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     return () => clearTimeout(safetyTimeout);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Refresh token method ───────────────────────────────────────
+  // ── Refresh token ──────────────────────────────────────────────
   const refreshToken = useCallback(async (): Promise<void> => {
     if (isRefreshing) return;
     setIsRefreshing(true);
@@ -110,14 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [isRefreshing]);
 
-  // ── Auto refresh token every 8 minutes ─────────────────────────
+  // ── Auto refresh every 8 minutes ───────────────────────────────
   useEffect(() => {
     if (!user) return;
-
     if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
 
     refreshTimerRef.current = setInterval(() => {
-      console.log('Auto-refreshing token...');
       refreshToken();
     }, 8 * 60 * 1000);
 
@@ -127,14 +121,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, refreshToken]);
 
   // ── Login ──────────────────────────────────────────────────────
-  const login = useCallback(async (email: string, password: string): Promise<User> => {
-    const response = await apiClient.post('/user/login', { email, password });
-    const payload = response.data?.data || response.data;
-    persistCsrf(payload);
-    const userData = payload?.user || payload;
-    setUser(userData);
-    return userData;
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string): Promise<User> => {
+      const response = await apiClient.post('/user/login', { email, password });
+      const payload = response.data?.data || response.data;
+      persistCsrf(payload);
+      const userData = payload?.user || payload;
+      setUser(userData);
+      return userData;
+    },
+    []
+  );
 
   // ── Register ───────────────────────────────────────────────────
   const register = useCallback(async (data: RegisterData): Promise<User> => {
@@ -183,8 +180,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem('csrf_token');
+        // Clear all JS-accessible cookies for this domain
+        document.cookie.split(';').forEach((c) => {
+          const name = c.split('=')[0].trim();
+          if (name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          }
+        });
       }
       setUser(null);
+      // Hard redirect to fully reset state
+      if (typeof window !== 'undefined') {
+        window.location.href = '/bulk-audio/bulk-audio-login';
+      }
     }
   }, []);
 

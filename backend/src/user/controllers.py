@@ -33,7 +33,9 @@ from src.utils.otp import create_otp, verify_otp, mark_otp_used
 
 logger = logging.getLogger(__name__)
 google_service = GoogleOAuthService(settings.GOOGLE_CLIENT_ID)
-github_service = GithubOAuthService(settings.GITHUB_CLIENT_ID, settings.GITHUB_CLIENT_SECRET)
+github_service = GithubOAuthService(
+    settings.GITHUB_CLIENT_ID, settings.GITHUB_CLIENT_SECRET
+)
 
 
 # ────────────────────────────────────────────────────────────────
@@ -41,7 +43,6 @@ github_service = GithubOAuthService(settings.GITHUB_CLIENT_ID, settings.GITHUB_C
 # ────────────────────────────────────────────────────────────────
 def UserRegister(body: UserSchema, db: Session):
     try:
-        # ✅ FIX: unpack tuple returned by validate_password_strength
         is_valid, error = validate_password_strength(body.password)
         if not is_valid:
             raise HTTPException(
@@ -53,7 +54,6 @@ def UserRegister(body: UserSchema, db: Session):
         email = body.email.strip().lower()
 
         existing_user = db.query(User).filter(User.email == email).first()
-        print(existing_user)
         if existing_user:
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
@@ -115,15 +115,16 @@ def UserRegister(body: UserSchema, db: Session):
 def UserLogin(body: UserLoginSchema, db: Session, response: Response):
     try:
         email = body.email.strip().lower()
-        print(email)
-        print(body.password)
         existing_user = db.query(User).filter(User.email == email).first()
-        print(existing_user)
         if not existing_user:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password.")
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, "Invalid email or password."
+            )
 
         if not existing_user.is_active:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Your account has been disabled.")
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN, "Your account has been disabled."
+            )
 
         local_provider = (
             db.query(UserProvider)
@@ -140,7 +141,9 @@ def UserLogin(body: UserLoginSchema, db: Session, response: Response):
             )
 
         if not verify_password(body.password, existing_user.password):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password.")
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, "Invalid email or password."
+            )
 
         existing_user.csrf_token = generate_csrf_token()
         db.commit()
@@ -151,7 +154,9 @@ def UserLogin(body: UserLoginSchema, db: Session, response: Response):
         raise
     except Exception as e:
         logger.exception(f"Login error: {str(e)}")
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Login failed. Please try again.")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, "Login failed. Please try again."
+        )
 
 
 # ────────────────────────────────────────────────────────────────
@@ -159,13 +164,14 @@ def UserLogin(body: UserLoginSchema, db: Session, response: Response):
 # ────────────────────────────────────────────────────────────────
 def GoogleLogin(body: GoogleLoginSchema, db: Session, response: Response):
     try:
+        # ✅ FIX: settings बाट redirect URI लिनुहोस् (localhost hardcoded हटाइयो)
         token_res = httpx.post(
             "https://oauth2.googleapis.com/token",
             data={
                 "code": body.token,
                 "client_id": settings.GOOGLE_CLIENT_ID,
                 "client_secret": settings.GOOGLE_CLIENT_SECRET,
-                "redirect_uri": "http://localhost:3000/google/callback",
+                "redirect_uri": settings.GOOGLE_REDIRECT_URI,
                 "grant_type": "authorization_code",
             },
         )
@@ -193,22 +199,27 @@ async def GithubLogin(body: GithubLoginSchema, db: Session, response: Response):
         access_token = await github_service.get_access_token(body.code)
         github_user = await github_service.verify_token(access_token)
         if not github_user["email_verified"]:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "GitHub email is not verified.")
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN, "GitHub email is not verified."
+            )
         return oauth_login(github_user, db, response)
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"GitHub login error: {str(e)}")
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "GitHub authentication failed.")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, "GitHub authentication failed."
+        )
 
 
 # ────────────────────────────────────────────────────────────────
 # LOGOUT
 # ────────────────────────────────────────────────────────────────
 def Logout(response: Response):
-    response.delete_cookie("access_token", path="/")
-    response.delete_cookie("refresh_token", path="/")
-    response.delete_cookie("csrf_token", path="/")
+    cookie_domain = settings.COOKIE_DOMAIN or None
+    response.delete_cookie("access_token", path="/", domain=cookie_domain)
+    response.delete_cookie("refresh_token", path="/", domain=cookie_domain)
+    response.delete_cookie("csrf_token", path="/", domain=cookie_domain)
     return {"success": True, "message": "Logged out successfully"}
 
 
@@ -234,20 +245,27 @@ def RefreshToken(request: Request, db: Session, response: Response):
     try:
         refresh_token = request.cookies.get("refresh_token")
         if not refresh_token:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token not found")
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, "Refresh token not found"
+            )
 
         payload = validate_token_type(refresh_token, "refresh")
         if is_token_expired(refresh_token):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token expired. Please login again.")
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "Refresh token expired. Please login again.",
+            )
 
         user_id = payload.get("id")
         user = db.query(User).filter(User.id == user_id).first()
         if not user or not user.is_active:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found or disabled")
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, "User not found or disabled"
+            )
 
         new_tokens = refresh_tokens(user.id, user.email)
+        cookie_domain = settings.COOKIE_DOMAIN or None
 
-        # ✅ FIX: use settings.COOKIE_SAMESITE, not hardcoded "lax"
         response.set_cookie(
             key="access_token",
             value=new_tokens["access_token"],
@@ -256,6 +274,7 @@ def RefreshToken(request: Request, db: Session, response: Response):
             samesite=settings.COOKIE_SAMESITE,
             max_age=900,
             path="/",
+            domain=cookie_domain,
         )
         response.set_cookie(
             key="refresh_token",
@@ -265,6 +284,7 @@ def RefreshToken(request: Request, db: Session, response: Response):
             samesite=settings.COOKIE_SAMESITE,
             max_age=604800,
             path="/",
+            domain=cookie_domain,
         )
 
         user.csrf_token = generate_csrf_token()
@@ -277,6 +297,7 @@ def RefreshToken(request: Request, db: Session, response: Response):
             samesite=settings.COOKIE_SAMESITE,
             max_age=900,
             path="/",
+            domain=cookie_domain,
         )
         return {"success": True, "message": "Tokens refreshed successfully"}
     except ValueError as e:
@@ -285,7 +306,9 @@ def RefreshToken(request: Request, db: Session, response: Response):
         raise
     except Exception as e:
         logger.exception(f"Token refresh error: {str(e)}")
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Token refresh failed")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, "Token refresh failed"
+        )
 
 
 # ────────────────────────────────────────────────────────────────
@@ -296,11 +319,9 @@ def request_password_reset(
     db: Session,
     background_tasks: BackgroundTasks,
 ):
-    """Step 1: Generate OTP and send email."""
     email = body.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        # Don't reveal whether email exists
         return {
             "success": True,
             "message": "If your email is registered, you will receive an OTP.",
@@ -334,7 +355,6 @@ def request_password_reset(
 # VERIFY OTP (Step 2)
 # ────────────────────────────────────────────────────────────────
 def verify_otp_controller(body: VerifyOTPSchema, db: Session):
-    """Step 2: Verify OTP."""
     email = body.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -350,7 +370,6 @@ def verify_otp_controller(body: VerifyOTPSchema, db: Session):
 # RESET PASSWORD (Step 3)
 # ────────────────────────────────────────────────────────────────
 def reset_password_controller(body: ResetPasswordSchema, db: Session):
-    """Step 3: Reset password using OTP and new password."""
     email = body.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -359,10 +378,7 @@ def reset_password_controller(body: ResetPasswordSchema, db: Session):
     if not verify_otp(db, user.id, body.otp, "reset_password"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired OTP")
 
-    # Update password
     user.password = hash_password(body.new_password)
-
-    # ✅ FIX: mark_otp_used signature is (db, user_id, purpose)
     mark_otp_used(db, user.id, "reset_password")
     db.commit()
 

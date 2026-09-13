@@ -66,37 +66,39 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)) -> U
             ErrorCode.UNAUTHORIZED
         )
 
+
+
 def require_csrf_token(request: Request):
     if request.method in ["GET", "HEAD", "OPTIONS"]:
         return True
-    
+
     csrf_token = request.cookies.get("csrf_token")
     csrf_header = request.headers.get("X-CSRF-Token")
-    
+
     if not csrf_token or not csrf_header:
         logger.warning(
             f"CSRF token missing - cookie={bool(csrf_token)}, header={bool(csrf_header)}",
             method=request.method,
-            path=request.url.path
+            path=request.url.path,
         )
         raise AppException(
             status.HTTP_403_FORBIDDEN,
             "Security validation failed. Please refresh the page and try again.",
-            ErrorCode.CSRF_INVALID
+            ErrorCode.CSRF_INVALID,
         )
-    
+
     if csrf_token != csrf_header:
         logger.warning(
             "CSRF token mismatch",
             method=request.method,
-            path=request.url.path
+            path=request.url.path,
         )
         raise AppException(
             status.HTTP_403_FORBIDDEN,
             "Security validation failed. Please refresh the page and try again.",
-            ErrorCode.CSRF_INVALID
+            ErrorCode.CSRF_INVALID,
         )
-    
+
     return True
 
 def optional_csrf_token(request: Request):
