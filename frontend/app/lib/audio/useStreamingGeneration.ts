@@ -32,116 +32,123 @@ export function useStreamingGeneration() {
   const [isComplete, setIsComplete] = useState(false);
   const [provider, setProvider] = useState<string | null>(null);
   const [totalChars, setTotalChars] = useState(0);
-  
+
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const generate = useCallback(async (payload: {
-    script: string;
-    api_keys: string[];
-    voice_id: string;
-    model_id: string;
-    provider: string;
-  }) => {
-    // Reset state
-    setIsGenerating(true);
-    setProgress({ current: 0, total: 0 });
-    setSegments([]);
-    setError(null);
-    setIsComplete(false);
-    setGenerationId(null);
-    setTotalChars(0);
+  const generate = useCallback(
+    async (payload: {
+      script: string;
+      api_keys: string[];
+      voice_id: string;
+      model_id: string;
+      provider: string;
+    }) => {
+      // Reset state
+      setIsGenerating(true);
+      setProgress({ current: 0, total: 0 });
+      setSegments([]);
+      setError(null);
+      setIsComplete(false);
+      setGenerationId(null);
+      setTotalChars(0);
 
-    try {
-      // Get CSRF token from cookie
-      const csrfToken = getCsrfToken();
-      
-      const response = await fetch(
-        `${process.env.API_BASE_URL}/audio/generate-stream`,
-        {
+      // Create abort controller
+      abortControllerRef.current = new AbortController();
+
+      try {
+        const csrfToken = getCsrfToken();
+
+        // ✅ FIX: /api path मा जान्छ — Vercel proxy ले backend मा forward गर्छ
+        const response = await fetch(`/api/audio/generate-stream`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken || '', // Send CSRF token
+            'X-CSRF-Token': csrfToken || '',
           },
           credentials: 'include',
           body: JSON.stringify(payload),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Generation failed');
         }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Generation failed');
-      }
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+        if (!reader) {
+          throw new Error('Failed to read response stream');
+        }
 
-      if (!reader) {
-        throw new Error('Failed to read response stream');
-      }
+        let buffer = '';
 
-      let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data: StreamingProgress = JSON.parse(line.slice(6));
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data: StreamingProgress = JSON.parse(line.slice(6));
-              
-              switch (data.type) {
-                case 'start':
-                  setGenerationId(data.generation_id || null);
-                  setProgress({ current: 0, total: data.total || 0 });
-                  setProvider(data.provider || null);
-                  toast.info(`🎙️ Starting generation with ${data.provider || 'provider'}...`);
-                  break;
+                switch (data.type) {
+                  case 'start':
+                    setGenerationId(data.generation_id || null);
+                    setProgress({ current: 0, total: data.total || 0 });
+                    setProvider(data.provider || null);
+                    toast.info(`🎙️ Starting generation with ${data.provider || 'provider'}...`);
+                    break;
 
-                case 'progress':
-                  setProgress({ current: data.current || 0, total: data.total || 0 });
-                  if (data.segment) {
-                    setSegments(prev => [...prev, data.segment!]);
-                    toast.success(`✅ Generated: ${data.segment.title}`);
-                  }
-                  break;
+                  case 'progress':
+                    setProgress({ current: data.current || 0, total: data.total || 0 });
+                    if (data.segment) {
+                      setSegments((prev) => [...prev, data.segment!]);
+                      toast.success(`✅ Generated: ${data.segment.title}`);
+                    }
+                    break;
 
-                case 'complete':
-                  setIsComplete(true);
-                  setIsGenerating(false);
-                  setTotalChars(data.total_chars || 0);
-                  toast.success(`🎉 All ${data.total} files generated successfully!`);
-                  break;
+                  case 'complete':
+                    setIsComplete(true);
+                    setIsGenerating(false);
+                    setTotalChars(data.total_chars || 0);
+                    toast.success(`🎉 All ${data.total} files generated successfully!`);
+                    break;
 
-                case 'error':
-                  setError(data.message || 'An error occurred');
-                  toast.error(data.message || 'Generation failed');
-                  setIsGenerating(false);
-                  break;
+                  case 'error':
+                    setError(data.message || 'An error occurred');
+                    toast.error(data.message || 'Generation failed');
+                    setIsGenerating(false);
+                    break;
+                }
+              } catch (parseError) {
+                console.error('Failed to parse SSE data:', parseError);
               }
-            } catch (parseError) {
-              console.error('Failed to parse SSE data:', parseError);
             }
           }
         }
+
+        setIsGenerating(false);
+        return { segments, generationId, totalChars };
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          // User cancelled — do nothing
+          return;
+        }
+        const errorMessage = err instanceof Error ? err.message : 'Generation failed';
+        setError(errorMessage);
+        setIsGenerating(false);
+        toast.error(errorMessage);
+        throw err;
       }
-
-      setIsGenerating(false);
-      return { segments, generationId, totalChars };
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Generation failed';
-      setError(errorMessage);
-      setIsGenerating(false);
-      toast.error(errorMessage);
-      throw err;
-    }
-  }, []);
+    },
+    []
+  );
 
   const cancel = useCallback(() => {
     if (abortControllerRef.current) {
@@ -163,7 +170,6 @@ export function useStreamingGeneration() {
     setIsGenerating(false);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
