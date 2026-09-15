@@ -80,6 +80,9 @@ export const metadata: Metadata = {
     images: ['/twitter-image.jpg'],
     creator: '@bulkaudiogen',
   },
+  verification: {
+  google: "VNPS6oYdtSZbcO4htpOir9H6_3tm-Xtzn-9-V4VhMBI",
+},
 };
 
 export const viewport: Viewport = {
