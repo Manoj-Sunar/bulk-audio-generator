@@ -96,13 +96,7 @@ const softwareJsonLd = {
     priceCurrency: "USD",
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    ratingCount: "127",
-    bestRating: "5",
-    worstRating: "1",
-  },
+ 
   author: {
     "@type": "Person",
     name: "Manoj Kami",
