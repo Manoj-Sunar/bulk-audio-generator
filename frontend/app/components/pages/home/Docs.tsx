@@ -1,13 +1,22 @@
 // app/components/pages/home/Docs.tsx
-import { DocsHeroSection } from "./HeroSection"
-import { HowToUse } from "./Step"
+// ✅ Server Component — "use client" छैन
+
+import { DocsHeroSection } from "./HeroSection";
+import { HowToUse } from "./Step";
+
+
+import { HomeSEOContent } from "./HomeSeoContent";
+import { HomeFAQ } from "./HomeFAQ";
+import { HomeCTA } from "./HomeCTA";
 
 export const Docs = () => {
-
-    return (
-        <div className="flex flex-col gap-20">
-            <DocsHeroSection />
-            <HowToUse/> 
-        </div>
-    )
-}
+  return (
+    <div className="flex flex-col">
+      <DocsHeroSection />
+      <HowToUse />
+      <HomeSEOContent />
+      <HomeFAQ />
+      <HomeCTA/>
+    </div>
+  );
+};
