@@ -72,9 +72,10 @@ function writeCachedUser(user: User | null) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const initializedRef = useRef(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // ✅ FIX #12: Use ref instead of state for refresh lock (no stale closure)
+  const isRefreshingRef = useRef(false);
 
   const setUser = useCallback((u: User | null) => {
     setUserState(u);
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    // 1) Instant hydrate from cache — no flicker
+    // 1) Instant hydrate from cache
     const cached = readCachedUser();
     if (cached) {
       setUserState(cached);
@@ -104,14 +105,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initAuth = async () => {
       try {
         const response = await apiClient.get('/user/me');
-        setUser(response.data);
+        // ✅ FIX #3: Don't overwrite if login happened in between
+        setUserState((current) => current ?? response.data);
       } catch {
         try {
           await apiClient.post('/user/refresh');
           const retry = await apiClient.get('/user/me');
-          setUser(retry.data);
+          setUserState((current) => current ?? retry.data);
         } catch {
-          setUser(null);
+          // ✅ Only clear if no cached user
+          setUserState((current) => current ?? null);
         }
       } finally {
         setIsLoading(false);
@@ -119,12 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initAuth();
-  }, [setUser]);
+  }, []);
 
   // ── Refresh token ─────────────────────────────────────────────
   const refreshToken = useCallback(async (): Promise<void> => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
+    // ✅ FIX #12: Use ref, not state — no stale closure
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
     try {
       await apiClient.post('/user/refresh');
       const response = await apiClient.get('/user/me');
@@ -133,9 +137,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Token refresh failed:', extractErrorMessage(error));
       setUser(null);
     } finally {
-      setIsRefreshing(false);
+      isRefreshingRef.current = false;
     }
-  }, [isRefreshing, setUser]);
+  }, [setUser]);
 
   // ── Auto refresh every 8 minutes ──────────────────────────────
   useEffect(() => {
@@ -213,17 +217,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiClient.post('/user/logout');
     } catch {
       /* ignore */
-    } finally {
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('csrf_token');
-        window.localStorage.removeItem(USER_CACHE_KEY);
-      }
-      setUserState(null);
-      // Hard redirect — middleware ले clean state देख्छ
+    }
+
+    // ✅ FIX #4: Clear state FIRST, then navigate
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('csrf_token');
+      window.localStorage.removeItem(USER_CACHE_KEY);
+      sessionStorage.removeItem('active_generation_id'); // ✅ FIX #9
+    }
+
+    setUserState(null);
+    writeCachedUser(null);
+
+    // ✅ FIX #4: Use replace to avoid back-button re-entry
+    if (typeof window !== 'undefined') {
       window.location.replace('/bulk-audio/bulk-audio-login');
     }
   }, []);

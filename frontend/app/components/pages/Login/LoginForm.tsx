@@ -30,7 +30,7 @@ export const LoginForm = () => {
     try {
       setIsLoading(true);
       await loginMutation.mutateAsync({ email, password });
-      router.push('/bulk-audio/generator');
+      router.push('/protected/bulk-audio/generator');
     } catch (error) {
       // Error handled by hook
     } finally {

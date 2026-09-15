@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, extractErrorMessage } from '../axios/client';
 import { toast } from 'sonner';
+import { useAuth } from '../auth/context';
 
 export type GenerateAudioInput = {
   script: string;
@@ -75,9 +76,20 @@ export function useGenerateAndPlayAudio() {
   });
 }
 
-export function useGenerationsList(skip: number = 0, limit: number = 50, includeAudio: boolean = true) {
+// ✅ FIX #10: Add auth check + enabled option
+export function useGenerationsList(
+  skip: number = 0,
+  limit: number = 50,
+  includeAudio: boolean = true,
+  options?: { enabled?: boolean }
+) {
+  const { user, isLoading: authLoading } = useAuth();
+
+  // ✅ Only run query when user is authenticated AND auth check is done
+  const isEnabled = options?.enabled !== false && !!user && !authLoading;
+
   return useQuery({
-    queryKey: ['audio-generations', skip, limit, includeAudio],
+    queryKey: ['audio-generations', skip, limit, includeAudio, user?.id],
     queryFn: async () => {
       const response = await apiClient.get('/audio/generations', {
         params: { skip, limit, include_audio: includeAudio },
@@ -85,17 +97,20 @@ export function useGenerationsList(skip: number = 0, limit: number = 50, include
       return response.data as GenerationListResponse;
     },
     staleTime: 30000,
+    enabled: isEnabled, // ✅ Don't fetch if not authenticated
   });
 }
 
 export function useGenerationDetails(generationId: number | null) {
+  const { user, isLoading: authLoading } = useAuth();
+
   return useQuery({
-    queryKey: ['audio-generation', generationId],
+    queryKey: ['audio-generation', generationId, user?.id],
     queryFn: async () => {
       const response = await apiClient.get(`/audio/generation/${generationId}`);
       return response.data;
     },
-    enabled: !!generationId,
+    enabled: !!generationId && !!user && !authLoading, // ✅ Auth check
     staleTime: 60000,
   });
 }
@@ -125,7 +140,7 @@ export function useDownloadGeneration() {
       const response = await apiClient.get(`/audio/generation/${generationId}/download`, {
         responseType: 'blob',
       });
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -134,7 +149,7 @@ export function useDownloadGeneration() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       return response.data;
     },
     onError: (error: any) => {

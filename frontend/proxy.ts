@@ -19,15 +19,12 @@ const AUTH_PATHS = [
 const LOGIN_PATH = '/bulk-audio/bulk-audio-login';
 const GENERATOR_PATH = '/bulk-audio/generator';
 
+// proxy.ts
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Read auth tokens from cookies
   const accessToken = request.cookies.get('access_token')?.value;
-  const refreshToken = request.cookies.get('refresh_token')?.value;
-  const isAuthenticated = !!accessToken || !!refreshToken;
+  const isAuthenticated = !!accessToken;  // ← access_token मात्र
 
-  // 1. Protected route + not authenticated → login
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
   if (isProtected && !isAuthenticated) {
     const url = new URL(LOGIN_PATH, request.url);
@@ -35,7 +32,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 2. Auth route + authenticated → generator
   const isAuthRoute = AUTH_PATHS.some((p) => pathname.startsWith(p));
   if (isAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL(GENERATOR_PATH, request.url));

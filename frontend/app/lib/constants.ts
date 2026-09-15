@@ -25,7 +25,7 @@ export interface NavLink {
 export const NAV_LINKS: NavLink[] = [
   { name: "Home", href: "/", icon: Home },
   { name: "Documentation", href: "/bulk-audio/documentation", icon: BookOpen },
-  { name: "Generator", href: "/bulk-audio/generator", icon: Mic },
+  { name: "Generator", href: "/generator", icon: Mic },
   {
     name: "GitHub",
     href: "https://github.com/Manoj-Sunar",
@@ -33,11 +33,11 @@ export const NAV_LINKS: NavLink[] = [
     external: true,
   },
 
- {
-  name:"Where to Use",
-  href:"/bulk-audio/where",
-  icon:MdWhereToVote
- }
+  {
+    name: "Where to Use",
+    href: "/bulk-audio/where",
+    icon: MdWhereToVote
+  }
 ];
 
 // Steps for home page

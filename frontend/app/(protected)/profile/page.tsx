@@ -50,7 +50,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <AuthGuard>
+
       <main className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <Background />
         
@@ -207,7 +207,7 @@ const ProfilePage = () => {
           </div>
         </div>
       </main>
-    </AuthGuard>
+  
   );
 };
 

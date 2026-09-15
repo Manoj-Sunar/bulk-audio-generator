@@ -2,7 +2,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-    // Server-side env only — browser मा expose हुँदैन
     const apiUrl =
       process.env.API_BASE_URL ||
       (process.env.NODE_ENV === 'production'
@@ -19,7 +18,6 @@ const nextConfig = {
   async headers() {
     const isDev = process.env.NODE_ENV !== 'production';
 
-    // CSP मा दुबै environment को URL राख्नुहोस्
     const connectSrc = [
       "'self'",
       "https://api.elevenlabs.io",
@@ -33,7 +31,8 @@ const nextConfig = {
 
     return [
       {
-        source: '/:path*',
+        // ✅ FIX #5 + #11: HTML pages — no cache, CSP without unsafe-eval in prod
+        source: '/((?!api|_next/static|_next/image|favicon.ico).*)',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           {
@@ -51,7 +50,8 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com",
+              // ✅ FIX #11: unsafe-eval only in dev
+              `script-src 'self' ${isDev ? "'unsafe-eval' " : ''}'unsafe-inline' https://accounts.google.com`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://*.googleusercontent.com https://avatars.githubusercontent.com",
               "font-src 'self' data:",
@@ -66,6 +66,17 @@ const nextConfig = {
               ...(isDev ? [] : ["upgrade-insecure-requests"]),
             ].join('; '),
           },
+          // ✅ FIX #5: HTML pages should NOT be cached
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+      {
+        // ✅ Static assets — long cache OK
+        source: '/_next/static/:path*',
+        headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
@@ -73,6 +84,16 @@ const nextConfig = {
         ],
       },
       {
+        source: '/_next/image',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // ✅ API — no cache
         source: '/api/:path*',
         headers: [
           { key: 'Cache-Control', value: 'no-store, must-revalidate' },

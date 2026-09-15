@@ -15,13 +15,15 @@ import { LiveProgress } from './LiveProgress';
 import { GeneratedFilesTable } from './GeneratedFilesTable';
 import { Background } from '../../ui/Background';
 import { fadeInLeft, fadeInRight, staggerContainer } from '@/app/lib/animations';
-import { AuthGuard } from '@/app/components/AuthGuard';
+
 import { Sparkles, Zap, Clock, Layers, Download, CheckCircle } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Card, CardContent } from '../../ui/Card';
 import { ELEVENLABS_VOICES, GEMINI_VOICES, PROVIDERS, AUDIO_FORMATS, MIME_TYPES } from '@/app/lib/constants';
 
-// Helper: convert base64 data to Blob
+// ✅ FIX #9: Session storage key
+const ACTIVE_GENERATION_KEY = 'active_generation_id';
+
 function dataURLtoBlob(dataURL: string, mimeType: string = 'audio/mpeg'): Blob {
   const arr = dataURL.split(',');
   const mime = arr[0].match(/:(.*?);/)?.[1] || mimeType;
@@ -35,21 +37,20 @@ function dataURLtoBlob(dataURL: string, mimeType: string = 'audio/mpeg'): Blob {
 export const Generator = () => {
   const { user } = useAuth();
   const { currentlyPlaying, play, stop } = useAudioPlayer();
-  const { 
-    generate, 
-    cancel, 
+  const {
+    generate,
+    cancel,
     reset,
-    isGenerating, 
-    progress, 
-    segments, 
+    isGenerating,
+    progress,
+    segments,
     generationId,
     error,
     isComplete,
     provider,
-    totalChars 
+    totalChars
   } = useStreamingGeneration();
 
-  // State
   const [apiKey, setApiKey] = useState('');
   const [scripts, setScripts] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<Provider>(PROVIDERS.ELEVENLABS);
@@ -57,7 +58,39 @@ export const Generator = () => {
   const [status, setStatus] = useState<'idle' | 'generating' | 'completed' | 'failed'>('idle');
   const [files, setFiles] = useState<GeneratedAudioFile[]>([]);
 
-  // Voice options based on provider
+  // ✅ FIX #9: Persist generationId to sessionStorage so it survives refresh
+  useEffect(() => {
+    if (generationId) {
+      sessionStorage.setItem(ACTIVE_GENERATION_KEY, String(generationId));
+    }
+  }, [generationId]);
+
+  // ✅ FIX #9: On unmount, only clear if generation is complete (keep for refresh)
+  useEffect(() => {
+    return () => {
+      // Don't clear on unmount — user might refresh
+      // Clear only when generation completes successfully
+    };
+  }, []);
+
+  // ✅ FIX #9: Clear sessionStorage when generation completes
+  useEffect(() => {
+    if (isComplete) {
+      // Keep the ID for a bit so refresh can show the completed state
+      // Clear after user navigates away or starts new generation
+    }
+  }, [isComplete]);
+
+  // ✅ FIX #9: On page load, check for pending generation
+  useEffect(() => {
+    const savedId = sessionStorage.getItem(ACTIVE_GENERATION_KEY);
+    if (savedId) {
+      // Optional: fetch generation status from backend
+      // For now, just log it — you can add a "resume" UI
+      console.log('Found active generation:', savedId);
+    }
+  }, []);
+
   const voiceOptions = useMemo(() => {
     if (selectedProvider === PROVIDERS.ELEVENLABS) {
       return ELEVENLABS_VOICES;
@@ -66,19 +99,17 @@ export const Generator = () => {
     }
   }, [selectedProvider]);
 
-  // Reset voice when provider changes
   useEffect(() => {
     if (voiceOptions.length > 0) {
       setVoiceId(voiceOptions[0].value);
     }
   }, [voiceOptions]);
 
-  // Update files when segments arrive via streaming
   useEffect(() => {
     if (segments.length > 0) {
       const audioFormat = selectedProvider === PROVIDERS.ELEVENLABS ? AUDIO_FORMATS.MP3 : AUDIO_FORMATS.WAV;
       const mimeType = selectedProvider === PROVIDERS.ELEVENLABS ? MIME_TYPES.mp3 : MIME_TYPES.wav;
-      
+
       const newFiles: GeneratedAudioFile[] = segments.map((seg) => ({
         id: seg.id || `temp-${seg.index}`,
         fileName: `${seg.title.replace(/[^a-zA-Z0-9]/g, '_')}.${audioFormat}`,
@@ -90,40 +121,42 @@ export const Generator = () => {
         provider: selectedProvider,
         format: audioFormat,
       }));
-      
+
       setFiles(newFiles);
       setStatus('generating');
     }
   }, [segments, selectedProvider]);
 
-  // Update status when generation completes
   useEffect(() => {
     if (isComplete) {
       setStatus('completed');
+      // ✅ FIX #9: Clear active generation marker on complete
+      sessionStorage.removeItem(ACTIVE_GENERATION_KEY);
     }
   }, [isComplete]);
 
-  // Update status on error
   useEffect(() => {
     if (error) {
       setStatus('failed');
+      sessionStorage.removeItem(ACTIVE_GENERATION_KEY);
     }
   }, [error]);
 
-  // Generate handler
   const handleGenerate = useCallback(async () => {
     if (!scripts.trim()) { toast.error('Please enter some scripts'); return; }
     const chunks = scripts.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
     if (!chunks.length) { toast.error('No valid scripts found'); return; }
     if (chunks.length > 100) { toast.error('Too many scripts (max 100)'); return; }
-    if (!apiKey.trim()) { 
-      toast.error(`Please enter your ${selectedProvider === PROVIDERS.ELEVENLABS ? 'ElevenLabs' : 'Gemini'} API key`); 
-      return; 
+    if (!apiKey.trim()) {
+      toast.error(`Please enter your ${selectedProvider === PROVIDERS.ELEVENLABS ? 'ElevenLabs' : 'Gemini'} API key`);
+      return;
     }
 
     setStatus('generating');
     setFiles([]);
     stop();
+    // ✅ Clear any previous active generation marker
+    sessionStorage.removeItem(ACTIVE_GENERATION_KEY);
 
     const payload = {
       script: scripts,
@@ -140,20 +173,18 @@ export const Generator = () => {
     }
   }, [scripts, apiKey, voiceId, selectedProvider, generate, stop]);
 
-  // Cancel handler
   const handleCancel = useCallback(() => {
     cancel();
     setStatus('failed');
+    sessionStorage.removeItem(ACTIVE_GENERATION_KEY);
   }, [cancel]);
 
-  // Play handler
   const handlePlay = useCallback((file: GeneratedAudioFile) => {
     if (file.audioUrl) {
       play(file.audioUrl, file.id);
     }
   }, [play]);
 
-  // Download single file
   const handleDownload = useCallback((file: GeneratedAudioFile) => {
     if (!file.audioUrl) return;
     const link = document.createElement('a');
@@ -164,13 +195,11 @@ export const Generator = () => {
     link.remove();
   }, []);
 
-  // Delete file
   const handleDelete = useCallback((file: GeneratedAudioFile) => {
     setFiles(prev => prev.filter(f => f.id !== file.id));
     toast.info(`🗑️ Removed: ${file.fileName}`);
   }, []);
 
-  // Download all as ZIP
   const handleDownloadZip = useCallback(async () => {
     const successFiles = files.filter(f => f.status === 'success');
     if (!successFiles.length) { toast.error('No completed files to download'); return; }
@@ -201,7 +230,6 @@ export const Generator = () => {
     }
   }, [files]);
 
-  // Convert progress to logs format for LiveProgress
   const logs = useMemo<GenerationLog[]>(() => {
     const logEntries: GenerationLog[] = files.map((file, index) => ({
       id: index,
@@ -209,7 +237,7 @@ export const Generator = () => {
       message: `✅ Generated: ${file.fileName}`,
       status: 'success' as const,
     }));
-    
+
     if (isGenerating && progress.current > 0) {
       logEntries.push({
         id: -1,
@@ -218,7 +246,7 @@ export const Generator = () => {
         status: 'processing' as const,
       });
     }
-    
+
     return logEntries.length > 0 ? logEntries : [
       { id: 0, time: new Date().toLocaleTimeString(), message: '🚀 System ready. Waiting for scripts...', status: 'success' as const }
     ];
@@ -230,7 +258,7 @@ export const Generator = () => {
   }), [files]);
 
   return (
-    <AuthGuard>
+
       <motion.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -239,7 +267,6 @@ export const Generator = () => {
       >
         <Background />
 
-        {/* Error display */}
         <AnimatePresence>
           {error && (
             <motion.div
@@ -270,7 +297,6 @@ export const Generator = () => {
           )}
         </AnimatePresence>
 
-        {/* Hero Section */}
         <section className="relative z-10 px-6 pt-12 pb-8 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50/80 backdrop-blur-sm border border-indigo-200/50 text-indigo-700 text-sm font-medium mb-6">
@@ -319,7 +345,6 @@ export const Generator = () => {
             </motion.aside>
 
             <motion.section variants={fadeInRight} className="space-y-6 xl:col-span-7">
-              {/* Provider & Voice Selection */}
               <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/30 p-5 transition-all hover:shadow-xl hover:shadow-indigo-200/20 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">🔊 Provider</label>
@@ -355,7 +380,6 @@ export const Generator = () => {
                 isGenerating={isGenerating}
               />
 
-              {/* Completion Summary */}
               {isComplete && files.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -416,6 +440,6 @@ export const Generator = () => {
           </div>
         </motion.section>
       </motion.main>
-    </AuthGuard>
+  
   );
 };

@@ -9,6 +9,7 @@ import { GoogleOAuthProvider } from './provider/GoogleAuthProvider';
 import { Navbar } from './components/Layout/Navbar';
 import { Footer } from './components/Layout/Footer';
 
+
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -18,7 +19,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ||
-      'https://bulk-audio-generator.vercel.app'
+    'https://bulk-audio-generator.vercel.app'
   ),
   title: {
     default: 'Bulk Audio Generator | AI Voice Generation',

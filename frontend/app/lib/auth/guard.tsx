@@ -1,7 +1,7 @@
 // app/lib/auth/guards.ts
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './context';
 import { ROUTES } from '../constants';
@@ -21,25 +21,33 @@ export function AuthGuard({
 }: AuthGuardProps) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [hasChecked, setHasChecked] = useState(false);
 
-  // Middleware already redirects — यो safety net मात्र
   useEffect(() => {
     if (isLoading) return;
 
+    // Redirect logic — but ONLY after initial check
     if (!requireAuth && user) {
       router.replace(ROUTES.GENERATOR);
     } else if (requireAuth && !user) {
       router.replace(redirectTo);
     }
+    setHasChecked(true);
   }, [user, isLoading, router, requireAuth, redirectTo]);
 
-  // Show spinner ONLY on very first load (no cache)
+  // First load — show spinner ONLY if truly no cached user
   if (isLoading && !user) {
     return fallback ?? <FullPageSpinner />;
   }
 
-  if (requireAuth && !user) return null;
-  if (!requireAuth && user) return null;
+  // Auth required but no user — show spinner while redirecting (NOT null!)
+  if (requireAuth && !user) {
+    return fallback ?? <FullPageSpinner />;
+  }
+
+  if (!requireAuth && user) {
+    return fallback ?? <FullPageSpinner />;
+  }
 
   return <>{children}</>;
 }

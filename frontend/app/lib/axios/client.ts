@@ -61,7 +61,6 @@ const processQueue = (error: any = null) => {
 };
 
 const NO_REFRESH_URLS = [
-  '/user/me',
   '/user/refresh',
   '/user/login',
   '/user/register',

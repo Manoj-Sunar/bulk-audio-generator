@@ -34,17 +34,19 @@ export function useLogin() {
   });
 }
 
+// hooks.ts
 export function useLogout() {
   const { logout } = useAuth();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
       queryClient.clear();
+      router.replace('/bulk-audio/bulk-audio-login');
       toast.success('Logged out');
     },
-    onError: (error: any) => toast.error(extractErrorMessage(error)),
   });
 }
 

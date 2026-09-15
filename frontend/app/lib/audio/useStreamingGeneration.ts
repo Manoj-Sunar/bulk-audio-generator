@@ -37,6 +37,23 @@ export function useStreamingGeneration() {
   const [totalChars, setTotalChars] = useState(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  // ✅ FIX #8: Refs to track latest values (avoids stale closures)
+  const segmentsRef = useRef<StreamingSegment[]>([]);
+  const generationIdRef = useRef<number | null>(null);
+  const totalCharsRef = useRef<number>(0);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    segmentsRef.current = segments;
+  }, [segments]);
+
+  useEffect(() => {
+    generationIdRef.current = generationId;
+  }, [generationId]);
+
+  useEffect(() => {
+    totalCharsRef.current = totalChars;
+  }, [totalChars]);
 
   const generate = useCallback(
     async (payload: {
@@ -49,17 +66,19 @@ export function useStreamingGeneration() {
       setIsGenerating(true);
       setProgress({ current: 0, total: 0 });
       setSegments([]);
+      segmentsRef.current = []; // ✅ Reset ref too
       setError(null);
       setIsComplete(false);
       setGenerationId(null);
+      generationIdRef.current = null;
       setTotalChars(0);
+      totalCharsRef.current = 0;
 
       abortControllerRef.current = new AbortController();
 
       try {
         const csrfToken = getCsrfToken();
 
-        // ✅ /api path — reverse proxy ले onrender.com मा forward गर्छ
         const response = await fetch(`/api/audio/generate-stream`, {
           method: 'POST',
           headers: {
@@ -99,6 +118,7 @@ export function useStreamingGeneration() {
                 switch (data.type) {
                   case 'start':
                     setGenerationId(data.generation_id || null);
+                    generationIdRef.current = data.generation_id || null;
                     setProgress({ current: 0, total: data.total || 0 });
                     setProvider(data.provider || null);
                     toast.info(
@@ -112,7 +132,11 @@ export function useStreamingGeneration() {
                       total: data.total || 0,
                     });
                     if (data.segment) {
-                      setSegments((prev) => [...prev, data.segment!]);
+                      setSegments((prev) => {
+                        const next = [...prev, data.segment!];
+                        segmentsRef.current = next; // ✅ Sync ref
+                        return next;
+                      });
                       toast.success(`✅ Generated: ${data.segment.title}`);
                     }
                     break;
@@ -121,6 +145,7 @@ export function useStreamingGeneration() {
                     setIsComplete(true);
                     setIsGenerating(false);
                     setTotalChars(data.total_chars || 0);
+                    totalCharsRef.current = data.total_chars || 0;
                     toast.success(`🎉 All ${data.total} files generated!`);
                     break;
 
@@ -138,7 +163,12 @@ export function useStreamingGeneration() {
         }
 
         setIsGenerating(false);
-        return { segments, generationId, totalChars };
+        // ✅ FIX #8: Return latest values from refs, not stale state
+        return {
+          segments: segmentsRef.current,
+          generationId: generationIdRef.current,
+          totalChars: totalCharsRef.current,
+        };
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         const errorMessage =
@@ -149,7 +179,7 @@ export function useStreamingGeneration() {
         throw err;
       }
     },
-    []
+    [] // ✅ No deps needed — using refs
   );
 
   const cancel = useCallback(() => {
@@ -163,12 +193,15 @@ export function useStreamingGeneration() {
 
   const reset = useCallback(() => {
     setSegments([]);
+    segmentsRef.current = [];
     setProgress({ current: 0, total: 0 });
     setError(null);
     setIsComplete(false);
     setGenerationId(null);
+    generationIdRef.current = null;
     setProvider(null);
     setTotalChars(0);
+    totalCharsRef.current = 0;
     setIsGenerating(false);
   }, []);
 
