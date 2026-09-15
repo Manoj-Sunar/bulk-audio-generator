@@ -86,10 +86,8 @@ export function Navbar() {
   };
 
   const dropdownItems: DropdownItem[] = [
-    { icon: User, label: 'Profile', href: '/bulk-audio/profile' },
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/bulk-audio/dashboard' },
-    { icon: Settings, label: 'Settings', href: '/bulk-audio/settings' },
-    { icon: HelpCircle, label: 'Help & Support', href: '/bulk-audio/support' },
+    { icon: User, label: 'Profile', href: '/profile' },
+    { icon: Settings, label: 'Settings', href: '/settings' },
     { icon: LogOut, label: 'Logout', onClick: () => logout(), className: 'text-red-600 hover:bg-red-50' },
   ];
 
