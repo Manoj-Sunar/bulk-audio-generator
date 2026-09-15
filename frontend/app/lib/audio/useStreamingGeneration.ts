@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { getCsrfToken } from '../axios/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface StreamingSegment {
   id: string;
@@ -24,11 +25,10 @@ export interface StreamingProgress {
 }
 
 export function useStreamingGeneration() {
+  const queryClient = useQueryClient();   // ✅ नयाँ
+  
   const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState<{ current: number; total: number }>({
-    current: 0,
-    total: 0,
-  });
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [segments, setSegments] = useState<StreamingSegment[]>([]);
   const [generationId, setGenerationId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,23 +37,14 @@ export function useStreamingGeneration() {
   const [totalChars, setTotalChars] = useState(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
-  // ✅ FIX #8: Refs to track latest values (avoids stale closures)
   const segmentsRef = useRef<StreamingSegment[]>([]);
   const generationIdRef = useRef<number | null>(null);
   const totalCharsRef = useRef<number>(0);
 
-  // Keep refs in sync with state
-  useEffect(() => {
-    segmentsRef.current = segments;
-  }, [segments]);
-
-  useEffect(() => {
-    generationIdRef.current = generationId;
-  }, [generationId]);
-
-  useEffect(() => {
-    totalCharsRef.current = totalChars;
-  }, [totalChars]);
+  // refs sync (उही)
+  useEffect(() => { segmentsRef.current = segments; }, [segments]);
+  useEffect(() => { generationIdRef.current = generationId; }, [generationId]);
+  useEffect(() => { totalCharsRef.current = totalChars; }, [totalChars]);
 
   const generate = useCallback(
     async (payload: {
@@ -66,7 +57,7 @@ export function useStreamingGeneration() {
       setIsGenerating(true);
       setProgress({ current: 0, total: 0 });
       setSegments([]);
-      segmentsRef.current = []; // ✅ Reset ref too
+      segmentsRef.current = [];
       setError(null);
       setIsComplete(false);
       setGenerationId(null);
@@ -121,9 +112,7 @@ export function useStreamingGeneration() {
                     generationIdRef.current = data.generation_id || null;
                     setProgress({ current: 0, total: data.total || 0 });
                     setProvider(data.provider || null);
-                    toast.info(
-                      `🎙️ Starting generation with ${data.provider || 'provider'}...`
-                    );
+                    toast.info(`🎙️ Starting generation with ${data.provider || 'provider'}...`);
                     break;
 
                   case 'progress':
@@ -134,7 +123,7 @@ export function useStreamingGeneration() {
                     if (data.segment) {
                       setSegments((prev) => {
                         const next = [...prev, data.segment!];
-                        segmentsRef.current = next; // ✅ Sync ref
+                        segmentsRef.current = next;
                         return next;
                       });
                       toast.success(`✅ Generated: ${data.segment.title}`);
@@ -147,6 +136,12 @@ export function useStreamingGeneration() {
                     setTotalChars(data.total_chars || 0);
                     totalCharsRef.current = data.total_chars || 0;
                     toast.success(`🎉 All ${data.total} files generated!`);
+                    
+                    // ✅✅✅ मुख्य FIX — Cache invalidate
+                    queryClient.invalidateQueries({
+                      queryKey: ['audio-generations'],
+                      refetchType: 'all',   // Inactive queries पनि refetch
+                    });
                     break;
 
                   case 'error':
@@ -163,7 +158,6 @@ export function useStreamingGeneration() {
         }
 
         setIsGenerating(false);
-        // ✅ FIX #8: Return latest values from refs, not stale state
         return {
           segments: segmentsRef.current,
           generationId: generationIdRef.current,
@@ -171,15 +165,14 @@ export function useStreamingGeneration() {
         };
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
-        const errorMessage =
-          err instanceof Error ? err.message : 'Generation failed';
+        const errorMessage = err instanceof Error ? err.message : 'Generation failed';
         setError(errorMessage);
         setIsGenerating(false);
         toast.error(errorMessage);
         throw err;
       }
     },
-    [] // ✅ No deps needed — using refs
+    [queryClient]   // ✅ queryClient dependency
   );
 
   const cancel = useCallback(() => {
@@ -214,16 +207,9 @@ export function useStreamingGeneration() {
   }, []);
 
   return {
-    generate,
-    cancel,
-    reset,
-    isGenerating,
-    progress,
-    segments,
-    generationId,
-    error,
-    isComplete,
-    provider,
-    totalChars,
+    generate, cancel, reset,
+    isGenerating, progress, segments,
+    generationId, error, isComplete,
+    provider, totalChars,
   };
 }

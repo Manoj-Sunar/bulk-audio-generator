@@ -1,9 +1,16 @@
+// app/components/ui/ImageWithLightBox.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import Image, { ImageProps } from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Maximize2 } from "lucide-react";
+import { Maximize2 } from "lucide-react";
+
+// ✅ Lightbox lazy load — केवल खोल्दा load हुन्छ
+const LightboxModal = lazy(() => import("../pages/documentation/LightBoxModel"));
+
+// ✅ छोटो blur placeholder — base64 SVG
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMjQwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iI2YxZjVmOSIvPjwvc3ZnPg==";
 
 interface ImageWithLightboxProps extends ImageProps {
   containerClassName?: string;
@@ -12,26 +19,27 @@ interface ImageWithLightboxProps extends ImageProps {
 export const ImageWithLightbox = ({
   containerClassName = "",
   className = "",
+  priority = false,
   ...props
 }: ImageWithLightboxProps) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const handleOpen = () => setIsOpen(true);
-  const handleClose = () => setIsOpen(false);
 
   return (
     <>
       {/* Thumbnail */}
       <div
         className={`relative cursor-pointer overflow-hidden rounded-2xl border border-outline-variant bg-white shadow-inner transition-all hover:shadow-md ${containerClassName}`}
-        onClick={handleOpen}
+        onClick={() => setIsOpen(true)}
       >
         <Image
           {...props}
+          priority={priority}
           className={`w-full h-auto object-cover transition-transform duration-300 hover:scale-[1.02] ${className}`}
-          sizes="(max-width: 768px) 100vw, 50vw"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+          loading={priority ? "eager" : "lazy"}
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
         />
-        {/* Hover overlay with magnify icon */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors hover:bg-black/20">
           <div className="rounded-full bg-white/80 p-2 opacity-0 transition-opacity hover:opacity-100">
             <Maximize2 size={20} className="text-primary" />
@@ -39,41 +47,16 @@ export const ImageWithLightbox = ({
         </div>
       </div>
 
-      {/* Lightbox Modal */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 top-10"
-            onClick={handleClose}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", damping: 20 }}
-              className="relative max-h-[90vh] max-w-[90vw] rounded-2xl overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                {...props}
-                className="w-auto h-auto max-h-[85vh] object-contain"
-                sizes="90vw"
-                quality={100}
-              />
-              <button
-                onClick={handleClose}
-                className="absolute top-4 right-4 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
-                aria-label="Close image"
-              >
-                <X size={24} />
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ✅ Lightbox केवल खोल्दा load */}
+      {isOpen && (
+        <Suspense fallback={null}>
+          <LightboxModal
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            imageProps={props}
+          />
+        </Suspense>
+      )}
     </>
   );
 };

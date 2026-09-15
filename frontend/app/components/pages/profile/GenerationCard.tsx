@@ -2,7 +2,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import {
   Calendar, Download, Trash2, Play, Pause, ChevronDown, ChevronUp,
   Music, Loader2, CheckCircle, XCircle, Clock, Mic2, FileAudio,
@@ -30,7 +30,7 @@ interface GenerationCardProps {
   index?: number;
 }
 
-export const GenerationCard = ({
+export const GenerationCard = memo(({
   generation,
   onDownload,
   onDelete,
@@ -58,21 +58,21 @@ export const GenerationCard = ({
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'completed': 
+      case 'completed':
         return { icon: CheckCircle, label: 'Completed', color: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', spin: false };
-      case 'processing': 
+      case 'processing':
         return { icon: Loader2, label: 'Processing', color: 'blue', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', spin: true };
-      case 'failed': 
+      case 'failed':
         return { icon: XCircle, label: 'Failed', color: 'red', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', spin: false };
-      default: 
+      default:
         return { icon: Clock, label: 'Pending', color: 'slate', bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', spin: false };
     }
   };
   const statusConfig = getStatusConfig(generation.status);
   const StatusIcon = statusConfig.icon;
 
-  const formatDate = (date: string) => new Date(date).toLocaleDateString('en-US', { 
-    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+  const formatDate = (date: string) => new Date(date).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 
   const handleSegmentPlay = (segment: Segment) => {
@@ -97,7 +97,7 @@ export const GenerationCard = ({
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 flex-shrink-0">
                 <Music className="w-5 h-5" />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Heading as="h4" size="md" weight="semibold" className="text-slate-800 truncate">
@@ -108,7 +108,7 @@ export const GenerationCard = ({
                     {statusConfig.label}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <Span size="xs" className="text-slate-500 flex items-center gap-1">
                     <Mic2 className="w-3 h-3" />
@@ -131,7 +131,7 @@ export const GenerationCard = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Actions */}
             <div className="flex items-center gap-1 flex-shrink-0">
               {generation.status === 'completed' && (
@@ -160,11 +160,10 @@ export const GenerationCard = ({
               </motion.div>
               <motion.button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all duration-300 ${
-                  isExpanded 
-                    ? 'border-blue-300 bg-blue-50 text-blue-600' 
+                className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all duration-300 ${isExpanded
+                    ? 'border-blue-300 bg-blue-50 text-blue-600'
                     : 'border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50'
-                }`}
+                  }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -203,7 +202,7 @@ export const GenerationCard = ({
                     </Paragraph>
                   </div>
                 )}
-                
+
                 {/* Audio Files List */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -215,7 +214,7 @@ export const GenerationCard = ({
                       {completedSegments} ready
                     </Span>
                   </div>
-                  
+
                   <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
                     {segments.map((segment, idx) => (
                       <motion.div
@@ -228,13 +227,13 @@ export const GenerationCard = ({
                         <Span size="xs" className="font-mono text-slate-400 w-7 flex-shrink-0 text-center">
                           #{segment.index}
                         </Span>
-                        
+
                         <div className="flex-1 min-w-0">
                           <Paragraph size="xs" weight="medium" className="text-slate-700 truncate">
                             {segment.title}
                           </Paragraph>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {segment.audio_data ? (
                             <>
@@ -243,11 +242,10 @@ export const GenerationCard = ({
                                 size="sm"
                                 leftIcon={currentlyPlayingSegment === segment.id ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                                 onClick={() => handleSegmentPlay(segment)}
-                                className={`transition-all duration-200 rounded-lg px-3 py-1 text-xs ${
-                                  currentlyPlayingSegment === segment.id 
-                                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                className={`transition-all duration-200 rounded-lg px-3 py-1 text-xs ${currentlyPlayingSegment === segment.id
+                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
                                     : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'
-                                }`}
+                                  }`}
                               >
                                 {currentlyPlayingSegment === segment.id ? 'Playing' : 'Play'}
                               </Button>
@@ -294,4 +292,7 @@ export const GenerationCard = ({
       </Card>
     </motion.div>
   );
-};
+});
+
+
+GenerationCard.displayName = 'GenerationCard';

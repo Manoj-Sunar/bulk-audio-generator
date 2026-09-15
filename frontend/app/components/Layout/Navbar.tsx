@@ -1,14 +1,14 @@
 // app/components/Layout/Navbar.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
-  Menu, X, Sparkles, User, LogOut, Settings, HelpCircle,
-  LayoutDashboard, ChevronDown
+  Menu, X, Sparkles, User, LogOut, Settings,
+  ChevronDown,
 } from 'lucide-react';
 
 import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
@@ -19,12 +19,24 @@ import { Button } from '../ui/Button';
 import { useAuth } from '@/app/lib/auth/context';
 import { useLogout } from '@/app/lib/auth/hooks';
 
-// Animated gradient background for navbar
+// ✅ Z-index constants — केवल mobile stacking व्यवस्थित गर्न
+const Z_NAVBAR = 60;
+const Z_MOBILE_MENU = 55;
+const Z_BACKDROP = 50;
+
+// ─────────────────────────────────────────────
+// Animated gradient background — उही
+// ─────────────────────────────────────────────
 const NavbarGradient = () => (
   <div className="absolute inset-0 -z-10 overflow-hidden rounded-b-3xl">
     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5" />
-    <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl animate-pulse" />
-    <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-secondary/10 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+    <div
+      className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl animate-pulse"
+    />
+    <div
+      className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-secondary/10 blur-3xl animate-pulse"
+      style={{ animationDelay: '1s' }}
+    />
   </div>
 );
 
@@ -46,7 +58,7 @@ export function Navbar() {
   const { mutate: logout } = useLogout();
   const { user } = useAuth();
 
-  // Scroll effect with threshold
+  // ✅ Scroll effect — passive listener (उही)
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -55,10 +67,10 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // ✅ Close mobile menu on route change (उही)
   useEffect(() => setOpen(false), [pathname]);
 
-  // Click outside dropdown
+  // ✅ Click outside dropdown (उही)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -69,15 +81,32 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Prevent body scroll when mobile menu is open
+  // ─────────────────────────────────────────────
+  // ✅ FIXED: iOS-safe body scroll lock
+  // केवल mobile menu खोल्दा चल्छ
+  // ─────────────────────────────────────────────
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!open) return;
+
+    const scrollY = window.scrollY;
+    const body = document.body;
+
+    // iOS-safe scroll lock
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+
     return () => {
-      document.body.style.overflow = '';
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
@@ -88,19 +117,25 @@ export function Navbar() {
   const dropdownItems: DropdownItem[] = [
     { icon: User, label: 'Profile', href: '/profile' },
     { icon: Settings, label: 'Settings', href: '/settings' },
-    { icon: LogOut, label: 'Logout', onClick: () => logout(), className: 'text-red-600 hover:bg-red-50' },
+    {
+      icon: LogOut,
+      label: 'Logout',
+      onClick: () => logout(),
+      className: 'text-red-600 hover:bg-red-50',
+    },
   ];
 
+  // ✅ Animation variants — उही
   const mobileMenuVariants: Variants = {
     hidden: {
       opacity: 0,
       height: 0,
-      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
     },
     visible: {
       opacity: 1,
       height: 'auto',
-      transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+      transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
     },
   };
 
@@ -113,8 +148,8 @@ export function Navbar() {
       transition: {
         delay: i * 0.06,
         duration: 0.4,
-        ease: [0.4, 0, 0.2, 1]
-      }
+        ease: [0.4, 0, 0.2, 1],
+      },
     }),
   };
 
@@ -123,30 +158,62 @@ export function Navbar() {
       opacity: 0,
       y: -10,
       scale: 0.95,
-      transition: { duration: 0.15, ease: [0.4, 0, 0.2, 1] }
+      transition: { duration: 0.15, ease: [0.4, 0, 0.2, 1] },
     },
     visible: {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
+      transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
     },
   };
 
   return (
     <>
+      {/* ═══════════════════════════════════════════ */}
+      {/* ✅ BACKDROP — पहिले render (तल stacking)    */}
+      {/* केवल mobile मा देखिन्छ — desktop मा lg:hidden */}
+      {/* ═══════════════════════════════════════════ */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ zIndex: Z_BACKDROP }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm lg:hidden"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* ✅ NAVBAR                                    */}
+      {/* Mobile: edge-to-edge + top-0                */}
+      {/* Desktop: पहिले जस्तै floating card (lg:*)   */}
+      {/* ═══════════════════════════════════════════ */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+        style={{ zIndex: Z_NAVBAR }}
         className={cn(
-          'sticky top-4 z-50 mx-auto max-w-7xl px-4 transition-all duration-300 lg:px-8',
+          // ✅ MOBILE: full width, top-0, कुनै padding/margin छैन
+          'sticky top-0 w-full',
+          // ✅ DESKTOP: पहिले जस्तै — floating card (lg: breakpoint)
+          'lg:top-4 lg:mx-auto lg:max-w-7xl lg:px-4 lg:px-8',
           scrolled ? 'mt-0' : 'mt-0'
         )}
       >
         <div
           className={cn(
-            'relative rounded-2xl border transition-all duration-500',
+            // ✅ MOBILE: edge-to-edge — कुनै rounding छैन
+            'relative transition-all duration-500',
+            'rounded-none border-b',
+            // ✅ DESKTOP: पहिले जस्तै — rounded card + full border
+            'lg:rounded-2xl lg:border',
             scrolled
               ? 'border-white/20 bg-white/90 backdrop-blur-2xl shadow-2xl shadow-primary/5'
               : 'border-white/40 bg-white/70 backdrop-blur-xl shadow-lg shadow-primary/5'
@@ -155,16 +222,19 @@ export function Navbar() {
           <NavbarGradient />
 
           <nav className="relative flex h-[72px] items-center justify-between px-4 sm:px-6">
-            {/* Logo - FIXED: Consistent className with shrink-0 */}
-
-
+            {/* ───────────────────────────────── */}
+            {/* Logo — उही                         */}
+            {/* ───────────────────────────────── */}
             <div className="flex shrink-0 items-center">
               <motion.div
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex  items-center"
+                className="flex items-center"
               >
-                <Link href="/" className="group flex items-center gap-3 transition-all">
+                <Link
+                  href="/"
+                  className="group flex items-center gap-3 transition-all"
+                >
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-secondary blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
                     <Image
@@ -179,19 +249,24 @@ export function Navbar() {
                       className="absolute -top-1 -right-1"
                       animate={{
                         scale: [1, 1.3, 1],
-                        rotate: [0, 20, -20, 0]
+                        rotate: [0, 20, -20, 0],
                       }}
                       transition={{
                         duration: 3,
                         repeat: Infinity,
-                        ease: 'easeInOut'
+                        ease: 'easeInOut',
                       }}
                     >
                       <Sparkles size={14} className="text-primary drop-shadow-lg" />
                     </motion.div>
                   </div>
                   <div className="hidden sm:block">
-                    <Heading as="h1" size="lg" weight="bold" className="leading-tight">
+                    <Heading
+                      as="h1"
+                      size="lg"
+                      weight="bold"
+                      className="leading-tight"
+                    >
                       <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                         Bulk Voice
                       </span>
@@ -204,7 +279,10 @@ export function Navbar() {
                 </Link>
               </motion.div>
             </div>
-            {/* Desktop Nav Links */}
+
+            {/* ───────────────────────────────── */}
+            {/* Desktop Nav Links — उही            */}
+            {/* ───────────────────────────────── */}
             <ul className="hidden items-center gap-1 lg:flex">
               {NAV_LINKS.map(({ name, href, icon: Icon, external }) => {
                 const active = isActive(href);
@@ -232,7 +310,9 @@ export function Navbar() {
                           size={18}
                           className={cn(
                             'transition-all duration-300',
-                            active ? 'text-primary' : 'text-on-surface-variant/50 group-hover:text-primary',
+                            active
+                              ? 'text-primary'
+                              : 'text-on-surface-variant/50 group-hover:text-primary',
                             hoveredLink === href && 'scale-110'
                           )}
                         />
@@ -266,7 +346,9 @@ export function Navbar() {
               })}
             </ul>
 
-            {/* Right side - Actions - FIXED: Consistent className with shrink-0 */}
+            {/* ───────────────────────────────── */}
+            {/* Right side actions — उही          */}
+            {/* ───────────────────────────────── */}
             <div className="flex shrink-0 items-center gap-2">
               {user ? (
                 <div className="relative" ref={dropdownRef}>
@@ -308,8 +390,12 @@ export function Navbar() {
                         className="absolute right-0 mt-3 w-64 rounded-2xl border border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl shadow-primary/10 py-2 overflow-hidden"
                       >
                         <div className="border-b border-gray-100/50 px-4 py-3 mb-1">
-                          <p className="font-semibold text-on-surface">{user.name || 'User'}</p>
-                          <p className="text-sm text-on-surface-variant/60 truncate">{user.email}</p>
+                          <p className="font-semibold text-on-surface">
+                            {user.name || 'User'}
+                          </p>
+                          <p className="text-sm text-on-surface-variant/60 truncate">
+                            {user.email}
+                          </p>
                         </div>
 
                         {dropdownItems.map((item, index) => (
@@ -328,7 +414,10 @@ export function Navbar() {
                                   item.className
                                 )}
                               >
-                                <item.icon size={18} className="text-on-surface-variant/60" />
+                                <item.icon
+                                  size={18}
+                                  className="text-on-surface-variant/60"
+                                />
                                 {item.label}
                               </Link>
                             ) : (
@@ -342,7 +431,10 @@ export function Navbar() {
                                   item.className
                                 )}
                               >
-                                <item.icon size={18} className="text-on-surface-variant/60" />
+                                <item.icon
+                                  size={18}
+                                  className="text-on-surface-variant/60"
+                                />
                                 {item.label}
                               </button>
                             )}
@@ -351,9 +443,15 @@ export function Navbar() {
 
                         <div className="border-t border-gray-100/50 px-4 py-3 mt-1 flex gap-3 justify-center">
                           {[
-                            { icon: FaGithub, href: 'https://github.com/Manoj-Sunar' },
+                            {
+                              icon: FaGithub,
+                              href: 'https://github.com/Manoj-Sunar',
+                            },
                             { icon: FaTwitter, href: 'https://x.com/home' },
-                            { icon: FaLinkedin, href: 'https://www.linkedin.com/feed/' },
+                            {
+                              icon: FaLinkedin,
+                              href: 'https://www.linkedin.com/feed/',
+                            },
                           ].map((social, i) => (
                             <motion.a
                               key={i}
@@ -379,7 +477,10 @@ export function Navbar() {
                     whileTap={{ scale: 0.95 }}
                   >
                     <Button className="rounded-full bg-gradient-to-r from-primary to-secondary px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/40">
-                      <Link href="/bulk-audio/bulk-audio-login" className="flex items-center gap-2">
+                      <Link
+                        href="/bulk-audio/bulk-audio-login"
+                        className="flex items-center gap-2"
+                      >
                         Get Started
                         <Sparkles size={16} />
                       </Link>
@@ -388,7 +489,7 @@ export function Navbar() {
                 </div>
               )}
 
-              {/* Mobile Menu Toggle */}
+              {/* Mobile Menu Toggle — उही */}
               <motion.button
                 onClick={() => setOpen((prev) => !prev)}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-primary/10 lg:hidden"
@@ -413,7 +514,9 @@ export function Navbar() {
             </div>
           </nav>
 
-          {/* Mobile Menu */}
+          {/* ───────────────────────────────── */}
+          {/* Mobile Menu — उही                  */}
+          {/* ───────────────────────────────── */}
           <AnimatePresence>
             {open && (
               <motion.div
@@ -421,59 +524,66 @@ export function Navbar() {
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
+                style={{ zIndex: Z_MOBILE_MENU }}
                 className="overflow-hidden border-t border-gray-100/50 bg-white/95 backdrop-blur-xl lg:hidden"
               >
                 <ul className="space-y-1 p-4 pb-6">
-                  {NAV_LINKS.map(({ name, href, icon: Icon, external }, index) => {
-                    const active = isActive(href);
-                    return (
-                      <motion.li
-                        key={href}
-                        custom={index}
-                        variants={linkVariants}
-                        initial="hidden"
-                        animate="visible"
-                        whileHover={{ x: 8, scale: 1.01 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <Link
-                          href={href}
-                          target={external ? '_blank' : undefined}
-                          rel={external ? 'noopener noreferrer' : undefined}
-                          onClick={() => setOpen(false)}
-                          className={cn(
-                            'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-300',
-                            active
-                              ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-primary shadow-inner'
-                              : 'text-on-surface-variant hover:bg-primary/5 hover:text-primary'
-                          )}
+                  {NAV_LINKS.map(
+                    ({ name, href, icon: Icon, external }, index) => {
+                      const active = isActive(href);
+                      return (
+                        <motion.li
+                          key={href}
+                          custom={index}
+                          variants={linkVariants}
+                          initial="hidden"
+                          animate="visible"
+                          whileHover={{ x: 8, scale: 1.01 }}
+                          transition={{ duration: 0.2 }}
                         >
-                          {Icon && (
-                            <Icon
-                              size={20}
-                              className={cn(
-                                'transition-all duration-300',
-                                active ? 'text-primary' : 'text-on-surface-variant/50'
-                              )}
-                            />
-                          )}
-                          <span className="flex-1">{name}</span>
-                          {active && (
-                            <motion.div
-                              layoutId="mobileActiveIndicator"
-                              className="h-2 w-2 rounded-full bg-gradient-to-r from-primary to-secondary"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            />
-                          )}
-                          {external && (
-                            <span className="text-xs text-on-surface-variant/40">↗</span>
-                          )}
-                        </Link>
-                      </motion.li>
-                    );
-                  })}
+                          <Link
+                            href={href}
+                            target={external ? '_blank' : undefined}
+                            rel={external ? 'noopener noreferrer' : undefined}
+                            onClick={() => setOpen(false)}
+                            className={cn(
+                              'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-300',
+                              active
+                                ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-primary shadow-inner'
+                                : 'text-on-surface-variant hover:bg-primary/5 hover:text-primary'
+                            )}
+                          >
+                            {Icon && (
+                              <Icon
+                                size={20}
+                                className={cn(
+                                  'transition-all duration-300',
+                                  active
+                                    ? 'text-primary'
+                                    : 'text-on-surface-variant/50'
+                                )}
+                              />
+                            )}
+                            <span className="flex-1">{name}</span>
+                            {active && (
+                              <motion.div
+                                layoutId="mobileActiveIndicator"
+                                className="h-2 w-2 rounded-full bg-gradient-to-r from-primary to-secondary"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.3 }}
+                              />
+                            )}
+                            {external && (
+                              <span className="text-xs text-on-surface-variant/40">
+                                ↗
+                              </span>
+                            )}
+                          </Link>
+                        </motion.li>
+                      );
+                    }
+                  )}
 
                   {!user && (
                     <motion.li
@@ -490,7 +600,11 @@ export function Navbar() {
                         Get Started
                         <motion.span
                           animate={{ x: [0, 4, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }}
                         >
                           →
                         </motion.span>
@@ -506,8 +620,12 @@ export function Navbar() {
                       animate="visible"
                       className="mt-2 rounded-xl bg-primary/5 p-4 border border-primary/10"
                     >
-                      <p className="font-medium text-on-surface">{user.name || 'User'}</p>
-                      <p className="text-sm text-on-surface-variant/60">{user.email}</p>
+                      <p className="font-medium text-on-surface">
+                        {user.name || 'User'}
+                      </p>
+                      <p className="text-sm text-on-surface-variant/60">
+                        {user.email}
+                      </p>
                       <button
                         onClick={() => {
                           setOpen(false);
@@ -526,20 +644,6 @@ export function Navbar() {
           </AnimatePresence>
         </div>
       </motion.header>
-
-      {/* Backdrop for mobile menu */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden"
-            onClick={() => setOpen(false)}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 }

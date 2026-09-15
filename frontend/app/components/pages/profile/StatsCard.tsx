@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/app/components/ui/Card';
 import { Heading } from '@/app/components/typography/Heading';
 import { Paragraph } from '@/app/components/typography/Paragraph';
 import { Span } from '@/app/components/typography/Span';
+import { memo } from 'react';
 
 interface StatsCardProps {
   stats: {
@@ -22,7 +23,7 @@ interface StatsCardProps {
   };
 }
 
-export const StatsCard = ({ stats }: StatsCardProps) => {
+export const StatsCard = memo(({ stats }: StatsCardProps) => {
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
   const successRate = stats.total > 0 ? Math.round(((stats.completed) / stats.total) * 100) : 0;
 
@@ -146,4 +147,7 @@ export const StatsCard = ({ stats }: StatsCardProps) => {
       </CardContent>
     </Card>
   );
-};
+});
+
+
+StatsCard.displayName = 'StatsCard';

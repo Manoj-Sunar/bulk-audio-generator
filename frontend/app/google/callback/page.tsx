@@ -31,7 +31,7 @@ function GoogleCallbackInner() {
 
         toast.success('Google login successful!');
         setStatus('success');
-        setTimeout(() => router.push('/bulk-audio/generator'), 800);
+        setTimeout(() => router.push('/generator'), 800);
       } catch (err: any) {
         const message = extractErrorMessage(err) || 'Google authentication failed';
         toast.error(message);

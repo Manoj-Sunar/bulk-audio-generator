@@ -46,6 +46,16 @@ export type GenerationListResponse = {
   };
 };
 
+export const audioKeys = {
+  all: ['audio-generations'] as const,
+  lists: () => [...audioKeys.all, 'list'] as const,
+  list: (skip: number, limit: number, includeAudio: boolean, userId?: number) =>
+    [...audioKeys.lists(), { skip, limit, includeAudio, userId }] as const,
+  details: () => [...audioKeys.all, 'detail'] as const,
+  detail: (id: number, userId?: number) =>
+    [...audioKeys.details(), id, userId] as const,
+};
+
 export function useGenerateAudio() {
   return useMutation({
     mutationFn: async (data: GenerateAudioInput) => {
@@ -53,8 +63,7 @@ export function useGenerateAudio() {
       return response.data;
     },
     onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
+      toast.error(extractErrorMessage(error));
     },
   });
 }
@@ -70,8 +79,7 @@ export function useGenerateAndPlayAudio() {
       }
     },
     onError: (error: any) => {
-      const message = error.message || extractErrorMessage(error);
-      toast.error(message);
+      toast.error(error.message || extractErrorMessage(error));
     },
   });
 }
@@ -80,24 +88,33 @@ export function useGenerateAndPlayAudio() {
 export function useGenerationsList(
   skip: number = 0,
   limit: number = 50,
-  includeAudio: boolean = true,
+  includeAudio: boolean = false,   // ✅ DEFAULT FALSE — audio data lazy load
   options?: { enabled?: boolean }
 ) {
   const { user, isLoading: authLoading } = useAuth();
-
-  // ✅ Only run query when user is authenticated AND auth check is done
   const isEnabled = options?.enabled !== false && !!user && !authLoading;
 
   return useQuery({
-    queryKey: ['audio-generations', skip, limit, includeAudio, user?.id],
+    // ✅ Query key factory प्रयोग — consistent
+    queryKey: audioKeys.list(skip, limit, includeAudio, user?.id),
+    
     queryFn: async () => {
       const response = await apiClient.get('/audio/generations', {
         params: { skip, limit, include_audio: includeAudio },
       });
       return response.data as GenerationListResponse;
     },
-    staleTime: 30000,
-    enabled: isEnabled, // ✅ Don't fetch if not authenticated
+    
+    // ✅ Global config ले पुग्छ, तर explicit राख्नु राम्रो
+    staleTime: 5 * 60 * 1000,      // ५ मिनेट
+    gcTime: 30 * 60 * 1000,         // ३० मिनेट
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    
+    // ✅ Stale data तुरुन्तै देखाउने — कुनै loading spinner छैन
+    placeholderData: (previousData) => previousData,
+    
+    enabled: isEnabled,
   });
 }
 
@@ -105,13 +122,14 @@ export function useGenerationDetails(generationId: number | null) {
   const { user, isLoading: authLoading } = useAuth();
 
   return useQuery({
-    queryKey: ['audio-generation', generationId, user?.id],
+    queryKey: audioKeys.detail(generationId!, user?.id),
     queryFn: async () => {
       const response = await apiClient.get(`/audio/generation/${generationId}`);
       return response.data;
     },
-    enabled: !!generationId && !!user && !authLoading, // ✅ Auth check
-    staleTime: 60000,
+    enabled: !!generationId && !!user && !authLoading,
+    staleTime: 10 * 60 * 1000,     // १० मिनेट
+    refetchOnMount: false,
   });
 }
 
@@ -124,12 +142,15 @@ export function useDeleteGeneration() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['audio-generations'] });
+      // ✅ सबै list invalidate + तुरुन्तै refetch
+      queryClient.invalidateQueries({ 
+        queryKey: audioKeys.lists(),
+        refetchType: 'all',   // ✅ Inactive queries पनि refetch
+      });
       toast.success('Generation deleted successfully');
     },
     onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
+      toast.error(extractErrorMessage(error));
     },
   });
 }
@@ -153,8 +174,7 @@ export function useDownloadGeneration() {
       return response.data;
     },
     onError: (error: any) => {
-      const message = extractErrorMessage(error);
-      toast.error(message);
+      toast.error(extractErrorMessage(error));
     },
   });
 }

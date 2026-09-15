@@ -30,7 +30,7 @@ function GithubCallbackInner() {
         onSuccess: () => {
           toast.success('GitHub login successful!');
           setStatus('success');
-          setTimeout(() => router.push('/bulk-audio/generator'), 800);
+          setTimeout(() => router.push('/generator'), 800);
         },
         onError: (err) => {
           console.error('GitHub Login API Error:', err);
