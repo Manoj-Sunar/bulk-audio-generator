@@ -1,5 +1,5 @@
 // app/components/pages/documentation/DocumentationHero.tsx
-"use client";
+
 
 import {
   BookOpen,

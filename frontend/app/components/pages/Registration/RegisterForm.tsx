@@ -1,8 +1,7 @@
-"use client";
+
 
 import Link from "next/link";
-import { AtSign, Eye, EyeOff, Lock, User, CheckCircle2, XCircle } from "lucide-react";
-import { useState, useMemo } from "react";
+import { AtSign, User, CheckCircle2, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Input } from "../../Inputs/InputText";
@@ -39,20 +38,7 @@ export const RegisterForm = ({
     onTermsChange,
     onSubmit,
 }: RegisterFormProps) => {
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    // Password Strength Calculation
-    const passwordStrength = useMemo(() => {
-        if (!password) return 0;
-        let score = 0;
-        if (password.length >= 8) score++;
-        if (password.match(/[a-z]+/)) score++;
-        if (password.match(/[A-Z]+/)) score++;
-        if (password.match(/[0-9]+/)) score++;
-        if (password.match(/[$@#&!]+/)) score++;
-        return score;
-    }, [password]);
+    
 
     const isPasswordMatch = password && confirmPassword && password === confirmPassword;
 

@@ -1,4 +1,4 @@
-"use client";
+
 
 import { Card, CardContent } from "../../ui/Card";
 import { LoginFooter } from "./LoginFooter";

@@ -1,6 +1,6 @@
-"use client";
 
-import { UserPlus } from "lucide-react";
+
+
 
 import { Heading } from "../../typography/Heading";
 import { Paragraph } from "../../typography/Paragraph";
