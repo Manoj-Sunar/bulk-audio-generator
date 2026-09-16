@@ -1,4 +1,4 @@
-"use client"
+
 import {
   HeartHandshake,
   Mail,
@@ -10,6 +10,7 @@ import { Card, CardContent } from "../../ui/Card";
 import { Heading } from "../../typography/Heading";
 import { Paragraph } from "../../typography/Paragraph";
 import { Button } from "../../ui/Button";
+import { CopyEmailButton } from "./CopyEmailButton";
 
 const SUPPORT_EMAIL = "kumar980062begin@gmail.com";
 
@@ -80,16 +81,7 @@ export const SupportSection = () => {
                   >
                     {SUPPORT_EMAIL}
                   </a>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-primary hover:bg-primary/10"
-                    onClick={() => {
-                      navigator.clipboard.writeText(SUPPORT_EMAIL);
-                    }}
-                  >
-                    Copy
-                  </Button>
+                 <CopyEmailButton email="kumar980062begin@gmail.com"/>
                 </div>
 
                 <div className="mt-8">

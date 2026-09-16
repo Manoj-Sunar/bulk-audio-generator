@@ -238,7 +238,7 @@ export function Navbar() {
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary to-secondary blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
                     <Image
-                      src="/wave.svg"
+                      src="/wave.png"
                       alt="Bulk Voice Generator"
                       width={44}
                       height={44}

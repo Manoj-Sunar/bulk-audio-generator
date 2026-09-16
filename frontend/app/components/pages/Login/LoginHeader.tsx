@@ -16,7 +16,7 @@ export const LoginHeader = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 p-2 shadow-inner"
       >
-        <Image src="/wave.svg" alt="Bulk Audio Generator" width={60} height={60} className="drop-shadow-md" />
+        <Image src="/wave.png" alt="Bulk Audio Generator" width={60} height={60} className="drop-shadow-md" />
       </motion.div>
 
       <Heading as="h1" size="3xl" weight="extrabold" className="text-on-background">

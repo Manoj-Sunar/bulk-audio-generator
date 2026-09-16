@@ -10,7 +10,7 @@ export const RegisterHeader = () => {
   return (
     <div className="space-y-5 text-center">
       <div className="mx-auto flex h-20 w-20 items-center justify-center">
-       <Image src="/wave.svg" alt="logo" width={100} height={100}/>
+       <Image src="/wave.png" alt="logo" width={100} height={100}/>
       </div>
 
       <div className="space-y-2">

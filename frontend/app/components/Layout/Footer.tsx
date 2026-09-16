@@ -88,7 +88,7 @@ export const Footer = () => {
               <div className="relative">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <Image
-                  src="/wave.svg"
+                  src="/wave.png"
                   alt="Bulk Audio Generator"
                   width={52}
                   height={52}

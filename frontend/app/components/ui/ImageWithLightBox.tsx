@@ -5,10 +5,8 @@ import { useState, lazy, Suspense } from "react";
 import Image, { ImageProps } from "next/image";
 import { Maximize2 } from "lucide-react";
 
-// ✅ Lightbox lazy load — केवल खोल्दा load हुन्छ
-const LightboxModal = lazy(() => import("../pages/documentation/LightBoxModel"));
+const LightboxModal = lazy(() => import("./LightBoxModel"));
 
-// ✅ छोटो blur placeholder — base64 SVG
 const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMjQwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iI2YxZjVmOSIvPjwvc3ZnPg==";
 
@@ -26,7 +24,6 @@ export const ImageWithLightbox = ({
 
   return (
     <>
-      {/* Thumbnail */}
       <div
         className={`relative cursor-pointer overflow-hidden rounded-2xl border border-outline-variant bg-white shadow-inner transition-all hover:shadow-md ${containerClassName}`}
         onClick={() => setIsOpen(true)}
@@ -47,7 +44,6 @@ export const ImageWithLightbox = ({
         </div>
       </div>
 
-      {/* ✅ Lightbox केवल खोल्दा load */}
       {isOpen && (
         <Suspense fallback={null}>
           <LightboxModal

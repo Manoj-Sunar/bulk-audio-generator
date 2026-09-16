@@ -1,3 +1,7 @@
+
+
+
+
 // app/components/pages/documentation/FAQ.tsx
 "use client";
 
@@ -53,17 +57,26 @@ const faqs: FAQItem[] = [
 ];
 
 export const FAQSection = () => {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  // ✅ सबै प्रश्न default खुला (Google ले सबै content देख्छ)
+  const [openIndexes, setOpenIndexes] = useState<number[]>(
+    faqs.map((_, i) => i)
+  );
+
+  const toggle = (index: number) => {
+    setOpenIndexes((prev) =>
+      prev.includes(index)
+        ? prev.filter((i) => i !== index)
+        : [...prev, index]
+    );
+  };
 
   return (
-    <section className="relative py-24 overflow-hidden">
-      {/* ✅ एक blur मात्र */}
+    <section className="relative py-24 overflow-hidden" id="faq">
       <div className="absolute inset-0 -z-10">
         <div className="absolute left-0 top-0 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <div className="mx-auto max-w-5xl px-6">
-        {/* Header */}
         <div className="mb-16 text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-5 py-2 backdrop-blur-sm shadow-sm">
             <HelpCircle size={16} className="text-primary" />
@@ -72,38 +85,41 @@ export const FAQSection = () => {
             </span>
           </div>
 
+          {/* ✅ एक मात्र H2 */}
           <Heading as="h2" size="3xl" weight="extrabold" className="text-center">
-            Everything You Need
+            Frequently Asked Questions About
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {" "}
-              To Know
+              Bulk Audio Generation
             </span>
           </Heading>
 
           <Paragraph className="mx-auto mt-5 max-w-2xl text-on-surface-variant text-center">
-            Answers to the most common questions from users.
+            Answers to the most common questions from users. Click any question
+            to expand or collapse the answer.
           </Paragraph>
         </div>
 
-        {/* FAQ Accordion */}
         <div className="space-y-3">
           {faqs.map((faq, index) => {
-            const open = openIndex === index;
+            const open = openIndexes.includes(index);
             return (
               <Card
                 key={faq.question}
                 className={`overflow-hidden rounded-2xl border transition-all duration-300 ${
                   open
                     ? "border-primary/20 bg-white/80 shadow-xl shadow-primary/5 backdrop-blur-sm"
-                    : "border-transparent bg-white/50 hover:border-primary/10 hover:bg-white/70 hover:shadow-lg hover:shadow-primary/5"
+                    : "border-transparent bg-white/50 hover:border-primary/10 hover:bg-white/70"
                 }`}
               >
                 <button
-                  onClick={() => setOpenIndex(open ? null : index)}
+                  onClick={() => toggle(index)}
                   className="flex w-full items-center justify-between p-6 text-left group"
+                  aria-expanded={open}
                 >
+                  {/* ✅ H3 heading — Google लाई visible */}
                   <Heading
-                    as="h5"
+                    as="h3"
                     size="lg"
                     weight="bold"
                     className={`pr-6 transition-colors ${
@@ -118,7 +134,7 @@ export const FAQSection = () => {
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all ${
                       open
                         ? "bg-primary/10 text-primary"
-                        : "bg-surface-container text-on-surface-variant group-hover:bg-primary/5 group-hover:text-primary"
+                        : "bg-surface-container text-on-surface-variant"
                     }`}
                   >
                     <ChevronDown size={18} />
@@ -144,41 +160,6 @@ export const FAQSection = () => {
               </Card>
             );
           })}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-16">
-          <Card className="relative overflow-hidden rounded-3xl border-white/20 bg-gradient-to-br from-white via-primary/5 to-secondary/5 shadow-xl shadow-primary/5 backdrop-blur-sm">
-            {/* ✅ एक blur मात्र */}
-            <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-primary/10 blur-3xl" />
-
-            <CardContent className="relative p-10 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/10">
-                <Sparkles size={24} className="text-primary" />
-              </div>
-              <Heading
-                as="h3"
-                size="2xl"
-                weight="bold"
-                className="text-on-surface text-center"
-              >
-                Still have questions?
-              </Heading>
-              <Paragraph className="mx-auto mt-3 max-w-2xl text-on-surface-variant text-center">
-                If you encounter issues while using Bulk Audio Generator, check
-                the documentation or contact our support team for assistance.
-              </Paragraph>
-              <div className="mt-6 flex flex-wrap justify-center gap-4">
-                <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                  📖 Read Documentation
-                </button>
-                <span className="text-on-surface-variant/30">•</span>
-                <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                  ✉️ Contact Support
-                </button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </section>

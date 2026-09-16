@@ -51,9 +51,18 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: '/wave.svg', sizes: '16x16', type: 'image/svg' }],
-    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
-    other: [{ rel: 'mask-icon', url: '/safari-pinned-tab.svg' }],
+   icon: [
+    
+    { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+   
+    { url: '/favicon.ico', sizes: 'any' },
+  ],
+  apple: [
+    { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+  ],
+  other: [
+    { rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#3748dd' },
+  ],
   },
   manifest: '/site.webmanifest',
   openGraph: {
