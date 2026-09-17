@@ -523,7 +523,7 @@ export const LandingPage = () => {
               </div>
 
               <div className="mt-10 flex flex-wrap items-center gap-4">
-                <Link href="/bulk-audio/generator">
+                <Link href="/generator">
                   <Button
                     size="lg"
                     leftIcon={<Zap className="h-4 w-4" />}
@@ -868,7 +868,7 @@ export const LandingPage = () => {
                   Start free, no credit card required.
                 </Paragraph>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                  <Link href="/bulk-audio/generator">
+                  <Link href="/generator">
                     <Button
                       size="lg"
                       leftIcon={<Zap className="h-4 w-4" />}

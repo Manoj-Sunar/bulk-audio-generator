@@ -24,7 +24,7 @@ import { Background } from "../ui/Background";
 
 const productLinks = [
   { title: "Documentation", href: "/bulk-audio/documentation", icon: BookOpen },
-  { title: "Generator", href: "/bulk-audio/generator", icon: AudioLines },
+  { title: "Generator", href: "/generator", icon: AudioLines },
 ];
 
 const featureLinks = [
