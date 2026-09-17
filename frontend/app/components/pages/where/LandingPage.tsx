@@ -1,10 +1,9 @@
-// app/components/pages/landing/LandingPage.tsx
+// app/components/pages/where/LandingPage.tsx
 "use client";
 
 import { motion, useScroll, useSpring } from "framer-motion";
-import { lazy, Suspense, useRef, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
-
   Play,
   Clock,
   Video,
@@ -12,11 +11,9 @@ import {
   Edit3,
   Download,
   Zap,
- 
   Shield,
   CheckCircle2,
   AlertCircle,
-
   Sparkles,
   Timer,
   FileAudio,
@@ -24,17 +21,11 @@ import {
   Wand2,
   ChevronRight,
   Star,
- 
   Rocket,
- 
   Check,
   X,
- 
-  X as XClose,
-
 } from "lucide-react";
 import Link from "next/link";
-
 
 import { Background } from "@/app/components/ui/Background";
 import { Button } from "@/app/components/ui/Button";
@@ -46,16 +37,18 @@ import { cn } from "@/app/lib/helpers";
 
 // Lazy load heavy components
 const LazyVideoSection = lazy(() =>
-  import("./VideoSection").then((mod) => ({ default: mod.VideoSection }))
+  import("@/app/components/pages/where/VideoSection").then((mod) => ({
+    default: mod.VideoSection,
+  }))
 );
 
 const LazyStatsSection = lazy(() =>
-  import("./StatsSection").then((mod) => ({ default: mod.StatsSection }))
+  import("@/app/components/pages/where/StatsSection").then((mod) => ({
+    default: mod.StatsSection,
+  }))
 );
 
-;
-
-// Types
+/* ---------------- Types ---------------- */
 interface Feature {
   icon: React.ElementType;
   title: string;
@@ -88,12 +81,13 @@ interface ComparisonPoint {
   isPositive: boolean;
 }
 
-// Constants - DRY and centralized
+/* ---------------- Content ---------------- */
 const PROBLEMS: ProblemPoint[] = [
   {
     icon: AlertCircle,
     title: "Audio-Video Desync",
-    description: "AI-generated audio frequently doesn't align with video timing. Voiceovers arrive late or early, breaking immersion and ruining viewer experience.",
+    description:
+      "AI-generated audio frequently doesn't align with video timing. Voiceovers arrive late or early, breaking immersion and ruining viewer experience.",
     color: "from-red-500 to-orange-500",
     stats: "85% of creators face sync issues",
     impact: "Loses 60% of viewer retention",
@@ -101,7 +95,8 @@ const PROBLEMS: ProblemPoint[] = [
   {
     icon: Timer,
     title: "Manual Clip-by-Clip Editing",
-    description: "Each 8-second clip requires individual audio matching. A 10-minute video needs 75+ clips, each demanding precise manual synchronization.",
+    description:
+      "Each 8-second clip requires individual audio matching. A 10-minute video needs 75+ clips, each demanding precise manual synchronization.",
     color: "from-amber-500 to-yellow-500",
     stats: "75+ clips per 10-min video",
     impact: "8+ hours of manual work",
@@ -109,7 +104,8 @@ const PROBLEMS: ProblemPoint[] = [
   {
     icon: Clock,
     title: "Exhausting Production Cycles",
-    description: "Generating audio one-by-one, syncing, re-editing, and exporting creates burnout. Your creative energy shouldn't be wasted on mechanical tasks.",
+    description:
+      "Generating audio one-by-one, syncing, re-editing, and exporting creates burnout. Your creative energy shouldn't be wasted on mechanical tasks.",
     color: "from-blue-500 to-indigo-500",
     stats: "80% time spent on sync",
     impact: "47 hours saved on average",
@@ -120,28 +116,32 @@ const FEATURES: Feature[] = [
   {
     icon: Zap,
     title: "Bulk Generation at Scale",
-    description: "Generate up to 100 audio clips simultaneously. Paste all scripts at once, get all audio files in seconds, not hours.",
+    description:
+      "Generate up to 100 audio clips simultaneously. Paste all scripts at once, get all audio files in seconds, not hours.",
     gradient: "from-indigo-500 to-purple-500",
     benefits: ["100 clips per batch", "2-second per clip", "Real-time progress"],
   },
   {
     icon: Mic2,
     title: "Premium AI Voices",
-    description: "Choose from ElevenLabs professional voices or Google Gemini's multilingual library. Natural, expressive voices for every character.",
+    description:
+      "Choose from ElevenLabs professional voices or Google Gemini's multilingual library. Natural, expressive voices for every character.",
     gradient: "from-emerald-500 to-teal-500",
     benefits: ["40+ voices available", "Multi-language support", "Customizable tone"],
   },
   {
     icon: Layers,
     title: "Smart Script Parsing",
-    description: "Intelligent script detection. Separate with blank lines. Each script becomes a perfectly timed, production-ready audio clip.",
+    description:
+      "Intelligent script detection. Separate with blank lines. Each script becomes a perfectly timed, production-ready audio clip.",
     gradient: "from-rose-500 to-pink-500",
     benefits: ["Auto-detection", "Error correction", "Preview before generation"],
   },
   {
     icon: Download,
     title: "One-Click ZIP Export",
-    description: "Download all generated audio files as a single ZIP archive. Ready to import into CapCut, Premiere Pro, Final Cut, or any editor.",
+    description:
+      "Download all generated audio files as a single ZIP archive. Ready to import into CapCut, Premiere Pro, Final Cut, or any editor.",
     gradient: "from-cyan-500 to-blue-500",
     benefits: ["Preserves filenames", "Organized structure", "Instant download"],
   },
@@ -151,80 +151,53 @@ const STEPS: Step[] = [
   {
     icon: Edit3,
     title: "Write Your Scripts",
-    description: "Paste your narrative scripts separated by blank lines. Each line becomes one audio clip.",
+    description:
+      "Paste your narrative scripts separated by blank lines. Each line becomes one audio clip.",
     gradient: "from-violet-500 to-purple-500",
     details: ["Supports 100+ scripts", "Auto-formatting", "Character counting"],
   },
   {
     icon: Mic2,
     title: "Choose Your AI Voice",
-    description: "Pick from premium voices. Match each character or scene with the perfect voice profile.",
+    description:
+      "Pick from premium voices. Match each character or scene with the perfect voice profile.",
     gradient: "from-blue-500 to-indigo-500",
     details: ["40+ voice options", "Preview before select", "Voice customization"],
   },
   {
     icon: Zap,
     title: "Generate All Audio",
-    description: "Click generate. Watch as all clips are created simultaneously with real-time progress.",
+    description:
+      "Click generate. Watch as all clips are created simultaneously with real-time progress.",
     gradient: "from-emerald-500 to-green-500",
     details: ["Parallel processing", "Live status updates", "Error handling"],
   },
   {
     icon: Video,
     title: "Edit & Sync Video",
-    description: "Import audio to CapCut, Premiere Pro, or Final Cut. Each clip is perfectly timed for your video scenes.",
+    description:
+      "Import audio to CapCut, Premiere Pro, or Final Cut. Each clip is perfectly timed for your video scenes.",
     gradient: "from-rose-500 to-pink-500",
     details: ["Ready for import", "Perfect sync", "Time saved"],
   },
 ];
 
 const COMPARISONS: ComparisonPoint[] = [
-  {
-    feature: "Generation Speed",
-    traditional: "2-3 minutes per clip",
-    ourSolution: "2-3 seconds per clip",
-    isPositive: true,
-  },
-  {
-    feature: "Manual Effort",
-    traditional: "8+ hours per video",
-    ourSolution: "5-10 minutes per video",
-    isPositive: true,
-  },
-  {
-    feature: "Sync Accuracy",
-    traditional: "Prone to errors",
-    ourSolution: "99.9% accurate sync",
-    isPositive: true,
-  },
-  {
-    feature: "Batch Size",
-    traditional: "1 clip at a time",
-    ourSolution: "100 clips at once",
-    isPositive: true,
-  },
-  {
-    feature: "Error Rate",
-    traditional: "High due to manual work",
-    ourSolution: "Minimal, automated",
-    isPositive: true,
-  },
-  {
-    feature: "Scalability",
-    traditional: "Limited by time",
-    ourSolution: "Unlimited scaling",
-    isPositive: true,
-  },
+  { feature: "Generation Speed", traditional: "2-3 minutes per clip", ourSolution: "2-3 seconds per clip", isPositive: true },
+  { feature: "Manual Effort", traditional: "8+ hours per video", ourSolution: "5-10 minutes per video", isPositive: true },
+  { feature: "Sync Accuracy", traditional: "Prone to errors", ourSolution: "99.9% accurate sync", isPositive: true },
+  { feature: "Batch Size", traditional: "1 clip at a time", ourSolution: "100 clips at once", isPositive: true },
+  { feature: "Error Rate", traditional: "High due to manual work", ourSolution: "Minimal, automated", isPositive: true },
+  { feature: "Scalability", traditional: "Limited by time", ourSolution: "Unlimited scaling", isPositive: true },
 ];
 
-// Components
+/* ---------------- Helper Components ---------------- */
 const SectionLoader = () => (
   <div className="flex min-h-[200px] items-center justify-center">
     <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
   </div>
 );
 
-// Premium Problem Card
 const ProblemCard = ({ problem, index }: { problem: ProblemPoint; index: number }) => {
   const Icon = problem.icon;
   return (
@@ -269,7 +242,6 @@ const ProblemCard = ({ problem, index }: { problem: ProblemPoint; index: number 
   );
 };
 
-// Premium Feature Card
 const FeatureCard = ({ feature, index }: { feature: Feature; index: number }) => {
   const Icon = feature.icon;
   return (
@@ -306,7 +278,6 @@ const FeatureCard = ({ feature, index }: { feature: Feature; index: number }) =>
   );
 };
 
-// Premium Step Card
 const StepCard = ({ step, index }: { step: Step; index: number }) => {
   const Icon = step.icon;
   return (
@@ -351,7 +322,6 @@ const StepCard = ({ step, index }: { step: Step; index: number }) => {
   );
 };
 
-// Comparison Table
 const ComparisonTable = () => {
   return (
     <Card className="overflow-hidden border-0 bg-white/90 backdrop-blur-xl shadow-2xl shadow-slate-200/50">
@@ -411,7 +381,7 @@ const ComparisonTable = () => {
   );
 };
 
-// Main Component
+/* ---------------- Main Component ---------------- */
 export const LandingPage = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -420,9 +390,7 @@ export const LandingPage = () => {
     restDelta: 0.001,
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Close mobile menu on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) setIsMobileMenuOpen(false);
@@ -433,6 +401,64 @@ export const LandingPage = () => {
 
   return (
     <main className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50/50">
+      {/* ============ STATIC SEO CONTENT (crawlable fallback) ============ */}
+      <section className="sr-only" aria-label="About Bulk Audio Generator">
+        <h1>Bulk Audio Generator — Generate 100+ AI Voice Clips in Seconds</h1>
+        <p>
+          Bulk Audio Generator is an AI-powered tool that converts hundreds of text
+          scripts into natural-sounding AI voiceovers in a single click. Using
+          ElevenLabs and Google Gemini voices, it produces perfectly timed audio
+          clips for AI video creation, YouTube automation, TikTok voiceovers,
+          audiobook narration, and podcast production.
+        </p>
+
+        <h2>Key Features</h2>
+        <ul>
+          <li>Bulk generation of up to 100 audio clips simultaneously</li>
+          <li>Premium ElevenLabs and Google Gemini AI voices (40+ options)</li>
+          <li>One-click ZIP download for CapCut, Premiere Pro, and Final Cut</li>
+          <li>Smart script parsing with auto-formatting</li>
+          <li>No credit card required to start</li>
+        </ul>
+
+        <h2>How Bulk Audio Generator Works</h2>
+        <ol>
+          <li>Paste your narrative scripts separated by blank lines</li>
+          <li>Choose from 40+ premium AI voices</li>
+          <li>Click generate — all clips are created in parallel</li>
+          <li>Download the ZIP and import into your video editor</li>
+        </ol>
+
+        <h2>Use Cases</h2>
+        <ul>
+          <li>AI-generated YouTube videos and Shorts</li>
+          <li>Faceless TikTok and Instagram Reels</li>
+          <li>Multi-character story narration</li>
+          <li>Podcast and audiobook production</li>
+          <li>E-learning and course narration</li>
+        </ul>
+
+        <h2>Why Bulk Audio Generator Saves 47 Hours Per Video</h2>
+        <p>
+          Manual clip-by-clip audio sync for a 10-minute AI video takes 8+ hours
+          across 75+ clips. Bulk Audio Generator reduces this to 5-10 minutes with
+          parallel generation and 99.9% accurate sync, saving an average of 47
+          hours per video project.
+        </p>
+
+        <h2>Frequently Asked Questions</h2>
+        <h3>What is Bulk Audio Generator?</h3>
+        <p>
+          Bulk Audio Generator is an AI-powered tool that converts text scripts
+          into natural AI voiceovers for video creation.
+        </p>
+        <h3>How many audio clips can I generate at once?</h3>
+        <p>Up to 100 clips per batch, in roughly 2-3 seconds each.</p>
+        <h3>Which AI voices are supported?</h3>
+        <p>ElevenLabs and Google Gemini, with 40+ premium multilingual voices.</p>
+      </section>
+      {/* ============ END STATIC SEO CONTENT ============ */}
+
       {/* Scroll Progress Bar */}
       <motion.div
         className="fixed left-0 right-0 top-0 z-50 h-1.5 origin-left bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600"
@@ -445,13 +471,11 @@ export const LandingPage = () => {
       <section className="relative z-10 overflow-hidden px-6 pt-24 pb-20 lg:pt-32 lg:pb-28">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-16 lg:grid-cols-2 lg:gap-20 items-center">
-            {/* Left Content */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, ease: "easeOut" }}
             >
-              {/* Badge */}
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-50/90 to-purple-50/90 px-5 py-2.5 border border-indigo-200/50 backdrop-blur-xl shadow-lg shadow-indigo-200/20">
                 <Sparkles className="h-4 w-4 text-indigo-600 animate-pulse" />
                 <Span size="sm" className="font-semibold text-indigo-700">
@@ -459,7 +483,7 @@ export const LandingPage = () => {
                 </Span>
               </div>
 
-              <Heading as="h1" size="5xl" weight="extrabold" className="leading-[1.1]">
+              <Heading as="h2" size="5xl" weight="extrabold" className="leading-[1.1]">
                 Generate Perfect
                 <Span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Audio for AI Videos
@@ -467,11 +491,10 @@ export const LandingPage = () => {
               </Heading>
 
               <Paragraph size="xl" className="mt-6 max-w-lg leading-relaxed text-slate-600">
-                Stop manually syncing audio clips. Generate 100+ perfectly timed audio files 
+                Stop manually syncing audio clips. Generate 100+ perfectly timed audio files
                 in seconds. Match any video scene with precision. Save hours of editing time.
               </Paragraph>
 
-              {/* Social Proof */}
               <div className="mt-8 flex flex-wrap items-center gap-6">
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
@@ -499,7 +522,6 @@ export const LandingPage = () => {
                 </div>
               </div>
 
-              {/* CTA Buttons */}
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link href="/bulk-audio/generator">
                   <Button
@@ -523,11 +545,10 @@ export const LandingPage = () => {
                 </Link>
               </div>
 
-              {/* Trust Badges */}
               <div className="mt-8 flex flex-wrap items-center gap-5 text-xs">
                 <div className="flex items-center gap-2 text-slate-500">
                   <Shield className="h-4 w-4 text-emerald-500" />
-                  <span>Encrypted & Secure</span>
+                  <span>Encrypted &amp; Secure</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -540,7 +561,6 @@ export const LandingPage = () => {
               </div>
             </motion.div>
 
-            {/* Right - Hero Visual */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -550,7 +570,6 @@ export const LandingPage = () => {
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-indigo-500/15 border border-slate-200/50 bg-white/90 backdrop-blur-xl">
                 <div className="aspect-video bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-5">
                   <div className="relative h-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800">
-                    {/* Video Placeholder */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
                         <motion.div
@@ -568,15 +587,12 @@ export const LandingPage = () => {
                         </Paragraph>
                       </div>
                     </div>
-                    {/* Animated Waveform */}
                     <div className="absolute bottom-5 left-5 right-5 flex items-center justify-center gap-1">
                       {[...Array(24)].map((_, i) => (
                         <motion.div
                           key={i}
                           className="w-1.5 bg-white/40 rounded-full"
-                          animate={{
-                            height: [8, 16 + Math.random() * 35, 8],
-                          }}
+                          animate={{ height: [8, 16 + Math.random() * 35, 8] }}
                           transition={{
                             duration: 0.8,
                             delay: i * 0.04,
@@ -586,13 +602,11 @@ export const LandingPage = () => {
                         />
                       ))}
                     </div>
-                    {/* Floating Badges */}
                     <div className="absolute top-4 left-4 rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
                       ⚡ Live Demo
                     </div>
                   </div>
                 </div>
-                {/* Floating Stats Cards */}
                 <div className="absolute -bottom-5 -right-5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-2xl border border-slate-200/50 px-5 py-4">
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 text-white shadow-lg">
@@ -636,9 +650,7 @@ export const LandingPage = () => {
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-50/90 to-orange-50/90 px-5 py-2.5 border border-red-200/50 backdrop-blur-xl shadow-lg shadow-red-200/20">
               <AlertCircle className="h-4 w-4 text-red-600" />
-              <Span size="sm" className="font-semibold text-red-700">
-                The Problem
-              </Span>
+              <Span size="sm" className="font-semibold text-red-700">The Problem</Span>
             </div>
             <Heading as="h2" size="4xl" weight="extrabold">
               Why AI Video Creation
@@ -647,7 +659,7 @@ export const LandingPage = () => {
               </Span>
             </Heading>
             <Paragraph size="lg" className="mx-auto mt-5 max-w-2xl text-slate-600 leading-relaxed">
-              Creating AI videos with perfect audio sync is a nightmare. Here's why creators
+              Creating AI videos with perfect audio sync is a nightmare. Here&apos;s why creators
               spend hours on what should take minutes.
             </Paragraph>
           </motion.div>
@@ -658,7 +670,6 @@ export const LandingPage = () => {
             ))}
           </div>
 
-          {/* Problem Stats Banner */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -691,7 +702,7 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* ===== SOLUTION / FEATURES SECTION ===== */}
+      {/* ===== SOLUTION / FEATURES ===== */}
       <section className="relative z-10 px-6 py-24 bg-white">
         <div className="mx-auto max-w-7xl">
           <motion.div
@@ -702,9 +713,7 @@ export const LandingPage = () => {
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-50/90 to-teal-50/90 px-5 py-2.5 border border-emerald-200/50 backdrop-blur-xl shadow-lg shadow-emerald-200/20">
               <Sparkles className="h-4 w-4 text-emerald-600" />
-              <Span size="sm" className="font-semibold text-emerald-700">
-                The Solution
-              </Span>
+              <Span size="sm" className="font-semibold text-emerald-700">The Solution</Span>
             </div>
             <Heading as="h2" size="4xl" weight="extrabold">
               Generate Perfect Audio
@@ -724,7 +733,6 @@ export const LandingPage = () => {
             ))}
           </div>
 
-          {/* Comparison Table */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -755,9 +763,7 @@ export const LandingPage = () => {
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-50/90 to-indigo-50/90 px-5 py-2.5 border border-blue-200/50 backdrop-blur-xl shadow-lg shadow-blue-200/20">
               <Wand2 className="h-4 w-4 text-blue-600" />
-              <Span size="sm" className="font-semibold text-blue-700">
-                How It Works
-              </Span>
+              <Span size="sm" className="font-semibold text-blue-700">How It Works</Span>
             </div>
             <Heading as="h2" size="4xl" weight="extrabold">
               From Script to
@@ -777,7 +783,6 @@ export const LandingPage = () => {
             ))}
           </div>
 
-          {/* Workflow Visualization */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -807,7 +812,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* ===== STATS SECTION ===== */}
       <Suspense fallback={<SectionLoader />}>
         <LazyStatsSection />
       </Suspense>
@@ -823,9 +827,7 @@ export const LandingPage = () => {
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-50/90 to-pink-50/90 px-5 py-2.5 border border-purple-200/50 backdrop-blur-xl shadow-lg shadow-purple-200/20">
               <Video className="h-4 w-4 text-purple-600" />
-              <Span size="sm" className="font-semibold text-purple-700">
-                Example Videos
-              </Span>
+              <Span size="sm" className="font-semibold text-purple-700">Example Videos</Span>
             </div>
             <Heading as="h2" size="4xl" weight="extrabold">
               See Perfect
@@ -845,9 +847,7 @@ export const LandingPage = () => {
         </div>
       </section>
 
-     
-
-      {/* ===== CTA SECTION ===== */}
+      {/* ===== CTA ===== */}
       <section className="relative z-10 px-6 py-24">
         <div className="mx-auto max-w-5xl">
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 shadow-2xl shadow-indigo-500/30">

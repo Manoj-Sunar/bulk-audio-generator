@@ -1,10 +1,14 @@
+// app/bulk-audio/generator/page.tsx (or wherever it lives)
 import { Generator } from "@/app/components/pages/generator/Generator";
 import type { Metadata } from "next";
 
+const BASE_URL = "https://bulk-audio-generator.vercel.app";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://your-domain.com"),
+  metadataBase: new URL(BASE_URL),
   title: "Bulk Audio Generation | Bulk AI Voice Generator with ElevenLabs",
-  description: "Generate AI audio in bulk using ElevenLabs. Convert hundreds of scripts into natural AI voices in one click and download every generated audio file as a ZIP archive.",
+  description:
+    "Generate AI audio in bulk using ElevenLabs. Convert hundreds of scripts into natural AI voices in one click and download every generated audio file as a ZIP archive.",
   keywords: [
     "bulk audio generation",
     "bulk ai voice generator",
@@ -23,7 +27,7 @@ export const metadata: Metadata = {
   creator: "Bulk Audio Generator",
   publisher: "Bulk Audio Generator",
   category: "Technology",
-  alternates: { canonical: "/generator" },
+  alternates: { canonical: `${BASE_URL}/generator` },
   robots: {
     index: true,
     follow: true,
@@ -38,13 +42,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://your-domain.com/generator",
+    url: `${BASE_URL}/generator`,
     siteName: "Bulk Audio Generator",
     title: "Bulk Audio Generation | Bulk AI Voice Generator",
-    description: "Generate hundreds of AI voice files simultaneously using ElevenLabs API.",
+    description:
+      "Generate hundreds of AI voice files simultaneously using ElevenLabs API.",
     images: [
       {
-        url: "/hero.jpg",
+        url: `${BASE_URL}/hero.jpg`,
         width: 1200,
         height: 630,
         alt: "Bulk Audio Generation Dashboard",
@@ -55,7 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bulk Audio Generation",
     description: "Generate hundreds of AI voices in seconds using ElevenLabs.",
-    images: ["/hero.jpg"],
+    images: [`${BASE_URL}/hero.jpg`],
   },
 };
 
@@ -65,7 +70,9 @@ const softwareJsonLd = {
   name: "Bulk Audio Generator",
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Web",
-  description: "Bulk Audio Generator lets you generate hundreds of AI voice files simultaneously using your ElevenLabs API key.",
+  url: `${BASE_URL}/generator`,
+  description:
+    "Bulk Audio Generator lets you generate hundreds of AI voice files simultaneously using your ElevenLabs API key.",
   offers: {
     "@type": "Offer",
     price: "0",
@@ -78,13 +85,9 @@ export default function GeneratorPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(softwareJsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
       />
-
       <main className="bg-background">
-        
         <Generator />
       </main>
     </>
