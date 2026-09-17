@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 
 // ── Route configuration ────────────────────────────────────────
 const PROTECTED_PATHS = [
-  '/bulk-audio/generator',
+  '/generator',
   '/bulk-audio/profile',
 ];
 
@@ -17,7 +17,7 @@ const AUTH_PATHS = [
 ];
 
 const LOGIN_PATH = '/bulk-audio/bulk-audio-login';
-const GENERATOR_PATH = '/bulk-audio/generator';
+const GENERATOR_PATH = '/generator';
 
 // proxy.ts
 export function proxy(request: NextRequest) {
