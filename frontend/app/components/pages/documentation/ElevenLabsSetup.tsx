@@ -19,36 +19,36 @@ const steps = [
     title: "Create an ElevenLabs Account",
     description:
       "Visit ElevenLabs and create a free account if you don't already have one.",
-    image: "/e1.webp",
+    image: "/e1.png",   // ✅ .png
   },
   {
     title: "Login to Dashboard",
     description:
       "After verifying your email, log in to your ElevenLabs dashboard.",
-    image: "/e2.webp",
+    image: "/e2.png",   // ✅ .png
   },
   {
     title: "Navigate to API Keys",
     description: "Go to Developers → API Keys to manage your API keys.",
-    image: "/e3.webp",
+    image: "/e3.png",   // ✅ .png
   },
   {
     title: "Create a New API Key",
     description:
       "Click 'Create API Key', give it a name, and configure access permissions.",
-    image: "/e4.webp",
+    image: "/e4.png",   // ✅ .png
   },
   {
     title: "Configure Access",
     description:
       "Set appropriate access levels for Text to Speech and other services.",
-    image: "/e5.webp",
+    image: "/e5.png",   // ✅ .png
   },
   {
     title: "Copy Your API Key",
     description:
       "Copy the generated API key immediately. It won't be shown again!",
-    image: "/e6.webp",
+    image: "/e6.png",   // ✅ .png
   },
 ];
 
@@ -57,38 +57,37 @@ const googleSteps = [
     title: "Go to Google AI Studio",
     description:
       "Visit Google AI Studio and sign in with your Google account.",
-    image: "/g1.webp",
+    image: "/g1.png",   // ✅ .png
   },
   {
     title: "Navigate to API Keys",
     description:
       "Go to the API Keys section in the Google AI Studio dashboard.",
-    image: "/g2.webp",
+    image: "/g2.png",   // ✅ .png
   },
   {
     title: "Create a New API Key",
     description:
       "Click 'Create API Key' and select the Text-to-Speech API.",
-    image: "/g3.webp",
+    image: "/g3.png",   // ✅ .png
   },
   {
     title: "Configure API Key",
     description:
       "Set appropriate permissions and restrictions for your API key.",
-    image: "/g4.webp",
+    image: "/g4.png",   // ✅ .png
   },
   {
     title: "Copy Your API Key",
     description:
       "Copy the generated API key. Store it securely for use in the application.",
-    image: "/g5.webp",
+    image: "/g5.png",   // ✅ .png
   },
 ];
 
 export const ElevenLabsSetup = () => {
   return (
     <section className="relative py-24 overflow-hidden">
-      {/* ✅ एक blur मात्र */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
       </div>
@@ -168,7 +167,6 @@ export const ElevenLabsSetup = () => {
                             width={400}
                             height={240}
                             containerClassName="aspect-[5/3] rounded-xl overflow-hidden shadow-sm"
-                            // ✅ priority हटाइयो — lazy loading default
                           />
                         </div>
                       </div>

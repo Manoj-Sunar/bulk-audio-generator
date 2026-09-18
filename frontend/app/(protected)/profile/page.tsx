@@ -136,7 +136,7 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <Link href="/bulk-audio/generator">
+          <Link href="/generator">
             <Button
               size="md"
               leftIcon={<Plus className="w-4 h-4" />}

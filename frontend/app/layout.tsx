@@ -9,7 +9,6 @@ import { GoogleOAuthProvider } from './provider/GoogleAuthProvider';
 import { Navbar } from './components/Layout/Navbar';
 import { Footer } from './components/Layout/Footer';
 
-
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -50,19 +49,20 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  // ✅ Favicon — तपाईंको actual files अनुसार
   icons: {
-   icon: [
-    
-    { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-   
-    { url: '/favicon.ico', sizes: 'any' },
-  ],
-  apple: [
-    { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-  ],
-  other: [
-    { rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#3748dd' },
-  ],
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/wave.png', color: '#3748dd' },
+    ],
   },
   manifest: '/site.webmanifest',
   openGraph: {
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
       'Generate bulk AI voices using ElevenLabs and Google Gemini APIs.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/hero.jpg',
         width: 1200,
         height: 630,
         alt: 'Bulk Audio Generator',
@@ -86,12 +86,12 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Bulk Audio Generator | AI Voice Generation',
     description: 'Generate bulk AI voices using ElevenLabs and Google Gemini APIs.',
-    images: ['/twitter-image.jpg'],
+    images: ['/hero.jpg'],
     creator: '@bulkaudiogen',
   },
   verification: {
-  google: "VNPS6oYdtSZbcO4htpOir9H6_3tm-Xtzn-9-V4VhMBI",
-},
+    google: "VNPS6oYdtSZbcO4htpOir9H6_3tm-Xtzn-9-V4VhMBI",
+  },
 };
 
 export const viewport: Viewport = {
@@ -111,11 +111,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/site.webmanifest" />
-      </head>
+      {/* 
+        ✅ <head> section COMPLETELY REMOVED
+        Next.js ले metadata.icons बाट automatically generate गर्छ
+        Manual links राख्दा duplicate हुन्छ र favicon देखिँदैन
+      */}
       <body className={inter.className}>
         <GoogleOAuthProvider>
           <QueryProvider>

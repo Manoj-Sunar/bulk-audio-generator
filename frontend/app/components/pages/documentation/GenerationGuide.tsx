@@ -25,7 +25,7 @@ const steps = [
     title: "Choose Your Provider",
     description:
       "Select either ElevenLabs or Google AI Studio as your TTS provider. Each offers unique voice options and capabilities.",
-    image: "/provider_selection.webp",
+    image: "/provider_selection.png",   // ✅ .png
     alt: "Provider Selection",
   },
   {
@@ -33,7 +33,7 @@ const steps = [
     title: "Enter Your API Key",
     description:
       "Paste your ElevenLabs or Google AI Studio API key into the secure input field. It is transmitted to our backend, where it is encrypted (Fernet) and stored securely in the database.",
-    image: "/api_key_card.webp",
+    image: "/api_key_card.png",   // ✅ .png
     alt: "API Key Input",
   },
   {
@@ -41,7 +41,7 @@ const steps = [
     title: "Write Your Scripts",
     description:
       "Type or paste your scripts in the editor. Separate each script with a blank line to generate individual audio files.",
-    image: "/script.webp",
+    image: "/script.png",   // ✅ .png
     alt: "Script Editor",
   },
   {
@@ -49,7 +49,7 @@ const steps = [
     title: "Choose Voice Profile",
     description:
       "Select your preferred voice from the available profiles. ElevenLabs and Google AI Studio each offer a variety of voices.",
-    image: "/voice_list.webp",
+    image: "/voice_list.png",   // ✅ .png
     alt: "Voice Selection",
   },
   {
@@ -57,7 +57,7 @@ const steps = [
     title: "Generate Audio",
     description:
       "Click Generate Audio and watch as your scripts are processed in parallel. Real-time progress shows each completed file.",
-    image: "/generating.webp",
+    image: "/generating.png",   // ✅ .png
     alt: "Generating Audio",
   },
   {
@@ -65,7 +65,7 @@ const steps = [
     title: "Download Your Files",
     description:
       "Once generation completes, download all files individually or as a single ZIP archive.",
-    image: "/generation_success.webp",
+    image: "/generation_success.png",   // ✅ .png
     alt: "Download Audio Files",
   },
 ];
