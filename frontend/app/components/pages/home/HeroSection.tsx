@@ -30,28 +30,26 @@ export const DocsHeroSection = () => {
               </div>
             </div>
 
-            {/* ✅ H1 — Main keyword exact-match */}
+            {/* ✅ H1 — Primary keyword exact-match */}
             <h1 className="animate-slideInLeft animation-delay-200 text-4xl font-extrabold leading-[1.05] tracking-tight text-on-background sm:text-5xl lg:text-6xl">
-              Bulk Audio Generator —{" "}
+              Free AI Voice Generator —{" "}
               <Span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-                Generate 100+ AI Voices
+                Generate Bulk AI Voice Files
               </Span>{" "}
               in One Click
             </h1>
 
             {/* Description */}
             <p className="animate-slideInLeft animation-delay-400 max-w-xl text-lg leading-8 text-on-surface-variant/80">
-              Convert hundreds of text scripts into natural-sounding AI voices
-              using your own{" "}
-              <strong className="font-semibold text-primary">ElevenLabs</strong>{" "}
+              Convert hundreds of text scripts into natural AI voices using your own{" "}
+              <strong className="font-semibold text-primary">ElevenLabs API</strong>{" "}
               or{" "}
               <strong className="font-semibold text-secondary">
                 Google AI Studio
               </strong>{" "}
-              API key. Download all generated audio files instantly as a ZIP
-              archive — save hours of manual work.
+              key. Supports 70+ languages, voice cloning, and emotional inflections.
+              Download all audio files instantly as a ZIP — no credit card required.
             </p>
-
             {/* Buttons */}
             <div className="animate-slideInLeft animation-delay-600 flex flex-wrap gap-4">
               <Link href="/bulk-audio/generator">

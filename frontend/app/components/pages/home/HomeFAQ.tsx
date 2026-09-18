@@ -5,30 +5,48 @@ import { HelpCircle } from "lucide-react";
 import { Heading } from "../../typography/Heading";
 import { Paragraph } from "../../typography/Paragraph";
 import { Card } from "../../ui/Card";
-
 const FAQ_ITEMS = [
   {
-    q: "What is Bulk Audio Generator?",
-    a: "Bulk Audio Generator is a free web tool that converts hundreds of text scripts into AI voices simultaneously using ElevenLabs or Google AI Studio APIs. You paste multiple scripts, generate all audio files at once, and download them as a ZIP archive.",
+    q: "What is the best free AI voice generator for bulk generation?",
+    a: "Bulk Audio Generator is a popular free AI voice generator built specifically for bulk generation. It uses the ElevenLabs API and Google AI Studio (Gemini) TTS to convert up to 100 text scripts into AI voices in one batch, then downloads everything as a ZIP archive. No subscription or credit card is required.",
   },
   {
-    q: "How many AI voices can I generate at once?",
+    q: "How do I generate bulk AI voice files with ElevenLabs?",
+    a: "Get an ElevenLabs API key from your dashboard, paste it into Bulk Audio Generator, then paste your scripts separated by blank lines. Click Generate — each script becomes a separate MP3 file, and all files are bundled into a ZIP for download. You can generate up to 100 files per batch using the eleven_multilingual_v2 model.",
+  },
+  {
+    q: "Is Bulk Audio Generator a good Murf AI alternative?",
+    a: "Yes — Bulk Audio Generator is one of the best free Murf AI alternatives for bulk voice generation. Unlike Murf AI, which focuses on single-file editing, Bulk Audio Generator processes 100+ audio files per batch and downloads everything as a ZIP. It's completely free, with no subscription required.",
+  },
+  {
+    q: "How many languages does the AI voice generator support?",
+    a: "Bulk Audio Generator supports 70+ languages including English, Spanish, French, German, Hindi, Japanese, Korean, Arabic, Portuguese, Italian, Russian, and many more. Language support comes from ElevenLabs' multilingual v2 model and Google AI Studio's WaveNet voices.",
+  },
+  {
+    q: "Does it support voice cloning and emotions?",
+    a: "Yes. When using ElevenLabs, you can access thousands of pre-made voices and use voice cloning for a custom voice. The platform captures natural pauses, emotional inflections, and contextual emphasis — ideal for storytelling, YouTube narration, ads, and audiobooks.",
+  },
+  {
+    q: "How many AI voice files can I generate at once?",
     a: "You can generate up to 100 AI voice files in a single batch. Each script produces a separate audio file, and all files are bundled into a single ZIP archive for download.",
   },
   {
-    q: "Do I need an ElevenLabs API key?",
-    a: "Yes. Bulk Audio Generator uses your own ElevenLabs or Google AI Studio API key. Your key is encrypted with Fernet symmetric encryption and stored securely in our database — it is never exposed in the browser.",
+    q: "Is Bulk Audio Generator free to use?",
+    a: "Yes, Bulk Audio Generator is completely free. There are no subscriptions, no hidden fees, and no credit card required. You only pay for what you use through your own ElevenLabs or Google AI Studio account.",
   },
   {
-    q: "Is Bulk Audio Generator free?",
-    a: "Yes, Bulk Audio Generator is completely free to use. You only pay for what you use through your own ElevenLabs or Google AI Studio account.",
+    q: "Can I use this for YouTube and TikTok voiceovers?",
+    a: "Absolutely. Bulk Audio Generator is designed for AI video creators. Generate voiceovers for YouTube videos, YouTube Shorts, TikTok videos, Instagram Reels, faceless channels, podcasts, and audiobooks. Download all MP3 files as a ZIP and import directly into CapCut, Premiere Pro, or Final Cut.",
   },
   {
     q: "How long does bulk audio generation take?",
-    a: "Generation happens in real-time as each script is processed. Most batches of 10-50 audio files complete in under 2 minutes, depending on the length of your scripts and your provider's API speed.",
+    a: "Generation happens in real-time as each script is processed. Most batches of 10–50 audio files complete in under 2 minutes, depending on script length and your provider's API speed.",
+  },
+  {
+    q: "Is my API key stored securely?",
+    a: "Yes. Your ElevenLabs or Google AI Studio API key is encrypted with Fernet symmetric encryption and stored in our database. The raw key is never persisted in your browser or exposed to any third party.",
   },
 ] as const;
-
 export const HomeFAQ = () => {
   return (
     <section
