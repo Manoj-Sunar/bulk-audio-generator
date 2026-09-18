@@ -37,7 +37,7 @@ export const HomeCTA = () => {
               </Paragraph>
 
               <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <Link href="/bulk-audio/generator">
+                <Link href="/generator">
                   <Button
                     size="lg"
                     className="group rounded-full bg-gradient-to-r from-primary to-secondary px-8 text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/40"

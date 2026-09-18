@@ -207,11 +207,11 @@ const ProblemCard = ({ problem, index }: { problem: ProblemPoint; index: number 
       transition={{ delay: index * 0.1, duration: 0.5 }}
       viewport={{ once: true }}
       whileHover={{ y: -8, scale: 1.01 }}
-      className="group relative"
+      className="group relative h-full"
     >
       <Card className="h-full overflow-hidden border-0 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/50 transition-all duration-500 hover:shadow-2xl hover:shadow-slate-300/60">
         <div className={`h-1.5 w-full bg-gradient-to-r ${problem.color} group-hover:h-2 transition-all duration-300`} />
-        <CardContent className="p-7">
+        <CardContent className="flex h-full flex-col p-7">
           <div className="flex items-start justify-between">
             <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${problem.color} text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
               <Icon size={28} />
@@ -222,10 +222,10 @@ const ProblemCard = ({ problem, index }: { problem: ProblemPoint; index: number 
               </Span>
             </div>
           </div>
-          <Heading as="h4" size="lg" weight="semibold" className="text-slate-800">
+          <Heading as="h4" size="lg" weight="semibold" align="left" className="text-slate-800">
             {problem.title}
           </Heading>
-          <Paragraph className="mt-3 text-slate-500 leading-relaxed">
+          <Paragraph align="left" className="mt-3 flex-1 text-slate-500 leading-relaxed">
             {problem.description}
           </Paragraph>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -251,18 +251,18 @@ const FeatureCard = ({ feature, index }: { feature: Feature; index: number }) =>
       transition={{ delay: index * 0.08, duration: 0.5 }}
       viewport={{ once: true }}
       whileHover={{ y: -6, scale: 1.02 }}
-      className="group relative"
+      className="group relative h-full"
     >
       <Card className="h-full overflow-hidden border-0 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/50 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-200/30">
         <div className={`h-1.5 w-full bg-gradient-to-r ${feature.gradient} group-hover:h-2 transition-all duration-300`} />
-        <CardContent className="p-7">
+        <CardContent className="flex h-full flex-col p-7">
           <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${feature.gradient} text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
             <Icon size={28} />
           </div>
-          <Heading as="h4" size="lg" weight="semibold" className="text-slate-800">
+          <Heading as="h4" size="lg" weight="semibold" align="left" className="text-slate-800">
             {feature.title}
           </Heading>
-          <Paragraph className="mt-2 text-slate-500 leading-relaxed">
+          <Paragraph align="left" className="mt-2 flex-1 text-slate-500 leading-relaxed">
             {feature.description}
           </Paragraph>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -286,15 +286,15 @@ const StepCard = ({ step, index }: { step: Step; index: number }) => {
       whileInView={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.1, duration: 0.5, type: "spring" }}
       viewport={{ once: true }}
-      className="relative group"
+      className="relative group h-full"
     >
       {index < STEPS.length - 1 && (
         <div className="absolute left-1/2 top-1/2 hidden -translate-y-1/2 lg:block">
           <div className="h-[2px] w-16 bg-gradient-to-r from-primary/30 to-transparent" />
         </div>
       )}
-      <Card className="border-0 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 group-hover:-translate-y-2">
-        <CardContent className="p-7 text-center">
+      <Card className="h-full border-0 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 group-hover:-translate-y-2">
+        <CardContent className="flex h-full flex-col items-center p-7 text-center">
           <div className="relative mx-auto mb-5">
             <div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${step.gradient} text-white shadow-xl group-hover:scale-110 transition-all duration-300`}>
               <Icon size={32} />
@@ -303,10 +303,10 @@ const StepCard = ({ step, index }: { step: Step; index: number }) => {
               {index + 1}
             </div>
           </div>
-          <Heading as="h4" size="md" weight="semibold" className="text-slate-800">
+          <Heading as="h4" size="md" weight="semibold" align="center" className="text-slate-800">
             {step.title}
           </Heading>
-          <Paragraph className="mt-2 text-sm text-slate-500 leading-relaxed">
+          <Paragraph size="sm" align="center" className="mt-2 flex-1 text-slate-500 leading-relaxed">
             {step.description}
           </Paragraph>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -326,7 +326,7 @@ const ComparisonTable = () => {
   return (
     <Card className="overflow-hidden border-0 bg-white/90 backdrop-blur-xl shadow-2xl shadow-slate-200/50">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-200">
               <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Feature</th>
@@ -351,13 +351,13 @@ const ComparisonTable = () => {
                 <td className="px-6 py-4 text-sm font-medium text-slate-700">{item.feature}</td>
                 <td className="px-6 py-4 text-sm text-red-500">
                   <div className="flex items-center gap-2">
-                    <X size={16} className="text-red-400" />
+                    <X size={16} className="text-red-400 shrink-0" />
                     {item.traditional}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-emerald-600">
                   <div className="flex items-center gap-2">
-                    <Check size={16} className="text-emerald-500" />
+                    <Check size={16} className="text-emerald-500 shrink-0" />
                     {item.ourSolution}
                   </div>
                 </td>
@@ -470,7 +470,7 @@ export const LandingPage = () => {
       {/* ===== HERO SECTION ===== */}
       <section className="relative z-10 overflow-hidden px-6 pt-24 pb-20 lg:pt-32 lg:pb-28">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-16 lg:grid-cols-2 lg:gap-20 items-center">
+          <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -478,19 +478,31 @@ export const LandingPage = () => {
             >
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-50/90 to-purple-50/90 px-5 py-2.5 border border-indigo-200/50 backdrop-blur-xl shadow-lg shadow-indigo-200/20">
                 <Sparkles className="h-4 w-4 text-indigo-600 animate-pulse" />
-                <Span size="sm" className="font-semibold text-indigo-700">
+                <Span size="sm" weight="semibold" className="text-indigo-700">
                   AI-Powered Bulk Audio Generation
                 </Span>
               </div>
 
-              <Heading as="h2" size="5xl" weight="extrabold" className="leading-[1.1]">
+              <Heading
+                as="h1"
+                size="5xl"
+                weight="extrabold"
+                align="left"
+                balance
+                className="leading-[1.1]"
+              >
                 Generate Perfect
                 <Span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Audio for AI Videos
                 </Span>
               </Heading>
 
-              <Paragraph size="xl" className="mt-6 max-w-lg leading-relaxed text-slate-600">
+              <Paragraph
+                size="xl"
+                align="left"
+                pretty
+                className="mt-6 max-w-lg leading-relaxed text-slate-600"
+              >
                 Stop manually syncing audio clips. Generate 100+ perfectly timed audio files
                 in seconds. Match any video scene with precision. Save hours of editing time.
               </Paragraph>
@@ -501,7 +513,7 @@ export const LandingPage = () => {
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
-                        className="h-9 w-9 rounded-full border-2 border-white bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-xs font-bold text-indigo-600 shadow-md"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-indigo-100 to-purple-100 text-xs font-bold text-indigo-600 shadow-md"
                       >
                         {String.fromCharCode(64 + i)}
                       </div>
@@ -516,7 +528,7 @@ export const LandingPage = () => {
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                   ))}
-                  <Span size="sm" className="ml-1 text-slate-600 font-medium">
+                  <Span size="sm" weight="medium" className="ml-1 text-slate-600">
                     5.0 (68 reviews)
                   </Span>
                 </div>
@@ -567,22 +579,22 @@ export const LandingPage = () => {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="relative"
             >
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-indigo-500/15 border border-slate-200/50 bg-white/90 backdrop-blur-xl">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200/50 bg-white/90 shadow-2xl shadow-indigo-500/15 backdrop-blur-xl">
                 <div className="aspect-video bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-5">
-                  <div className="relative h-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800">
+                  <div className="relative h-full overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 to-slate-800">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
                         <motion.div
                           animate={{ scale: [1, 1.1, 1] }}
                           transition={{ duration: 2, repeat: Infinity }}
-                          className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 shadow-xl"
+                          className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-white/30 bg-white/20 shadow-xl backdrop-blur-sm"
                         >
-                          <Play className="h-10 w-10 fill-white text-white ml-1" />
+                          <Play className="ml-1 h-10 w-10 fill-white text-white" />
                         </motion.div>
-                        <Paragraph className="text-white/80 font-medium">
+                        <Paragraph align="center" className="font-medium text-white/80">
                           See Bulk Audio Gen in Action
                         </Paragraph>
-                        <Paragraph size="sm" className="text-white/40 mt-1">
+                        <Paragraph size="sm" align="center" className="mt-1 text-white/40">
                           Click to play demo
                         </Paragraph>
                       </div>
@@ -591,7 +603,7 @@ export const LandingPage = () => {
                       {[...Array(24)].map((_, i) => (
                         <motion.div
                           key={i}
-                          className="w-1.5 bg-white/40 rounded-full"
+                          className="w-1.5 rounded-full bg-white/40"
                           animate={{ height: [8, 16 + Math.random() * 35, 8] }}
                           transition={{
                             duration: 0.8,
@@ -602,31 +614,35 @@ export const LandingPage = () => {
                         />
                       ))}
                     </div>
-                    <div className="absolute top-4 left-4 rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
+                    <div className="absolute left-4 top-4 rounded-full bg-emerald-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-sm">
                       ⚡ Live Demo
                     </div>
                   </div>
                 </div>
-                <div className="absolute -bottom-5 -right-5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-2xl border border-slate-200/50 px-5 py-4">
+                <div className="absolute -bottom-5 -right-5 rounded-2xl border border-slate-200/50 bg-white/95 px-5 py-4 shadow-2xl backdrop-blur-xl">
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 text-white shadow-lg">
                       <FileAudio className="h-6 w-6" />
                     </div>
                     <div>
-                      <Paragraph size="xs" className="text-slate-400 font-medium">Generated Audio</Paragraph>
+                      <Paragraph size="xs" weight="medium" className="text-slate-400">
+                        Generated Audio
+                      </Paragraph>
                       <Paragraph size="lg" weight="bold" className="text-slate-800">
                         1,247 clips
                       </Paragraph>
                     </div>
                   </div>
                 </div>
-                <div className="absolute -bottom-5 -left-5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-2xl border border-slate-200/50 px-5 py-4">
+                <div className="absolute -bottom-5 -left-5 rounded-2xl border border-slate-200/50 bg-white/95 px-5 py-4 shadow-2xl backdrop-blur-xl">
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg">
                       <Timer className="h-6 w-6" />
                     </div>
                     <div>
-                      <Paragraph size="xs" className="text-slate-400 font-medium">Time Saved</Paragraph>
+                      <Paragraph size="xs" weight="medium" className="text-slate-400">
+                        Time Saved
+                      </Paragraph>
                       <Paragraph size="lg" weight="bold" className="text-slate-800">
                         47 hours
                       </Paragraph>
@@ -640,7 +656,7 @@ export const LandingPage = () => {
       </section>
 
       {/* ===== PROBLEM SECTION ===== */}
-      <section className="relative z-10 px-6 py-24 bg-gradient-to-b from-white to-slate-50/80">
+      <section className="relative z-10 bg-gradient-to-b from-white to-slate-50/80 px-6 py-24">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -648,17 +664,24 @@ export const LandingPage = () => {
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-50/90 to-orange-50/90 px-5 py-2.5 border border-red-200/50 backdrop-blur-xl shadow-lg shadow-red-200/20">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-200/50 bg-gradient-to-r from-red-50/90 to-orange-50/90 px-5 py-2.5 shadow-lg shadow-red-200/20 backdrop-blur-xl">
               <AlertCircle className="h-4 w-4 text-red-600" />
-              <Span size="sm" className="font-semibold text-red-700">The Problem</Span>
+              <Span size="sm" weight="semibold" className="text-red-700">
+                The Problem
+              </Span>
             </div>
-            <Heading as="h2" size="4xl" weight="extrabold">
+            <Heading as="h2" size="4xl" weight="extrabold" align="center" balance>
               Why AI Video Creation
               <Span className="block bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">
                 Takes So Much Time
               </Span>
             </Heading>
-            <Paragraph size="lg" className="mx-auto mt-5 max-w-2xl text-slate-600 leading-relaxed">
+            <Paragraph
+              size="lg"
+              align="center"
+              pretty
+              className="mx-auto mt-5 max-w-2xl leading-relaxed text-slate-600"
+            >
               Creating AI videos with perfect audio sync is a nightmare. Here&apos;s why creators
               spend hours on what should take minutes.
             </Paragraph>
@@ -676,24 +699,40 @@ export const LandingPage = () => {
             viewport={{ once: true }}
             className="mt-12"
           >
-            <Card className="border-0 bg-gradient-to-r from-red-50/80 via-orange-50/80 to-amber-50/80 backdrop-blur-xl shadow-xl shadow-red-200/20">
+            <Card className="border-0 bg-gradient-to-r from-red-50/80 via-orange-50/80 to-amber-50/80 shadow-xl shadow-red-200/20 backdrop-blur-xl">
               <CardContent className="p-8">
                 <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                  <div className="text-center">
-                    <Heading as="h4" size="2xl" weight="bold" className="text-red-600">85%</Heading>
-                    <Paragraph size="sm" className="text-slate-600">Creators face sync issues</Paragraph>
+                  <div className="flex flex-col items-center text-center">
+                    <Heading as="h4" size="2xl" weight="bold" align="center" className="text-red-600">
+                      85%
+                    </Heading>
+                    <Paragraph size="sm" align="center" className="text-slate-600">
+                      Creators face sync issues
+                    </Paragraph>
                   </div>
-                  <div className="text-center">
-                    <Heading as="h4" size="2xl" weight="bold" className="text-amber-600">75+</Heading>
-                    <Paragraph size="sm" className="text-slate-600">Clips per 10-min video</Paragraph>
+                  <div className="flex flex-col items-center text-center">
+                    <Heading as="h4" size="2xl" weight="bold" align="center" className="text-amber-600">
+                      75+
+                    </Heading>
+                    <Paragraph size="sm" align="center" className="text-slate-600">
+                      Clips per 10-min video
+                    </Paragraph>
                   </div>
-                  <div className="text-center">
-                    <Heading as="h4" size="2xl" weight="bold" className="text-orange-600">8h+</Heading>
-                    <Paragraph size="sm" className="text-slate-600">Manual editing time</Paragraph>
+                  <div className="flex flex-col items-center text-center">
+                    <Heading as="h4" size="2xl" weight="bold" align="center" className="text-orange-600">
+                      8h+
+                    </Heading>
+                    <Paragraph size="sm" align="center" className="text-slate-600">
+                      Manual editing time
+                    </Paragraph>
                   </div>
-                  <div className="text-center">
-                    <Heading as="h4" size="2xl" weight="bold" className="text-red-600">60%</Heading>
-                    <Paragraph size="sm" className="text-slate-600">Viewer retention loss</Paragraph>
+                  <div className="flex flex-col items-center text-center">
+                    <Heading as="h4" size="2xl" weight="bold" align="center" className="text-red-600">
+                      60%
+                    </Heading>
+                    <Paragraph size="sm" align="center" className="text-slate-600">
+                      Viewer retention loss
+                    </Paragraph>
                   </div>
                 </div>
               </CardContent>
@@ -703,7 +742,7 @@ export const LandingPage = () => {
       </section>
 
       {/* ===== SOLUTION / FEATURES ===== */}
-      <section className="relative z-10 px-6 py-24 bg-white">
+      <section className="relative z-10 bg-white px-6 py-24">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -711,17 +750,24 @@ export const LandingPage = () => {
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-50/90 to-teal-50/90 px-5 py-2.5 border border-emerald-200/50 backdrop-blur-xl shadow-lg shadow-emerald-200/20">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/50 bg-gradient-to-r from-emerald-50/90 to-teal-50/90 px-5 py-2.5 shadow-lg shadow-emerald-200/20 backdrop-blur-xl">
               <Sparkles className="h-4 w-4 text-emerald-600" />
-              <Span size="sm" className="font-semibold text-emerald-700">The Solution</Span>
+              <Span size="sm" weight="semibold" className="text-emerald-700">
+                The Solution
+              </Span>
             </div>
-            <Heading as="h2" size="4xl" weight="extrabold">
+            <Heading as="h2" size="4xl" weight="extrabold" align="center" balance>
               Generate Perfect Audio
               <Span className="block bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
                 In Seconds, Not Hours
               </Span>
             </Heading>
-            <Paragraph size="lg" className="mx-auto mt-5 max-w-2xl text-slate-600 leading-relaxed">
+            <Paragraph
+              size="lg"
+              align="center"
+              pretty
+              className="mx-auto mt-5 max-w-2xl leading-relaxed text-slate-600"
+            >
               Bulk Audio Generator solves the sync problem. Generate all audio clips at once,
               perfectly timed for your video scenes.
             </Paragraph>
@@ -739,11 +785,11 @@ export const LandingPage = () => {
             viewport={{ once: true }}
             className="mt-16"
           >
-            <div className="text-center mb-8">
-              <Heading as="h3" size="2xl" weight="bold" className="text-slate-800">
+            <div className="mb-8 text-center">
+              <Heading as="h3" size="2xl" weight="bold" align="center">
                 Traditional vs. <Span className="text-primary">Bulk Audio Gen</Span>
               </Heading>
-              <Paragraph className="mt-2 text-slate-500">
+              <Paragraph align="center" className="mt-2 text-slate-500">
                 See the difference in every aspect of audio generation
               </Paragraph>
             </div>
@@ -753,7 +799,7 @@ export const LandingPage = () => {
       </section>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section id="how-it-works" className="relative z-10 px-6 py-24 bg-gradient-to-b from-slate-50/80 to-white">
+      <section id="how-it-works" className="relative z-10 bg-gradient-to-b from-slate-50/80 to-white px-6 py-24">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -761,23 +807,30 @@ export const LandingPage = () => {
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-50/90 to-indigo-50/90 px-5 py-2.5 border border-blue-200/50 backdrop-blur-xl shadow-lg shadow-blue-200/20">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200/50 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 px-5 py-2.5 shadow-lg shadow-blue-200/20 backdrop-blur-xl">
               <Wand2 className="h-4 w-4 text-blue-600" />
-              <Span size="sm" className="font-semibold text-blue-700">How It Works</Span>
+              <Span size="sm" weight="semibold" className="text-blue-700">
+                How It Works
+              </Span>
             </div>
-            <Heading as="h2" size="4xl" weight="extrabold">
+            <Heading as="h2" size="4xl" weight="extrabold" align="center" balance>
               From Script to
               <Span className="block bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent">
                 Production-Ready Audio
               </Span>
             </Heading>
-            <Paragraph size="lg" className="mx-auto mt-5 max-w-2xl text-slate-600 leading-relaxed">
+            <Paragraph
+              size="lg"
+              align="center"
+              pretty
+              className="mx-auto mt-5 max-w-2xl leading-relaxed text-slate-600"
+            >
               Four simple steps. Generate all audio clips. Import to your video editor.
               Perfect sync every time.
             </Paragraph>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 relative">
+          <div className="relative grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, index) => (
               <StepCard key={step.title} step={step} index={index} />
             ))}
@@ -793,16 +846,22 @@ export const LandingPage = () => {
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex items-center">
                   {i > 0 && (
-                    <div className="w-16 h-0.5 bg-gradient-to-r from-primary/20 to-primary/40" />
+                    <div className="h-0.5 w-16 bg-gradient-to-r from-primary/20 to-primary/40" />
                   )}
-                  <div className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold",
-                    i === 0 ? "bg-indigo-600 text-white" :
-                    i === 1 ? "bg-emerald-600 text-white" :
-                    i === 2 ? "bg-purple-600 text-white" :
-                    i === 3 ? "bg-rose-600 text-white" :
-                    "bg-slate-200 text-slate-400"
-                  )}>
+                  <div
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold",
+                      i === 0
+                        ? "bg-indigo-600 text-white"
+                        : i === 1
+                        ? "bg-emerald-600 text-white"
+                        : i === 2
+                        ? "bg-purple-600 text-white"
+                        : i === 3
+                        ? "bg-rose-600 text-white"
+                        : "bg-slate-200 text-slate-400"
+                    )}
+                  >
                     {i + 1}
                   </div>
                 </div>
@@ -817,7 +876,7 @@ export const LandingPage = () => {
       </Suspense>
 
       {/* ===== EXAMPLE VIDEOS ===== */}
-      <section className="relative z-10 px-6 py-24 bg-gradient-to-b from-white to-slate-50/80">
+      <section className="relative z-10 bg-gradient-to-b from-white to-slate-50/80 px-6 py-24">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -825,17 +884,24 @@ export const LandingPage = () => {
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-50/90 to-pink-50/90 px-5 py-2.5 border border-purple-200/50 backdrop-blur-xl shadow-lg shadow-purple-200/20">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-200/50 bg-gradient-to-r from-purple-50/90 to-pink-50/90 px-5 py-2.5 shadow-lg shadow-purple-200/20 backdrop-blur-xl">
               <Video className="h-4 w-4 text-purple-600" />
-              <Span size="sm" className="font-semibold text-purple-700">Example Videos</Span>
+              <Span size="sm" weight="semibold" className="text-purple-700">
+                Example Videos
+              </Span>
             </div>
-            <Heading as="h2" size="4xl" weight="extrabold">
+            <Heading as="h2" size="4xl" weight="extrabold" align="center" balance>
               See Perfect
               <Span className="block bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
                 Audio-Video Sync in Action
               </Span>
             </Heading>
-            <Paragraph size="lg" className="mx-auto mt-5 max-w-2xl text-slate-600 leading-relaxed">
+            <Paragraph
+              size="lg"
+              align="center"
+              pretty
+              className="mx-auto mt-5 max-w-2xl leading-relaxed text-slate-600"
+            >
               Watch how generated audio clips sync perfectly with video scenes.
               No more desync issues.
             </Paragraph>
@@ -851,19 +917,25 @@ export const LandingPage = () => {
       <section className="relative z-10 px-6 py-24">
         <div className="mx-auto max-w-5xl">
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 shadow-2xl shadow-indigo-500/30">
-            <CardContent className="p-12 text-center text-white">
+            <CardContent className="p-12 text-center">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
+                className="flex flex-col items-center"
               >
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 shadow-xl">
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-white/30 bg-white/20 shadow-xl backdrop-blur-sm">
                   <Rocket className="h-10 w-10 text-white" />
                 </div>
-                <Heading as="h2" size="4xl" weight="extrabold" className="text-white">
+                <Heading as="h2" size="4xl" weight="extrabold" align="center" balance className="text-white">
                   Ready to Save Hours of Editing?
                 </Heading>
-                <Paragraph size="lg" className="mx-auto mt-4 max-w-2xl text-white/80 leading-relaxed">
+                <Paragraph
+                  size="lg"
+                  align="center"
+                  pretty
+                  className="mx-auto mt-4 max-w-2xl leading-relaxed text-white/80"
+                >
                   Join 500+ creators already generating perfect audio for their AI videos.
                   Start free, no credit card required.
                 </Paragraph>
@@ -872,7 +944,7 @@ export const LandingPage = () => {
                     <Button
                       size="lg"
                       leftIcon={<Zap className="h-4 w-4" />}
-                      className="bg-white text-indigo-600 hover:bg-slate-50 shadow-2xl shadow-white/25 hover:shadow-3xl hover:shadow-white/35 hover:scale-105 transition-all duration-300 px-8"
+                      className="bg-white px-8 text-indigo-600 shadow-2xl shadow-white/25 transition-all duration-300 hover:scale-105 hover:bg-slate-50 hover:shadow-3xl hover:shadow-white/35"
                     >
                       Start Generating Free
                     </Button>
@@ -881,7 +953,7 @@ export const LandingPage = () => {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="border-white/30 text-white hover:bg-white/10 hover:border-white/50 transition-all duration-300"
+                      className="border-white/30 text-white transition-all duration-300 hover:border-white/50 hover:bg-white/10"
                     >
                       Learn More
                     </Button>

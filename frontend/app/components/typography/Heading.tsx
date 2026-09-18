@@ -1,20 +1,11 @@
+// app/components/typography/Heading.tsx
 import { cn } from "@/app/lib/helpers";
 import * as React from "react";
 
-
-
-
 // Headings Components
-type HeadingElement =
-  | "h1"
-  | "h2"
-  | "h3"
-  | "h4"
-  | "h5"
-  | "h6";
+type HeadingElement = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
-interface HeadingProps
-  extends React.HTMLAttributes<HTMLHeadingElement> {
+interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
   as?: HeadingElement;
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
   weight?:
@@ -27,18 +18,19 @@ interface HeadingProps
   align?: "left" | "center" | "right";
   color?: "default" | "muted" | "primary" | "destructive";
   truncate?: boolean;
+  balance?: boolean;
 }
 
 const sizeStyles = {
   xs: "text-sm",
-  sm: "text-lg",
-  md: "text-xl",
-  lg: "text-2xl",
-  xl: "text-3xl",
-  "2xl": "text-4xl",
-  "3xl": "text-5xl",
-  "4xl": "text-6xl",
-  "5xl": "text-7xl",
+  sm: "text-base sm:text-lg",
+  md: "text-lg sm:text-xl",
+  lg: "text-xl sm:text-2xl",
+  xl: "text-2xl sm:text-3xl",
+  "2xl": "text-3xl sm:text-4xl",
+  "3xl": "text-4xl sm:text-5xl",
+  "4xl": "text-4xl sm:text-5xl lg:text-6xl",
+  "5xl": "text-5xl sm:text-6xl lg:text-7xl",
 };
 
 const weightStyles = {
@@ -63,10 +55,7 @@ const colorStyles = {
   destructive: "text-destructive",
 };
 
-export const Heading = React.forwardRef<
-  HTMLHeadingElement,
-  HeadingProps
->(
+export const Heading = React.forwardRef<HTMLHeadingElement, HeadingProps>(
   (
     {
       as: Component = "h2",
@@ -75,6 +64,7 @@ export const Heading = React.forwardRef<
       align = "left",
       color = "default",
       truncate = false,
+      balance = false,
       className,
       children,
       ...props
@@ -91,6 +81,7 @@ export const Heading = React.forwardRef<
           alignStyles[align],
           colorStyles[color],
           truncate && "truncate",
+          balance && "text-balance",
           className
         )}
         {...props}
@@ -102,7 +93,3 @@ export const Heading = React.forwardRef<
 );
 
 Heading.displayName = "Heading";
-
-
-
-

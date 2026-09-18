@@ -12,6 +12,7 @@ import { Heading } from "../../typography/Heading";
 import { Paragraph } from "../../typography/Paragraph";
 import { Span } from "../../typography/Span";
 import { Button } from "../../ui/Button";
+import Link from "next/link";
 
 const STEPS = [
   {
@@ -60,7 +61,7 @@ export const QuickStartGuide = () => {
 
           <Heading as="h2" size="3xl" weight="extrabold" className="text-center">
             Get Started in
-            <Span className="mx-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <Span size="5xl" weight="extrabold" className="mx-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               4 Simple Steps
             </Span>
           </Heading>
@@ -111,13 +112,15 @@ export const QuickStartGuide = () => {
 
         {/* CTA */}
         <div className="mt-16 flex justify-center">
+          <Link href={"/generator"}>
           <Button
             size="lg"
             rightIcon={<ArrowRight size={18} />}
             className="shadow-sm shadow-primary/10 transition-transform duration-200 hover:scale-105"
-          >
+            >
             Start Generating Audio
           </Button>
+            </Link>
         </div>
       </div>
     </section>

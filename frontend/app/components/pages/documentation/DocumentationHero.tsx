@@ -16,6 +16,7 @@ import { Paragraph } from "../../typography/Paragraph";
 import { Span } from "../../typography/Span";
 import { Button } from "../../ui/Button";
 import { Card, CardContent } from "../../ui/Card";
+import Link from "next/link";
 
 const STATS = [
   { icon: Zap, value: "100+", label: "Files at Once" },
@@ -68,7 +69,7 @@ export const DocumentationHero = () => {
 
           <Heading as="h1" size="4xl" weight="extrabold" className="leading-tight">
             Generate{" "}
-            <Span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+            <Span size="6xl" weight="extrabold" className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
               Bulk AI Voices
             </Span>{" "}
             with ElevenLabs & Google AI
@@ -86,21 +87,16 @@ export const DocumentationHero = () => {
 
           {/* CTA Buttons — CSS hover, Framer Motion छैन */}
           <div className="mt-10 flex flex-wrap gap-4">
+            <Link href={"/generator"}>
             <Button
               size="lg"
               leftIcon={<Play size={18} />}
               className="shadow-lg shadow-primary/25 transition-transform duration-200 hover:scale-105"
-            >
+              >
               Get Started Now
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              leftIcon={<BookOpen size={18} />}
-              className="transition-transform duration-200 hover:scale-105"
-            >
-              View Documentation
-            </Button>
+              </Link>
+            
           </div>
 
           {/* Stats */}

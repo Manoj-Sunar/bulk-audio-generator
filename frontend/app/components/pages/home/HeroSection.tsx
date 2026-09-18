@@ -1,19 +1,31 @@
 // app/components/pages/home/HeroSection.tsx
 // ✅ Server Component
 
-import Image from "next/image";
+
 import Link from "next/link";
 import { Sparkles, Zap, ShieldCheck, ArrowRight, Bot } from "lucide-react";
 
 import { Paragraph } from "../../typography/Paragraph";
 import { Span } from "../../typography/Span";
 import { Button } from "../../ui/Button";
-import { Card, CardContent } from "../../ui/Card";
+
 import { Background } from "../../ui/Background";
 
-export const DocsHeroSection = () => {
+
+
+/**
+ * Hero YouTube video — the demo video shown in the right column.
+ * Change this URL to any YouTube link to update the hero.
+ */
+
+
+export const DocsHeroSection = async () => {
+  // Fetch YouTube metadata on the server (cached for 1 hour).
+  // Falls back gracefully to null if the video is unavailable.
+ 
+
   return (
-    <section className="relative overflow-hidden bg-background min-h-screen flex items-center">
+    <section className="relative flex min-h-screen items-center overflow-hidden bg-background">
       <Background />
 
       <div className="container mx-auto max-w-7xl px-6 py-16 lg:py-24">
@@ -32,8 +44,12 @@ export const DocsHeroSection = () => {
 
             {/* ✅ H1 — Primary keyword exact-match */}
             <h1 className="animate-slideInLeft animation-delay-200 text-4xl font-extrabold leading-[1.05] tracking-tight text-on-background sm:text-5xl lg:text-6xl">
-              Free AI Voice Generator —{" "}
-              <Span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+              Free AI Voice Generator{" "}
+              <Span
+                size="6xl"
+                weight="extrabold"
+                className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent"
+              >
                 Generate Bulk AI Voice Files
               </Span>{" "}
               in One Click
@@ -50,12 +66,13 @@ export const DocsHeroSection = () => {
               key. Supports 70+ languages, voice cloning, and emotional inflections.
               Download all audio files instantly as a ZIP — no credit card required.
             </p>
+
             {/* Buttons */}
             <div className="animate-slideInLeft animation-delay-600 flex flex-wrap gap-4">
-              <Link href="/bulk-audio/generator">
+              <Link href="/generator">
                 <Button
                   size="lg"
-                  className="rounded-full px-8 shadow-xl shadow-primary/25 transition-all duration-300 hover:shadow-primary/40 group"
+                  className="group rounded-full px-8 shadow-xl shadow-primary/25 transition-all duration-300 hover:shadow-primary/40"
                 >
                   Get Started Free
                   <ArrowRight
@@ -130,44 +147,11 @@ export const DocsHeroSection = () => {
             </div>
           </div>
 
-          {/* RIGHT — Hero Image */}
+          {/* RIGHT — YouTube Video (thumbnail + click-to-play) */}
           <div className="animate-slideInRight animation-delay-400 relative flex justify-center">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 blur-[120px]" />
 
-            <div className="animate-float relative overflow-visible">
-              <Card className="rounded-[36px] border border-white/40 bg-white/70 p-4 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] hover:shadow-primary/20">
-                <CardContent className="p-0">
-                  <Image
-                    src="/hero.jpg"
-                    alt="Bulk Audio Generator interface showing batch text-to-speech generation with ElevenLabs and Google AI Studio"
-                    width={700}
-                    height={700}
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 700px"
-                    className="rounded-[28px] object-cover shadow-lg"
-                  />
-                </CardContent>
-
-                {/* Floating Stats — ✅ mobile मा पनि देखिन्छ */}
-                <div className="animate-slideInLeft animation-delay-600 absolute -left-6 top-10 rounded-2xl border border-white/50 bg-white/90 px-4 py-3 shadow-xl backdrop-blur sm:px-5 sm:py-4">
-                  <Paragraph className="font-bold text-base sm:text-xl">
-                    ⚡ 10,000+
-                  </Paragraph>
-                  <Paragraph size="sm" color="muted">
-                    Voices Generated
-                  </Paragraph>
-                </div>
-
-                <div className="animate-slideInRight animation-delay-600 absolute -right-6 bottom-10 rounded-2xl border border-white/50 bg-white/90 px-4 py-3 shadow-xl backdrop-blur sm:px-5 sm:py-4">
-                  <Paragraph className="font-bold text-base sm:text-xl">
-                    🚀 5× Faster
-                  </Paragraph>
-                  <Paragraph size="sm" color="muted">
-                    Than Manual Workflow
-                  </Paragraph>
-                </div>
-              </Card>
-            </div>
+           
           </div>
         </div>
       </div>

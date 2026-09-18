@@ -1,6 +1,6 @@
+// app/components/typography/Paragraph.tsx
 import { cn } from "@/app/lib/helpers";
 import * as React from "react";
-
 
 interface ParagraphProps
   extends React.HTMLAttributes<HTMLParagraphElement> {
@@ -10,14 +10,15 @@ interface ParagraphProps
   align?: "left" | "center" | "right" | "justify";
   leading?: "none" | "tight" | "normal" | "relaxed" | "loose";
   truncate?: boolean;
+  pretty?: boolean;
 }
 
 const sizeStyles = {
   xs: "text-xs",
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg",
-  xl: "text-xl",
+  sm: "text-sm sm:text-base",
+  md: "text-base sm:text-lg",
+  lg: "text-base sm:text-lg",
+  xl: "text-lg sm:text-xl",
 };
 
 const weightStyles = {
@@ -62,6 +63,7 @@ export const Paragraph = React.forwardRef<
       align = "left",
       leading = "relaxed",
       truncate = false,
+      pretty = false,
       className,
       children,
       ...props
@@ -78,6 +80,7 @@ export const Paragraph = React.forwardRef<
           alignStyles[align],
           leadingStyles[leading],
           truncate && "truncate",
+          pretty && "text-pretty",
           className
         )}
         {...props}

@@ -18,6 +18,7 @@ import { Paragraph } from "../../typography/Paragraph";
 import { Span } from "../../typography/Span";
 import { Button } from "../../ui/Button";
 import { ImageWithLightbox } from "../../ui/ImageWithLightBox";
+import Link from "next/link";
 
 const steps = [
   {
@@ -291,9 +292,11 @@ export const GenerateGuide = () => {
 
         {/* CTA */}
         <div className="mt-16 flex justify-center">
+          <Link href={"/generator"}>
           <Button size="lg" rightIcon={<ArrowRight size={18} />}>
             Start Generating Audio
           </Button>
+          </Link>
         </div>
       </div>
     </section>

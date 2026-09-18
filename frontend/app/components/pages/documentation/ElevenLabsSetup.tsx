@@ -13,6 +13,7 @@ import { Paragraph } from "../../typography/Paragraph";
 import { Span } from "../../typography/Span";
 import { Button } from "../../ui/Button";
 import { ImageWithLightbox } from "../../ui/ImageWithLightBox";
+import Link from "next/link";
 
 const steps = [
   {
@@ -332,13 +333,15 @@ export const ElevenLabsSetup = () => {
 
         {/* CTA */}
         <div className="mt-16 flex justify-center">
+          <Link href={"/generator"}>
           <Button
             size="lg"
             rightIcon={<ArrowRight size={18} />}
             className="shadow-md shadow-primary/10 transition-transform duration-200 hover:scale-105"
-          >
+            >
             Continue to Script Editor
           </Button>
+            </Link>
         </div>
       </div>
     </section>

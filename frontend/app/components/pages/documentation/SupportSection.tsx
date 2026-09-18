@@ -11,6 +11,7 @@ import { Heading } from "../../typography/Heading";
 import { Paragraph } from "../../typography/Paragraph";
 import { Button } from "../../ui/Button";
 import { CopyEmailButton } from "./CopyEmailButton";
+import Link from "next/link";
 
 const SUPPORT_EMAIL = "kumar980062begin@gmail.com";
 
@@ -139,9 +140,12 @@ export const SupportSection = () => {
                 </Paragraph>
 
                 <div className="mt-10 flex flex-wrap justify-center gap-5">
+                  <Link href={"/generator"}>
+                  
                   <Button className="bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:scale-105">
                     Get Started
                   </Button>
+                  </Link>
                   <Button
                     variant="outline"
                     className="border-primary/20 text-primary hover:bg-primary/5 transition-transform duration-200 hover:scale-105"

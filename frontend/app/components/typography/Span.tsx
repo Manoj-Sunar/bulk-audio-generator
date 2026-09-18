@@ -1,8 +1,6 @@
+// app/components/typography/Span.tsx
 import { cn } from "@/app/lib/helpers";
 import * as React from "react";
-
-
-
 
 interface SpanProps extends React.HTMLAttributes<HTMLSpanElement> {
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl";
@@ -23,8 +21,6 @@ const sizeStyles = {
   "5xl": "text-5xl",
   "6xl": "text-6xl",
 };
-
-// ... rest remains the same
 
 const weightStyles = {
   light: "font-light",

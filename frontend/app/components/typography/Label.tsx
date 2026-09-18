@@ -1,6 +1,6 @@
+// app/components/typography/Label.tsx
 import { cn } from "@/app/lib/helpers";
 import * as React from "react";
-
 
 interface LabelProps
   extends React.LabelHTMLAttributes<HTMLLabelElement> {
@@ -31,10 +31,7 @@ const colorStyles = {
   destructive: "text-destructive",
 };
 
-export const Label = React.forwardRef<
-  HTMLLabelElement,
-  LabelProps
->(
+export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
   (
     {
       size = "sm",
@@ -61,10 +58,7 @@ export const Label = React.forwardRef<
       >
         {children}
         {required && (
-          <span
-            aria-hidden="true"
-            className="text-destructive"
-          >
+          <span aria-hidden="true" className="text-destructive">
             *
           </span>
         )}
